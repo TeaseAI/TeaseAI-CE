@@ -9,9 +9,9 @@ using System.Windows.Forms;
 
 namespace TeaseAI_CE.UI
 {
-	public partial class frmSplitChat : Form
+	public partial class frmSplitOther : Form
 	{
-		public frmSplitChat()
+		public frmSplitOther()
 		{
 			InitializeComponent();
 		}

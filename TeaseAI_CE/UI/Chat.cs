@@ -25,7 +25,7 @@ namespace TeaseAI_CE.UI
 			}
 			else
 			{
-				txtHistory.Text += Environment.NewLine + text;
+				chatHistory.Append("System", text);
 			}
 		}
 	}

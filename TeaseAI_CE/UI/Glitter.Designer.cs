@@ -1,13 +1,13 @@
 ﻿namespace TeaseAI_CE.UI
 {
-	partial class frmSplitChat
+	partial class Glitter
 	{
-		/// <summary>
+		/// <summary> 
 		/// Required designer variable.
 		/// </summary>
 		private System.ComponentModel.IContainer components = null;
 
-		/// <summary>
+		/// <summary> 
 		/// Clean up any resources being used.
 		/// </summary>
 		/// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
@@ -20,40 +20,39 @@
 			base.Dispose(disposing);
 		}
 
-		#region Windows Form Designer generated code
+		#region Component Designer generated code
 
-		/// <summary>
-		/// Required method for Designer support - do not modify
+		/// <summary> 
+		/// Required method for Designer support - do not modify 
 		/// the contents of this method with the code editor.
 		/// </summary>
 		private void InitializeComponent()
 		{
-			this.Chat = new TeaseAI_CE.UI.Chat();
+			this.webBrowserForChat1 = new TeaseAI_CE.UI.WebBrowserForChat();
 			this.SuspendLayout();
 			// 
-			// Chat
+			// webBrowserForChat1
 			// 
-			this.Chat.Dock = System.Windows.Forms.DockStyle.Fill;
-			this.Chat.Location = new System.Drawing.Point(0, 0);
-			this.Chat.Name = "Chat";
-			this.Chat.Size = new System.Drawing.Size(753, 340);
-			this.Chat.TabIndex = 0;
+			this.webBrowserForChat1.Dock = System.Windows.Forms.DockStyle.Fill;
+			this.webBrowserForChat1.Location = new System.Drawing.Point(0, 0);
+			this.webBrowserForChat1.Name = "webBrowserForChat1";
+			this.webBrowserForChat1.Size = new System.Drawing.Size(253, 396);
+			this.webBrowserForChat1.TabIndex = 0;
+			this.webBrowserForChat1.Text = "webBrowserForChat1";
 			// 
-			// frmSplitChat
+			// Glitter
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-			this.ClientSize = new System.Drawing.Size(753, 340);
-			this.Controls.Add(this.Chat);
-			this.Name = "frmSplitChat";
-			this.Text = "TeaseAI CE - Chat";
-			this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.frmSplitChat_FormClosed);
+			this.Controls.Add(this.webBrowserForChat1);
+			this.Name = "Glitter";
+			this.Size = new System.Drawing.Size(253, 396);
 			this.ResumeLayout(false);
 
 		}
 
 		#endregion
 
-		internal Chat Chat;
+		private WebBrowserForChat webBrowserForChat1;
 	}
 }

@@ -61,11 +61,11 @@
     <Compile Include="UI\frmCombined.Designer.cs">
       <DependentUpon>frmCombined.cs</DependentUpon>
     </Compile>
-    <Compile Include="UI\frmSplitChat.cs">
+    <Compile Include="UI\frmSplitOther.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="UI\frmSplitChat.Designer.cs">
-      <DependentUpon>frmSplitChat.cs</DependentUpon>
+    <Compile Include="UI\frmSplitOther.Designer.cs">
+      <DependentUpon>frmSplitOther.cs</DependentUpon>
     </Compile>
     <Compile Include="UI\frmSplitMedia.cs">
       <SubType>Form</SubType>
@@ -79,11 +79,20 @@
     <Compile Include="UI\frmStartup.Designer.cs">
       <DependentUpon>frmStartup.cs</DependentUpon>
     </Compile>
+    <Compile Include="UI\Glitter.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UI\Glitter.Designer.cs">
+      <DependentUpon>Glitter.cs</DependentUpon>
+    </Compile>
     <Compile Include="UI\Media.cs">
       <SubType>UserControl</SubType>
     </Compile>
     <Compile Include="UI\Media.Designer.cs">
       <DependentUpon>Media.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\WebBrowserForChat.cs">
+      <SubType>Component</SubType>
     </Compile>
     <EmbeddedResource Include="UI\Chat.resx">
       <DependentUpon>Chat.cs</DependentUpon>
@@ -91,14 +100,17 @@
     <EmbeddedResource Include="UI\frmCombined.resx">
       <DependentUpon>frmCombined.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="UI\frmSplitChat.resx">
-      <DependentUpon>frmSplitChat.cs</DependentUpon>
+    <EmbeddedResource Include="UI\frmSplitOther.resx">
+      <DependentUpon>frmSplitOther.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="UI\frmSplitMedia.resx">
       <DependentUpon>frmSplitMedia.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="UI\frmStartup.resx">
       <DependentUpon>frmStartup.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\Glitter.resx">
+      <DependentUpon>Glitter.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="UI\Media.resx">
       <DependentUpon>Media.cs</DependentUpon>

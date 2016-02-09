@@ -29,7 +29,7 @@
 		private void InitializeComponent()
 		{
 			this.txtUser = new System.Windows.Forms.TextBox();
-			this.txtHistory = new System.Windows.Forms.TextBox();
+			this.chatHistory = new TeaseAI_CE.UI.WebBrowserForChat();
 			this.SuspendLayout();
 			// 
 			// txtUser
@@ -41,22 +41,20 @@
 			this.txtUser.Size = new System.Drawing.Size(572, 20);
 			this.txtUser.TabIndex = 0;
 			// 
-			// txtHistory
+			// chatHistory
 			// 
-			this.txtHistory.Dock = System.Windows.Forms.DockStyle.Fill;
-			this.txtHistory.Location = new System.Drawing.Point(0, 0);
-			this.txtHistory.Multiline = true;
-			this.txtHistory.Name = "txtHistory";
-			this.txtHistory.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-			this.txtHistory.Size = new System.Drawing.Size(572, 130);
-			this.txtHistory.TabIndex = 1;
-			this.txtHistory.Text = "Replace with web control";
+			this.chatHistory.Dock = System.Windows.Forms.DockStyle.Fill;
+			this.chatHistory.Location = new System.Drawing.Point(0, 0);
+			this.chatHistory.Name = "chatHistory";
+			this.chatHistory.Size = new System.Drawing.Size(572, 130);
+			this.chatHistory.TabIndex = 1;
+			this.chatHistory.Text = "webBrowserForChat1";
 			// 
 			// Chat
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-			this.Controls.Add(this.txtHistory);
+			this.Controls.Add(this.chatHistory);
 			this.Controls.Add(this.txtUser);
 			this.Name = "Chat";
 			this.Size = new System.Drawing.Size(572, 150);
@@ -68,6 +66,6 @@
 		#endregion
 
 		private System.Windows.Forms.TextBox txtUser;
-		private System.Windows.Forms.TextBox txtHistory;
+		private WebBrowserForChat chatHistory;
 	}
 }

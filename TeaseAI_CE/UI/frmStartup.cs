@@ -37,12 +37,12 @@ namespace TeaseAI_CE.UI
 			bool split = MessageBox.Show("Yes for dual window, no for single window", "", MessageBoxButtons.YesNo) == DialogResult.Yes;
 			if (split)
 			{
-				var chat = new frmSplitChat();
+				var other = new frmSplitOther();
 				var media = new frmSplitMedia();
-				chat.Show();
+				other.Show();
 				media.Show();
 
-				controller.OnOutput = chat.Chat.Message;
+				controller.OnOutput = other.Chat.Message;
 			}
 			else
 			{
