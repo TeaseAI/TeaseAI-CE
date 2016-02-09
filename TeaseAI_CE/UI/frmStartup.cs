@@ -19,6 +19,7 @@ namespace TeaseAI_CE.UI
 			InitializeComponent();
 		}
 
+		// ToDo : Threaded loading with progress.
 		private void frmStartup_Shown(object sender, EventArgs e)
 		{
 			vm = new VM();
@@ -35,6 +36,7 @@ namespace TeaseAI_CE.UI
 
 
 			bool split = MessageBox.Show("Yes for dual window, no for single window", "", MessageBoxButtons.YesNo) == DialogResult.Yes;
+			progressBar1.Value = progressBar1.Maximum;
 			if (split)
 			{
 				var other = new frmSplitOther();
