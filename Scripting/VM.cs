@@ -9,10 +9,10 @@ namespace TeaseAI_CE.Scripting
 {
 	public class VM
 	{
-		// ToDo : Proper thread safety. (there are _many_ holes)
-		private Thread thread;
+		private Thread thread = null;
 		private bool threadRun = false;
 
+		private ReaderWriterLockSlim personControlLock = new ReaderWriterLockSlim();
 		private List<Personality> personalities = new List<Personality>();
 		private List<Controller> controllers = new List<Controller>();
 
@@ -21,11 +21,11 @@ namespace TeaseAI_CE.Scripting
 
 		public const char IndentChar = '\t';
 
-		public VM()
-		{
-			thread = new Thread(new ThreadStart(threadTick));
-		}
 
+		/// <summary>
+		/// Load scripts with .vtscript in path and all sub directories.
+		/// </summary>
+		/// <param name="path"></param>
 		public void LoadScripts(string path)
 		{
 			if (!Directory.Exists(path))
@@ -37,10 +37,18 @@ namespace TeaseAI_CE.Scripting
 			var files = Directory.GetFiles(path, "*.vtscript", SearchOption.AllDirectories);
 			foreach (string file in files)
 			{
-				parseFile(file);
+				if (!parseFile(file))
+				{
+					// ToDo : Log file unable to load.
+				}
 			}
 		}
 
+		/// <summary>
+		/// Loads file from disk and parses in to the system.
+		/// </summary>
+		/// <param name="file"></param>
+		/// <returns></returns>
 		private bool parseFile(string file)
 		{
 			if (!File.Exists(file))
@@ -67,6 +75,8 @@ namespace TeaseAI_CE.Scripting
 			// split-up the lines in to indatation based blocks.
 			int currentLine = 0;
 			Block tmpBlock = parseBlock(rawLines, ref currentLine, 0);
+			if (tmpBlock == null)
+				return false;
 			// go thought each root block, and add it to the system.
 			foreach (var line in tmpBlock.Lines)
 			{
@@ -80,9 +90,7 @@ namespace TeaseAI_CE.Scripting
 						scripts[line.Data.ToLowerInvariant()] = new Script(line.SubBlock.Lines);
 					}
 					finally
-					{
-						scriptsLock.ExitWriteLock();
-					}
+					{ scriptsLock.ExitWriteLock(); }
 
 				}
 				else
@@ -93,43 +101,55 @@ namespace TeaseAI_CE.Scripting
 			return true;
 		}
 
+		/// <summary>
+		/// Parses rawLines in to blocks of code recursively based on blockIndent.
+		/// </summary>
+		/// <param name="rawLines"></param>
+		/// <param name="currentLine"></param>
+		/// <param name="blockIndent">Indent level this block is at.</param>
+		/// <returns>Block with lines, or null if zero lines.</returns>
 		private Block parseBlock(List<string> rawLines, ref int currentLine, int blockIndent)
 		{
+			// temp list of lines, until we are finished parsing.
 			var lines = new List<Block.Line>();
 
 			string lineData;
 			int lineIndent = 0;
 			int indentDifference;
+			// Note: This loop is picky, do NOT edit untilss you understand what is happening.
+			// currentLine should be added to once we are done with the line.
 			while (currentLine < rawLines.Count)
 			{
+				// get raw line, cut it and get indent level.
 				lineData = rawLines[currentLine];
 				if (parseCutLine(ref lineData, ref lineIndent))
 				{
 					indentDifference = lineIndent - blockIndent;
+					// if indentation difference is negative, then exit the block.
 					if (indentDifference < 0)
 					{
 						break;
 					}
+					// indentation unchanged, so just add the line.
+					else if (indentDifference == 0)
+					{
+						lines.Add(new Block.Line(currentLine, lineData, null));
+						++currentLine;
+					}
+					// next level of indentation. Parse as a sub block, then add to last line.
 					else if (indentDifference == +1)
 					{
-						int lineIndex = lines.Count - 1;
 						var subBlock = parseBlock(rawLines, ref currentLine, lineIndent);
-
-						if (lineIndex < 0)
+						if (lines.Count == 0)
 						{
-							// ToDo : Warning invalid indatation.
+							// ToDo : Warning invalid indatation. (not sure if this error is even possible.)
 							lines.Add(new Block.Line(-1, "", subBlock));
 						}
 						else
 						{
-							var tmp = lines[lineIndex];
-							lines[lineIndex] = new Block.Line(tmp.LineNumber, tmp.Data, subBlock);
+							var tmp = lines[lines.Count - 1];
+							lines[lines.Count - 1] = new Block.Line(tmp.LineNumber, tmp.Data, subBlock);
 						}
-					}
-					else if (indentDifference == 0) // indentation unchanged, so just add the line.
-					{
-						lines.Add(new Block.Line(currentLine, lineData, null));
-						++currentLine;
 					}
 					else // invalid indentation.
 					{
@@ -137,9 +157,10 @@ namespace TeaseAI_CE.Scripting
 						++currentLine;
 					}
 				}
-				else
+				else // line was empty
 					++currentLine;
 			}
+
 			if (lines.Count > 0)
 				return new Block(lines.ToArray());
 			return null;
@@ -193,34 +214,31 @@ namespace TeaseAI_CE.Scripting
 			return true;
 		}
 
-		public void Start()
-		{
-			threadRun = true;
-			if (!thread.IsAlive)
-				thread.Start();
-			// ToDo : Add proper checks for thread start and stop.
-		}
-		public void Stop()
-		{
-			threadRun = false;
-			if (thread.IsAlive)
-				thread.Abort();
-		}
-
 
 		public Personality CreatePersonality()
 		{
-			var p = new Personality();
-
-			personalities.Add(p);
-			return p;
+			personControlLock.EnterWriteLock();
+			try
+			{
+				var p = new Personality();
+				personalities.Add(p);
+				return p;
+			}
+			finally
+			{ personControlLock.ExitWriteLock(); }
 		}
 
 		public Controller CreateController(Personality p)
 		{
-			var c = new Controller(this, p);
-			controllers.Add(c);
-			return c;
+			personControlLock.EnterWriteLock();
+			try
+			{
+				var c = new Controller(this, p);
+				controllers.Add(c);
+				return c;
+			}
+			finally
+			{ personControlLock.ExitWriteLock(); }
 		}
 
 		public Script GetScript(string name)
@@ -237,6 +255,34 @@ namespace TeaseAI_CE.Scripting
 				scriptsLock.ExitReadLock();
 			}
 			return result;
+		}
+
+		public void Start()
+		{
+			if (thread == null || !thread.IsAlive)
+			{
+				threadRun = true;
+				thread = new Thread(threadTick);
+				thread.Start();
+			}
+		}
+		public void Stop()
+		{
+			threadRun = false;
+			if (thread != null)
+			{
+				foreach (var c in controllers) // stop all timmers
+					c.timmer.Stop();
+				for (int i = 0; i < 10; ++i) // wait one second for thread to stop on it's own.
+					if (thread.IsAlive)
+						Thread.Sleep(100);
+				if (thread.IsAlive)
+				{
+					thread.Abort();
+					thread.Join();
+				}
+				thread = null;
+			}
 		}
 
 		private void threadTick()
