@@ -116,17 +116,15 @@
       <DependentUpon>Media.cs</DependentUpon>
     </EmbeddedResource>
     <None Include="app.config" />
+    <None Include="scripts\test.vtscript">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Scripting\Scripting.csproj">
       <Project>{7624e975-6cbd-4229-9795-e875f3e978ec}</Project>
       <Name>Scripting</Name>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="scripts\dummy.txt">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

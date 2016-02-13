@@ -1,3 +1,0 @@
-﻿Welcome!
-This is a dummy file, and does not represent any scripting.
-Bye!

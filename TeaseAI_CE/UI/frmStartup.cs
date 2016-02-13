@@ -23,16 +23,12 @@ namespace TeaseAI_CE.UI
 		private void frmStartup_Shown(object sender, EventArgs e)
 		{
 			vm = new VM();
-			if (!vm.Load())
-			{
-				MessageBox.Show("Unable to load dummy!");
-				Application.Exit();
-				return;
-			}
+			vm.LoadScripts("scripts");
 
 			var persona = vm.CreatePersonality();
 			var controller = vm.CreateController(persona);
 			controller.Interval = 2000;
+			controller.Script = vm.GetScript("script.welcome");
 
 
 			bool split = MessageBox.Show("Yes for dual window, no for single window", "", MessageBoxButtons.YesNo) == DialogResult.Yes;

@@ -30,6 +30,9 @@ namespace TeaseAI_CE.Scripting
 		//Replace with stack:
 		private int line = 0;
 
+		// TEMP
+		public Script Script;
+
 		internal Controller(VM vm, Personality personality)
 		{
 			this.vm = vm;
@@ -38,11 +41,11 @@ namespace TeaseAI_CE.Scripting
 
 		public void Tick()
 		{
-			if (line >= vm.script.Count)
+			if (Script == null || line >= Script.Lines.Length)
 				return;
 
 			if (OnOutput != null)
-				OnOutput.Invoke(vm.script[line]);
+				OnOutput.Invoke(Script.Lines[line].Data);
 
 			++line;
 		}

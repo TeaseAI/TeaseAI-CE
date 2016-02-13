@@ -1,0 +1,20 @@
+﻿// This script is just for testing.
+
+Script.One
+	Hello // Comment test
+	#if(true)
+		It's true
+		#if(true)
+			It's too deep!
+	#if(false)
+		Note: This is not executing anything yet.
+	Bye!
+	
+Script.Two
+	Different script?
+
+Script.Welcome
+	Hello!
+	Welcome to a test script.
+	There is not much here.
+	Bye!

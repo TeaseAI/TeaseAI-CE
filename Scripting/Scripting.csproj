@@ -36,8 +36,11 @@
     <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Block.cs" />
     <Compile Include="Controller.cs" />
     <Compile Include="Personality.cs" />
+    <Compile Include="Script.cs" />
+    <Compile Include="ScriptBase.cs" />
     <Compile Include="VM.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
