@@ -13,7 +13,7 @@ namespace TeaseAI_CE.Scripting
 		private bool threadRun = false;
 
 		private ReaderWriterLockSlim personControlLock = new ReaderWriterLockSlim();
-		private List<Personality> personalities = new List<Personality>();
+		private Dictionary<string, Personality> personalities = new Dictionary<string, Personality>();
 		private List<Controller> controllers = new List<Controller>();
 
 		private ReaderWriterLockSlim scriptsLock = new ReaderWriterLockSlim();
@@ -215,13 +215,20 @@ namespace TeaseAI_CE.Scripting
 		}
 
 
-		public Personality CreatePersonality()
+		public Personality CreatePersonality(string name)
 		{
+			var key = name.ToLowerInvariant();
 			personControlLock.EnterWriteLock();
 			try
 			{
-				var p = new Personality();
-				personalities.Add(p);
+				if (personalities.ContainsKey(key))
+				{
+					// ToDo : Error personality with name already exists.
+					return null;
+				}
+
+				var p = new Personality(this, name, key);
+				personalities[key] = p;
 				return p;
 			}
 			finally
@@ -233,7 +240,7 @@ namespace TeaseAI_CE.Scripting
 			personControlLock.EnterWriteLock();
 			try
 			{
-				var c = new Controller(this, p);
+				var c = new Controller(p);
 				controllers.Add(c);
 				return c;
 			}

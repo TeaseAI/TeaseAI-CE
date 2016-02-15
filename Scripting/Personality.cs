@@ -10,11 +10,21 @@ namespace TeaseAI_CE.Scripting
 	/// </summary>
 	public class Personality
 	{
+		public readonly VM VM;
+
 		// ToDo : Variables go here
 		// ToDo : List of enabled(or disabled) scripts
 
-		internal Personality()
+		// Name is temp, will be a variable.
+		private string _name, _key;
+		public string Name { get { return _name; } }
+
+		internal Personality(VM vm, string name, string key)
 		{
+			VM = vm;
+			_name = name;
+			_key = key;
 		}
+
 	}
 }

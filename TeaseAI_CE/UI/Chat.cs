@@ -16,16 +16,16 @@ namespace TeaseAI_CE.UI
 			InitializeComponent();
 		}
 
-		public delegate void MessageDelegate(string text);
-		public void Message(string text)
+		public delegate void MessageDelegate(Scripting.Personality p, string text);
+		public void Message(Scripting.Personality p, string text)
 		{
 			if (InvokeRequired)
 			{
-				Invoke(new MessageDelegate(Message), text);
+				Invoke(new MessageDelegate(Message), p, text);
 			}
 			else
 			{
-				chatHistory.Append("System", text);
+				chatHistory.Append(p.Name, text);
 			}
 		}
 	}

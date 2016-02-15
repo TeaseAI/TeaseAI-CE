@@ -23,32 +23,40 @@ namespace TeaseAI_CE.UI
 		private void frmStartup_Shown(object sender, EventArgs e)
 		{
 			vm = new VM();
-			vm.LoadScripts("scripts");
+			vm.LoadScripts("scripts"); // Load all scritps from scripts folder.
 
-			var persona = vm.CreatePersonality();
+			// Create a personality for testing.
+			var persona = vm.CreatePersonality("Lisa");
 			var controller = vm.CreateController(persona);
 			controller.Interval = 2000;
 			controller.Script = vm.GetScript("script.welcome");
 
 
-			bool split = MessageBox.Show("Yes for dual window, no for single window", "", MessageBoxButtons.YesNo) == DialogResult.Yes;
+			bool split = MessageBox.Show("Yes for dual window, no for single window", "", MessageBoxButtons.YesNo, MessageBoxIcon.None, MessageBoxDefaultButton.Button2) == DialogResult.Yes;
 			progressBar1.Value = progressBar1.Maximum;
+
+			// show the main windows and get the glitter and chat controls.
+			Glitter glitter;
+			Chat chat;
 			if (split)
 			{
 				var other = new frmSplitOther();
 				var media = new frmSplitMedia();
 				other.Show();
 				media.Show();
-
-				controller.OnOutput = other.Chat.Message;
+				chat = other.Chat;
+				glitter = other.Glitter;
 			}
 			else
 			{
 				var combined = new frmCombined();
 				combined.Show();
-
-				controller.OnOutput = combined.Chat.Message;
+				chat = combined.Chat;
+				glitter = combined.Glitter;
 			}
+
+			// assign the output of the controller to go to the chat control.
+			controller.OnOutput = chat.Message;
 
 			vm.Start();
 

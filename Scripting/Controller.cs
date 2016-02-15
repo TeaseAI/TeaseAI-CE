@@ -11,7 +11,6 @@ namespace TeaseAI_CE.Scripting
 	/// </summary>
 	public class Controller
 	{
-		private readonly VM vm;
 		private readonly Personality personality;
 
 		/// <summary>
@@ -20,7 +19,7 @@ namespace TeaseAI_CE.Scripting
 		public int Interval;
 		internal Stopwatch timmer = new Stopwatch(); // ToDo : Stopwatch is not optimal.
 
-		public delegate void OutputDelegate(string text);
+		public delegate void OutputDelegate(Personality p, string text);
 		public OutputDelegate OnOutput;
 
 		// ToDo : Stack goes here. (handles the block local variables, where we are in the script, etc..)
@@ -33,9 +32,8 @@ namespace TeaseAI_CE.Scripting
 		// TEMP
 		public Script Script;
 
-		internal Controller(VM vm, Personality personality)
+		internal Controller(Personality personality)
 		{
-			this.vm = vm;
 			this.personality = personality;
 		}
 
@@ -45,7 +43,7 @@ namespace TeaseAI_CE.Scripting
 				return;
 
 			if (OnOutput != null)
-				OnOutput.Invoke(Script.Lines[line].Data);
+				OnOutput.Invoke(personality, Script.Lines[line].Data);
 
 			++line;
 		}
