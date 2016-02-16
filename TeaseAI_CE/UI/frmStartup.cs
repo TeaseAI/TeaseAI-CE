@@ -24,12 +24,13 @@ namespace TeaseAI_CE.UI
 		{
 			vm = new VM();
 			vm.LoadScripts("scripts"); // Load all scritps from scripts folder.
+			// ToDo : At some point we will want to run setups.
 
 			// Create a personality for testing.
 			var persona = vm.CreatePersonality("Lisa");
 			var controller = vm.CreateController(persona);
 			controller.Interval = 2000;
-			controller.Script = vm.GetScript("script.welcome");
+			controller.Script = ((ValueScript)vm.GetVariable(VM.KeyClean("script.test.welcome"))).Value; // Note: this will not be common use.
 
 
 			bool split = MessageBox.Show("Yes for dual window, no for single window", "", MessageBoxButtons.YesNo, MessageBoxIcon.None, MessageBoxDefaultButton.Button2) == DialogResult.Yes;

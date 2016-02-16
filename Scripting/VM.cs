@@ -17,7 +17,8 @@ namespace TeaseAI_CE.Scripting
 		private List<Controller> controllers = new List<Controller>();
 
 		private ReaderWriterLockSlim scriptsLock = new ReaderWriterLockSlim();
-		private Dictionary<string, Script> scripts = new Dictionary<string, Script>();
+		private List<Script> scriptSetups = new List<Script>();
+		private Dictionary<string, ValueScript> scripts = new Dictionary<string, ValueScript>();
 
 		public const char IndentChar = '\t';
 
@@ -77,25 +78,56 @@ namespace TeaseAI_CE.Scripting
 			Block tmpBlock = parseBlock(rawLines, ref currentLine, 0);
 			if (tmpBlock == null)
 				return false;
+
+			// get the base script key from the file name.
+			var fileKey = KeyClean(Path.GetFileNameWithoutExtension(file));
+			// ToDo : script file info class.
+			// somthing that has a list of all the scripts that where in the file.
+
 			// go thought each root block, and add it to the system.
 			foreach (var line in tmpBlock.Lines)
 			{
 				if (line.SubBlock == null)
 					continue;
-				if (line.Data.StartsWith("script", StringComparison.InvariantCultureIgnoreCase))
+				var keySplit = KeySplit(KeyClean(line.Data));
+				if (keySplit.Length == 1)
 				{
-					scriptsLock.EnterWriteLock();
-					try
+					if (keySplit[0] == "setup")
 					{
-						scripts[line.Data.ToLowerInvariant()] = new Script(line.SubBlock.Lines);
+						scriptsLock.EnterWriteLock();
+						try
+						{ scriptSetups.Add(new Script(line.SubBlock.Lines)); }
+						finally
+						{ scriptsLock.ExitWriteLock(); }
 					}
-					finally
-					{ scriptsLock.ExitWriteLock(); }
-
+					else
+					{
+						// ToDo : warning unknown root type.
+					}
 				}
-				else
+				else if (keySplit.Length == 2)
 				{
-					// ToDo : warning unknown root type.
+					var key = fileKey + '.' + keySplit[1];
+					switch (keySplit[0])
+					{
+						case "script":
+							scriptsLock.EnterWriteLock();
+							try
+							{ scripts[key] = new ValueScript(new Script(line.SubBlock.Lines)); }
+							finally
+							{ scriptsLock.ExitWriteLock(); }
+							break;
+						case "list":
+							scriptsLock.EnterWriteLock();
+							try
+							{ } // ToDo : List
+							finally
+							{ scriptsLock.ExitWriteLock(); }
+							break;
+						default:
+							// ToDo : warning unknown root type.
+							break;
+					}
 				}
 			}
 			return true;
@@ -217,7 +249,7 @@ namespace TeaseAI_CE.Scripting
 
 		public Personality CreatePersonality(string name)
 		{
-			var key = CleanKey(name);
+			var key = KeyClean(name);
 			personControlLock.EnterWriteLock();
 			try
 			{
@@ -248,34 +280,41 @@ namespace TeaseAI_CE.Scripting
 			{ personControlLock.ExitWriteLock(); }
 		}
 
-		public Script GetScript(string name)
-		{
-			var key = CleanKey(name);
-			scriptsLock.EnterReadLock();
-			try
-			{
-				Script result = null;
-				scripts.TryGetValue(key, out result);
-				return result;
-			}
-			finally
-			{ scriptsLock.ExitReadLock(); }
-		}
-
 		public ValueObj GetVariable(string key)
 		{
 			// ToDo : Error logging
-			var keys = key.Split(new char[] { '.' }, 2);
-			if (keys.Length != 2 || keys[0].Length == 0)
+			var keySplit = KeySplit(key);
+			if (keySplit.Length != 2 || keySplit[0].Length == 0)
 				return null;
 
-			// ToDo : Finish
-			//switch (keys[0])
-			//{
-			//	case "script":
+			switch (keySplit[0])
+			{
+				case "script":
+					scriptsLock.EnterReadLock();
+					try
+					{
+						ValueScript result;
+						scripts.TryGetValue(keySplit[1], out result);
+						return result;
+					}
+					finally
+					{ scriptsLock.ExitReadLock(); }
 
-			//}
-			return null;
+
+				// ToDo 9: Question: Should personalities be under a namespace like personas or something?
+				default: // it may be a personality
+					personControlLock.EnterReadLock();
+					try
+					{
+						Personality result;
+						if (personalities.TryGetValue(keySplit[1], out result))
+							return new ValuePersonality(result);
+						// ToDo : Log error unable to find personality.
+						return null;
+					}
+					finally
+					{ personControlLock.ExitReadLock(); }
+			}
 		}
 
 		public void Start()
@@ -330,7 +369,7 @@ namespace TeaseAI_CE.Scripting
 		/// <summary>
 		/// Removes white-space, sets lowercase, removes invalid characters.
 		/// </summary>
-		public static string CleanKey(string key)
+		public static string KeyClean(string key)
 		{
 			var array = key.ToCharArray();
 			char c;
@@ -345,6 +384,11 @@ namespace TeaseAI_CE.Scripting
 					array[i] = char.ToLowerInvariant(c);
 			}
 			return new string(array);
+		}
+		private readonly static char[] keySeparator = { '.' };
+		public static string[] KeySplit(string key)
+		{
+			return key.Split(keySeparator, 2);
 		}
 	}
 }

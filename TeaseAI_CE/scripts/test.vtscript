@@ -1,5 +1,8 @@
 ﻿// This script is just for testing.
 
+Setup
+	// 
+
 Script.One
 	Hello // Comment test
 	#if(true)
