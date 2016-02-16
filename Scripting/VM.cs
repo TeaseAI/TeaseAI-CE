@@ -75,7 +75,7 @@ namespace TeaseAI_CE.Scripting
 
 			// split-up the lines in to indatation based blocks.
 			int currentLine = 0;
-			Block tmpBlock = parseBlock(rawLines, ref currentLine, 0);
+			Block tmpBlock = parseBlock(rawLines, ref currentLine, 0, null, true);
 			if (tmpBlock == null)
 				return false;
 
@@ -87,7 +87,8 @@ namespace TeaseAI_CE.Scripting
 			// go thought each root block, and add it to the system.
 			foreach (var line in tmpBlock.Lines)
 			{
-				if (line.SubBlock == null)
+				BlockBase block = line.SubBlock as BlockBase;
+				if (block == null)
 					continue;
 				var keySplit = KeySplit(KeyClean(line.Data));
 				if (keySplit.Length == 1)
@@ -96,7 +97,7 @@ namespace TeaseAI_CE.Scripting
 					{
 						scriptsLock.EnterWriteLock();
 						try
-						{ scriptSetups.Add(new Script(line.SubBlock.Lines)); }
+						{ scriptSetups.Add(new Script(block)); }
 						finally
 						{ scriptsLock.ExitWriteLock(); }
 					}
@@ -113,7 +114,7 @@ namespace TeaseAI_CE.Scripting
 						case "script":
 							scriptsLock.EnterWriteLock();
 							try
-							{ scripts[key] = new ValueScript(new Script(line.SubBlock.Lines)); }
+							{ scripts[key] = new ValueScript(new Script(block)); }
 							finally
 							{ scriptsLock.ExitWriteLock(); }
 							break;
@@ -140,15 +141,19 @@ namespace TeaseAI_CE.Scripting
 		/// <param name="currentLine"></param>
 		/// <param name="blockIndent">Indent level this block is at.</param>
 		/// <returns>Block with lines, or null if zero lines.</returns>
-		private Block parseBlock(List<string> rawLines, ref int currentLine, int blockIndent)
+		private Block parseBlock(List<string> rawLines, ref int currentLine, int blockIndent, BlockBase.Logger log, bool isRoot)
 		{
 			// temp list of lines, until we are finished parsing.
 			var lines = new List<Block.Line>();
 
+			bool isBase = log == null || isRoot;
+			if (log == null)
+				log = new BlockBase.Logger();
+
 			string lineData;
 			int lineIndent = 0;
 			int indentDifference;
-			// Note: This loop is picky, do NOT edit untilss you understand what is happening.
+			// Note: This loop is picky, do NOT edit unilss you understand what is happening.
 			// currentLine should be added to once we are done with the line.
 			while (currentLine < rawLines.Count)
 			{
@@ -171,7 +176,11 @@ namespace TeaseAI_CE.Scripting
 					// next level of indentation. Parse as a sub block, then add to last line.
 					else if (indentDifference == +1)
 					{
-						var subBlock = parseBlock(rawLines, ref currentLine, lineIndent);
+						Block subBlock;
+						if (isRoot)
+							subBlock = parseBlock(rawLines, ref currentLine, lineIndent, null, false);
+						else
+							subBlock = parseBlock(rawLines, ref currentLine, lineIndent, log, false);
 						if (lines.Count == 0)
 						{
 							// ToDo : Warning invalid indatation. (not sure if this error is even possible.)
@@ -193,9 +202,12 @@ namespace TeaseAI_CE.Scripting
 					++currentLine;
 			}
 
-			if (lines.Count > 0)
+			if (lines.Count == 0)
+				return null;
+			if (isBase)
+				return new BlockBase(log, lines.ToArray());
+			else
 				return new Block(lines.ToArray());
-			return null;
 		}
 
 		/// <summary>
