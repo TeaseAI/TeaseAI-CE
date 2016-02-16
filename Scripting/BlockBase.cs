@@ -5,10 +5,10 @@ using System.Text;
 
 namespace TeaseAI_CE.Scripting
 {
-	public class ScriptBase : Block
+	public class BlockBase : Block
 	{
 		// ToDo : Validater, Logger
-		public ScriptBase(Line[] lines) : base(lines)
+		public BlockBase(Line[] lines) : base(lines)
 		{ }
 	}
 }

@@ -40,7 +40,7 @@
     <Compile Include="Controller.cs" />
     <Compile Include="Personality.cs" />
     <Compile Include="Script.cs" />
-    <Compile Include="ScriptBase.cs" />
+    <Compile Include="BlockBase.cs" />
     <Compile Include="ValueObjects.cs" />
     <Compile Include="VM.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

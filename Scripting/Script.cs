@@ -5,7 +5,7 @@ using System.Text;
 
 namespace TeaseAI_CE.Scripting
 {
-	public class Script : ScriptBase
+	public class Script : BlockBase
 	{
 		public Script(Line[] lines) : base(lines)
 		{ }

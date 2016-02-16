@@ -10,7 +10,7 @@ namespace TeaseAI_CE.Scripting
 	public class VM
 	{
 		private Thread thread = null;
-		private bool threadRun = false;
+		private volatile bool threadRun = false;
 
 		private ReaderWriterLockSlim personControlLock = new ReaderWriterLockSlim();
 		private Dictionary<string, Personality> personalities = new Dictionary<string, Personality>();
@@ -280,7 +280,7 @@ namespace TeaseAI_CE.Scripting
 			{ personControlLock.ExitWriteLock(); }
 		}
 
-		public ValueObj GetVariable(string key)
+		internal ValueObj GetVariable(string key)
 		{
 			// ToDo : Error logging
 			var keySplit = KeySplit(key);
@@ -300,9 +300,7 @@ namespace TeaseAI_CE.Scripting
 					finally
 					{ scriptsLock.ExitReadLock(); }
 
-
-				// ToDo 9: Question: Should personalities be under a namespace like personas or something?
-				default: // it may be a personality
+				case "personality":
 					personControlLock.EnterReadLock();
 					try
 					{
@@ -314,6 +312,13 @@ namespace TeaseAI_CE.Scripting
 					}
 					finally
 					{ personControlLock.ExitReadLock(); }
+
+
+
+
+				default: // Function
+
+					return null;
 			}
 		}
 

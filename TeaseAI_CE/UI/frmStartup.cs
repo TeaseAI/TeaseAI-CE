@@ -30,7 +30,7 @@ namespace TeaseAI_CE.UI
 			var persona = vm.CreatePersonality("Lisa");
 			var controller = vm.CreateController(persona);
 			controller.Interval = 2000;
-			controller.Script = ((ValueScript)vm.GetVariable(VM.KeyClean("script.test.welcome"))).Value; // Note: this will not be common use.
+			controller.Script = ((ValueScript)persona.GetVariable(VM.KeyClean("script.test.welcome"))).Value; // Note: this will not be common use.
 
 
 			bool split = MessageBox.Show("Yes for dual window, no for single window", "", MessageBoxButtons.YesNo, MessageBoxIcon.None, MessageBoxDefaultButton.Button2) == DialogResult.Yes;
