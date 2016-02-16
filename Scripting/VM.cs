@@ -217,7 +217,7 @@ namespace TeaseAI_CE.Scripting
 
 		public Personality CreatePersonality(string name)
 		{
-			var key = name.ToLowerInvariant();
+			var key = CleanKey(name);
 			personControlLock.EnterWriteLock();
 			try
 			{
@@ -250,18 +250,32 @@ namespace TeaseAI_CE.Scripting
 
 		public Script GetScript(string name)
 		{
-			var key = name.ToLowerInvariant();
-			Script result = null;
+			var key = CleanKey(name);
 			scriptsLock.EnterReadLock();
 			try
 			{
-				result = scripts[key];
+				Script result = null;
+				scripts.TryGetValue(key, out result);
+				return result;
 			}
 			finally
-			{
-				scriptsLock.ExitReadLock();
-			}
-			return result;
+			{ scriptsLock.ExitReadLock(); }
+		}
+
+		public ValueObj GetVariable(string key)
+		{
+			// ToDo : Error logging
+			var keys = key.Split(new char[] { '.' }, 2);
+			if (keys.Length != 2 || keys[0].Length == 0)
+				return null;
+
+			// ToDo : Finish
+			//switch (keys[0])
+			//{
+			//	case "script":
+
+			//}
+			return null;
 		}
 
 		public void Start()
@@ -311,6 +325,26 @@ namespace TeaseAI_CE.Scripting
 				}
 				Thread.Sleep(50);
 			}
+		}
+
+		/// <summary>
+		/// Removes white-space, sets lowercase, removes invalid characters.
+		/// </summary>
+		public static string CleanKey(string key)
+		{
+			var array = key.ToCharArray();
+			char c;
+			for (int i = 0; i < array.Length; ++i)
+			{
+				c = array[i];
+				if (char.IsWhiteSpace(c))
+					array[i] = '_';
+				//else if (c == '#' || c == '@')
+				//	array[i] = '?';
+				else
+					array[i] = char.ToLowerInvariant(c);
+			}
+			return new string(array);
 		}
 	}
 }

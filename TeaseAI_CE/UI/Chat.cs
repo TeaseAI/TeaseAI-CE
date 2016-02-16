@@ -25,7 +25,11 @@ namespace TeaseAI_CE.UI
 			}
 			else
 			{
-				chatHistory.Append(p.Name, text);
+				string name = "NameNotFound";
+				var nameVar = p.GetVariable(".name") as Scripting.ValueString;
+				if (nameVar != null)
+					name = nameVar.Value;
+				chatHistory.Append(name, text);
 			}
 		}
 	}
