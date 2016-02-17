@@ -28,23 +28,28 @@ namespace TeaseAI_CE.Scripting
 			_key = key;
 		}
 
-		public ValueObj GetVariable(string key)
+		public ValueObj GetVariable(string key, Logger log)
 		{
 			if (key == null || key.Length == 0)
+			{
+				log.Error("GetVariable: key is empty!");
 				return null;
+			}
 
+			// variables starting wtih . is short hand for this personality.
 			if (key[0] == '.')
-				return getVariable_internal(key.Substring(1, key.Length - 1));
+				return getVariable_internal(key.Substring(1, key.Length - 1), log);
 
-			return VM.GetVariable(key);
+			return VM.GetVariable(key, log);
 		}
-		private ValueObj getVariable_internal(string key)
+		private ValueObj getVariable_internal(string key, Logger log)
 		{
 			varLock.EnterReadLock();
 			try
 			{
 				ValueObj result;
-				variables.TryGetValue(key, out result);
+				if (!variables.TryGetValue(key, out result))
+					log.Error("Variable does not exist: " + key);
 				return result;
 			}
 			finally

@@ -38,6 +38,7 @@
   <ItemGroup>
     <Compile Include="Block.cs" />
     <Compile Include="Controller.cs" />
+    <Compile Include="Logger.cs" />
     <Compile Include="Personality.cs" />
     <Compile Include="Script.cs" />
     <Compile Include="BlockBase.cs" />

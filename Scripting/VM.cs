@@ -141,14 +141,14 @@ namespace TeaseAI_CE.Scripting
 		/// <param name="currentLine"></param>
 		/// <param name="blockIndent">Indent level this block is at.</param>
 		/// <returns>Block with lines, or null if zero lines.</returns>
-		private Block parseBlock(List<string> rawLines, ref int currentLine, int blockIndent, BlockBase.Logger log, bool isRoot)
+		private Block parseBlock(List<string> rawLines, ref int currentLine, int blockIndent, Logger log, bool isRoot)
 		{
 			// temp list of lines, until we are finished parsing.
 			var lines = new List<Block.Line>();
 
 			bool isBase = log == null || isRoot;
 			if (log == null)
-				log = new BlockBase.Logger();
+				log = new Logger();
 
 			string lineData;
 			int lineIndent = 0;
@@ -157,6 +157,7 @@ namespace TeaseAI_CE.Scripting
 			// currentLine should be added to once we are done with the line.
 			while (currentLine < rawLines.Count)
 			{
+				log.SetId(currentLine);
 				// get raw line, cut it and get indent level.
 				lineData = rawLines[currentLine];
 				if (parseCutLine(ref lineData, ref lineIndent))
@@ -183,7 +184,7 @@ namespace TeaseAI_CE.Scripting
 							subBlock = parseBlock(rawLines, ref currentLine, lineIndent, log, false);
 						if (lines.Count == 0)
 						{
-							// ToDo : Warning invalid indatation. (not sure if this error is even possible.)
+							log.Warning("Invalid indatation. (not sure if this error is even possible.)");
 							lines.Add(new Block.Line(-1, "", subBlock));
 						}
 						else
@@ -194,7 +195,7 @@ namespace TeaseAI_CE.Scripting
 					}
 					else // invalid indentation.
 					{
-						// ToDo : Error invalid indentation.
+						log.Warning("Invalid indentation.");
 						++currentLine;
 					}
 				}
@@ -292,12 +293,20 @@ namespace TeaseAI_CE.Scripting
 			{ personControlLock.ExitWriteLock(); }
 		}
 
-		internal ValueObj GetVariable(string key)
+		internal ValueObj GetVariable(string key, Logger log)
 		{
-			// ToDo : Error logging
 			var keySplit = KeySplit(key);
-			if (keySplit.Length != 2 || keySplit[0].Length == 0)
-				return null;
+
+			if (keySplit.Length == 1)
+			{
+				switch (keySplit[0])
+				{
+					case "script":
+					case "personality":
+						log.Error("No " + keySplit[0] + " specified!");
+						return null;
+				}
+			}
 
 			switch (keySplit[0])
 			{
@@ -306,7 +315,8 @@ namespace TeaseAI_CE.Scripting
 					try
 					{
 						ValueScript result;
-						scripts.TryGetValue(keySplit[1], out result);
+						if (!scripts.TryGetValue(keySplit[1], out result))
+							log.Error("Script not found: " + keySplit[1]);
 						return result;
 					}
 					finally
@@ -319,7 +329,8 @@ namespace TeaseAI_CE.Scripting
 						Personality result;
 						if (personalities.TryGetValue(keySplit[1], out result))
 							return new ValuePersonality(result);
-						// ToDo : Log error unable to find personality.
+						else
+							log.Error("Personality not found: " + keySplit[1]);
 						return null;
 					}
 					finally
@@ -327,9 +338,8 @@ namespace TeaseAI_CE.Scripting
 
 
 
-
-				default: // Function
-
+				default: // Function?
+					log.Error("Function not found or bad namespace: " + keySplit[0]);
 					return null;
 			}
 		}
