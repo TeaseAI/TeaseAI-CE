@@ -7,6 +7,9 @@ using System.Threading;
 
 namespace TeaseAI_CE.Scripting
 {
+	/// <summary>
+	/// Main 'world' object, needs to know about all scripts, personalities, controllers, functions, etc..
+	/// </summary>
 	public class VM
 	{
 		private Thread thread = null;
@@ -22,6 +25,167 @@ namespace TeaseAI_CE.Scripting
 
 		public const char IndentChar = '\t';
 
+		#region Tick thread
+		/// <summary> Starts the controller update thread </summary>
+		public void Start()
+		{
+			if (thread == null || !thread.IsAlive)
+			{
+				threadRun = true;
+				thread = new Thread(threadTick);
+				thread.Start();
+			}
+		}
+		/// <summary> Stop controller updating. </summary>
+		public void Stop()
+		{
+			threadRun = false;
+			if (thread != null)
+			{
+				foreach (var c in controllers) // stop all timmers
+					c.timmer.Stop();
+				for (int i = 0; i < 10; ++i) // wait one second for thread to stop on it's own.
+					if (thread.IsAlive)
+						Thread.Sleep(100);
+				if (thread.IsAlive)
+				{
+					thread.Abort();
+					thread.Join();
+				}
+				thread = null;
+			}
+		}
+
+		/// <summary> Updates all controllers. </summary>
+		private void threadTick()
+		{
+			while (threadRun)
+			{
+				// update all controllers
+				foreach (var c in controllers)
+				{
+					if (!c.timmer.IsRunning)
+						c.timmer.Start();
+					if (c.timmer.ElapsedMilliseconds > c.Interval)
+					{
+						c.timmer.Stop();
+						c.timmer.Reset();
+						c.timmer.Start();
+						c.Tick();
+					}
+				}
+				Thread.Sleep(50);
+			}
+		}
+		#endregion
+
+		/// <summary>
+		/// Craete a new personality with given name.
+		/// </summary>
+		/// <param name="name"></param>
+		/// <returns>New Personality or null if name already exits.</returns>
+		public Personality CreatePersonality(string name)
+		{
+			var key = KeyClean(name);
+			personControlLock.EnterWriteLock();
+			try
+			{
+				if (personalities.ContainsKey(key))
+				{
+					// ToDo : Error personality with name already exists.
+					return null;
+				}
+
+				var p = new Personality(this, name, key);
+				personalities[key] = p;
+				return p;
+			}
+			finally
+			{ personControlLock.ExitWriteLock(); }
+		}
+
+		/// <summary>
+		/// Creates a new controller for the given personality.
+		/// </summary>
+		/// <param name="p"></param>
+		/// <returns></returns>
+		public Controller CreateController(Personality p)
+		{
+			personControlLock.EnterWriteLock();
+			try
+			{
+				var c = new Controller(p);
+				controllers.Add(c);
+				return c;
+			}
+			finally
+			{ personControlLock.ExitWriteLock(); }
+		}
+
+		/// <summary>
+		/// Get a variable, or null if not found.
+		/// </summary>
+		/// <param name="key">Clean key</param>
+		/// <param name="log"></param>
+		/// <returns></returns>
+		internal ValueObj GetVariable(string key, Logger log)
+		{
+			var keySplit = KeySplit(key);
+
+			if (keySplit.Length == 1)
+			{
+				switch (keySplit[0])
+				{
+					case "script":
+					case "personality":
+						log.Error("No " + keySplit[0] + " specified!");
+						return null;
+				}
+			}
+
+			switch (keySplit[0])
+			{
+				case "script":
+					scriptsLock.EnterReadLock();
+					try
+					{
+						ValueScript result;
+						if (!scripts.TryGetValue(keySplit[1], out result))
+							log.Error("Script not found: " + keySplit[1]);
+						return result;
+					}
+					finally
+					{ scriptsLock.ExitReadLock(); }
+
+				// return personality or a variable from the personailty.
+				case "personality":
+					var pKey = KeySplit(keySplit[1]); // split key into [0]personality key, [1]variable key
+					personControlLock.EnterReadLock();
+					try
+					{
+						Personality p;
+						if (personalities.TryGetValue(pKey[0], out p))
+						{
+							if (pKey.Length == 2) // return variable if we have key.
+								return p.getVariable_internal(pKey[1], log);
+							else // else just return the personality.
+								return new ValuePersonality(p);
+						}
+						log.Error("Personality not found: " + pKey[0]);
+						return null;
+					}
+					finally
+					{ personControlLock.ExitReadLock(); }
+
+
+
+				default: // Function?
+					log.Error("Function not found or bad namespace: " + keySplit[0]);
+					return null;
+			}
+		}
+
+		#region Loading and parsing files
 
 		/// <summary>
 		/// Load scripts with .vtscript in path and all sub directories.
@@ -259,139 +423,13 @@ namespace TeaseAI_CE.Scripting
 			return true;
 		}
 
+		#endregion
 
-		public Personality CreatePersonality(string name)
-		{
-			var key = KeyClean(name);
-			personControlLock.EnterWriteLock();
-			try
-			{
-				if (personalities.ContainsKey(key))
-				{
-					// ToDo : Error personality with name already exists.
-					return null;
-				}
-
-				var p = new Personality(this, name, key);
-				personalities[key] = p;
-				return p;
-			}
-			finally
-			{ personControlLock.ExitWriteLock(); }
-		}
-
-		public Controller CreateController(Personality p)
-		{
-			personControlLock.EnterWriteLock();
-			try
-			{
-				var c = new Controller(p);
-				controllers.Add(c);
-				return c;
-			}
-			finally
-			{ personControlLock.ExitWriteLock(); }
-		}
-
-		internal ValueObj GetVariable(string key, Logger log)
-		{
-			var keySplit = KeySplit(key);
-
-			if (keySplit.Length == 1)
-			{
-				switch (keySplit[0])
-				{
-					case "script":
-					case "personality":
-						log.Error("No " + keySplit[0] + " specified!");
-						return null;
-				}
-			}
-
-			switch (keySplit[0])
-			{
-				case "script":
-					scriptsLock.EnterReadLock();
-					try
-					{
-						ValueScript result;
-						if (!scripts.TryGetValue(keySplit[1], out result))
-							log.Error("Script not found: " + keySplit[1]);
-						return result;
-					}
-					finally
-					{ scriptsLock.ExitReadLock(); }
-
-				case "personality":
-					personControlLock.EnterReadLock();
-					try
-					{
-						Personality result;
-						if (personalities.TryGetValue(keySplit[1], out result))
-							return new ValuePersonality(result);
-						else
-							log.Error("Personality not found: " + keySplit[1]);
-						return null;
-					}
-					finally
-					{ personControlLock.ExitReadLock(); }
+		#region executing lines
 
 
 
-				default: // Function?
-					log.Error("Function not found or bad namespace: " + keySplit[0]);
-					return null;
-			}
-		}
-
-		public void Start()
-		{
-			if (thread == null || !thread.IsAlive)
-			{
-				threadRun = true;
-				thread = new Thread(threadTick);
-				thread.Start();
-			}
-		}
-		public void Stop()
-		{
-			threadRun = false;
-			if (thread != null)
-			{
-				foreach (var c in controllers) // stop all timmers
-					c.timmer.Stop();
-				for (int i = 0; i < 10; ++i) // wait one second for thread to stop on it's own.
-					if (thread.IsAlive)
-						Thread.Sleep(100);
-				if (thread.IsAlive)
-				{
-					thread.Abort();
-					thread.Join();
-				}
-				thread = null;
-			}
-		}
-
-		private void threadTick()
-		{
-			while (threadRun)
-			{
-				// update all controllers
-				foreach (var c in controllers)
-				{
-					if (!c.timmer.IsRunning)
-						c.timmer.Start();
-					if (c.timmer.ElapsedMilliseconds > c.Interval)
-					{
-						c.timmer.Stop();
-						c.timmer.Reset();
-						c.timmer.Start();
-						c.Tick();
-					}
-				}
-				Thread.Sleep(50);
-			}
-		}
+		#endregion
 
 		/// <summary>
 		/// Removes white-space, sets lowercase, removes invalid characters.

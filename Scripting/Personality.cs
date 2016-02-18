@@ -42,7 +42,7 @@ namespace TeaseAI_CE.Scripting
 
 			return VM.GetVariable(key, log);
 		}
-		private ValueObj getVariable_internal(string key, Logger log)
+		internal ValueObj getVariable_internal(string key, Logger log)
 		{
 			varLock.EnterReadLock();
 			try
