@@ -35,6 +35,9 @@ namespace VLCTest
             this.vlcControl1.Spu = -1;
             this.vlcControl1.TabIndex = 1;
             this.vlcControl1.Text = "vlcControl1";
+            ///####################################
+            /// CRUCIAL PART: This needs to point to a local "install" of vlc player version 1.1.11 or lower
+            ///####################################
             this.vlcControl1.VlcLibDirectory = new DirectoryInfo(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + @"\vlc");
             this.vlcControl1.VlcMediaplayerOptions = null;
 
