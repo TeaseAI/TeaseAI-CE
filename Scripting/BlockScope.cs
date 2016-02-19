@@ -32,5 +32,18 @@ namespace TeaseAI_CE.Scripting
 			Line = line;
 			Variables = variables;
 		}
+
+		public ValueObj GetVariable(string key)
+		{
+			if (key.StartsWith(".local"))
+			{
+				ValueObj result;
+				if (!Variables.TryGetValue(key, out result))
+					Root.Log.Error("Variable does not exist in the current scope: " + key);
+				return result;
+			}
+			else
+				return Controller.Personality.GetVariable(key, Root.Log);
+		}
 	}
 }

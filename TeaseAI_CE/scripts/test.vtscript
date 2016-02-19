@@ -17,7 +17,7 @@ Script.Two
 	Different script?
 
 Script.Welcome
-	Hello!
+	Hello, my name is @.Name .
 	Welcome to a test script.
 	There is not much here.
 	Bye!

@@ -16,6 +16,19 @@ namespace TeaseAI_CE.Scripting
 		public override abstract string ToString();
 	}
 
+	public class ValueFunction : ValueObj
+	{
+		private VM.Function _value;
+		public VM.Function Value
+		{
+			get { return _value; }
+			set { Interlocked.Exchange(ref _value, value); }
+		}
+		public ValueFunction(VM.Function value)
+		{ _value = value; }
+		public override string ToString()
+		{ return Value.ToString(); }
+	}
 	public class ValueScript : ValueObj
 	{
 		private Script _value;

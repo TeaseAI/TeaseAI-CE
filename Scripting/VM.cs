@@ -454,8 +454,80 @@ namespace TeaseAI_CE.Scripting
 
 		internal void ExecLine(BlockScope sender, string line, StringBuilder output)
 		{
-			// ToDo : Finish
-			output.Append(line);
+			var log = sender.Root.Log;
+			string key;
+			ValueObj[] args;
+
+			int i = 0;
+			char c;
+			while (i < line.Length)
+			{
+				c = line[i];
+				++i;
+				switch (c)
+				{
+					case '#':
+					case '@':
+						execSplitCommand(sender, line, ref i, out key, out args);
+						if (key != null)
+						{
+							ValueObj variable = sender.GetVariable(key);
+							if (variable == null)
+								return;
+							if (variable is ValueFunction)
+								variable = ((ValueFunction)variable).Value(sender, args, sender.Root.Log);
+							// ToDo : Do we need to do anything to other value types?
+
+							// output if @
+							if (c == '@' && variable != null)
+								output.Append(variable.ToString());
+						}
+						else
+						{
+							if (c == '@' && args != null && args.Length > 0 && args[0] != null)
+								output.Append(args[0].ToString());
+						}
+						break;
+
+					case '\\':
+						// ToDo : escape character.
+						break;
+					default:
+						output.Append(c);
+						break;
+				}
+			}
+		}
+		private void execSplitCommand(BlockScope sender, string str, ref int i, out string key, out ValueObj[] args)
+		{
+			args = null;
+			var sb = new StringBuilder();
+			char c;
+			while (i < str.Length)
+			{
+				c = str[i];
+				++i;
+				if (c == ' ')
+					break;
+				else if (c == '(')
+				{
+					args = execParentheses(sender, str, ref i);
+					break;
+				}
+				sb.Append(c);
+			}
+			if (sb.Length > 0)
+				key = KeyClean(sb.ToString());
+			else
+				key = null;
+			if (args == null)
+				args = new ValueObj[0];
+		}
+
+		private ValueObj[] execParentheses(BlockScope sender, string str, ref int i)
+		{
+			// ToDo : Parentheses
+			return null;
 		}
 
 		#endregion
