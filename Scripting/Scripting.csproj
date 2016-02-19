@@ -36,7 +36,8 @@
     <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Block.cs" />
+    <Compile Include="GroupInfo.cs" />
+    <Compile Include="Line.cs" />
     <Compile Include="Controller.cs" />
     <Compile Include="Logger.cs" />
     <Compile Include="Personality.cs" />

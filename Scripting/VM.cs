@@ -12,6 +12,8 @@ namespace TeaseAI_CE.Scripting
 	/// </summary>
 	public class VM
 	{
+		public delegate ValueObj Function(object sender, ValueObj[] args, Logger log);
+
 		private Thread thread = null;
 		private volatile bool threadRun = false;
 
@@ -199,14 +201,11 @@ namespace TeaseAI_CE.Scripting
 				return;
 			}
 
+			var infos = new List<GroupInfo>();
+
 			var files = Directory.GetFiles(path, "*.vtscript", SearchOption.AllDirectories);
 			foreach (string file in files)
-			{
-				if (!parseFile(file))
-				{
-					// ToDo : Log file unable to load.
-				}
-			}
+				infos.Add(parseFile(file));
 		}
 
 		/// <summary>
@@ -214,12 +213,16 @@ namespace TeaseAI_CE.Scripting
 		/// </summary>
 		/// <param name="file"></param>
 		/// <returns></returns>
-		private bool parseFile(string file)
+		private GroupInfo parseFile(string file)
 		{
+			var fileLog = new Logger();
+			// get the base script key from the file name.
+			var fileKey = KeyClean(Path.GetFileNameWithoutExtension(file));
+
 			if (!File.Exists(file))
 			{
-				// ToDo : Log file does not exist.
-				return false;
+				fileLog.Error("File does not exist!");
+				return new GroupInfo(file, fileKey, fileLog, null);
 			}
 
 			// Read the whole file into a tempary list.
@@ -232,70 +235,100 @@ namespace TeaseAI_CE.Scripting
 			}
 			catch (Exception ex)
 			{
-				// ToDo : Log file read error.
-				System.Diagnostics.Debug.WriteLine(ex.Message);
-				return false;
+				fileLog.Error(ex.Message);
+				return new GroupInfo(file, fileKey, fileLog, null);
 			}
 
 			// split-up the lines in to indatation based blocks.
+			var blocks = new List<BlockBase>();
 			int currentLine = 0;
-			Block tmpBlock = parseBlock(rawLines, ref currentLine, 0, null, true);
-			if (tmpBlock == null)
-				return false;
-
-			// get the base script key from the file name.
-			var fileKey = KeyClean(Path.GetFileNameWithoutExtension(file));
-			// ToDo : script file info class.
-			// somthing that has a list of all the scripts that where in the file.
-
-			// go thought each root block, and add it to the system.
-			foreach (var line in tmpBlock.Lines)
+			string blockKey = null;
+			int blockLine = 0;
+			while (currentLine < rawLines.Count)
 			{
-				BlockBase block = line.SubBlock as BlockBase;
-				if (block == null)
-					continue;
-				var keySplit = KeySplit(KeyClean(line.Data));
-				if (keySplit.Length == 1)
+				string str = rawLines[currentLine];
+				int indent = 0;
+				if (parseCutLine(ref str, ref indent)) // line empty?
 				{
-					if (keySplit[0] == "setup")
+					if (indent == 0) // indent 0 defines what the key of the upcoming object is.
 					{
-						scriptsLock.EnterWriteLock();
-						try
-						{ scriptSetups.Add(new Script(block)); }
-						finally
-						{ scriptsLock.ExitWriteLock(); }
+						blockKey = KeyClean(str);
+						blockLine = currentLine;
+						// make sure key is a valid type.
+						var rootKey = KeySplit(blockKey)[0];
+						if (rootKey != "script" && rootKey != "list" && rootKey != "setup")
+						{
+							fileLog.Error(currentLine, "Invalid root type: " + rootKey);
+							break;
+						}
+						++currentLine;
 					}
-					else
+					else if (indent > 0)
 					{
-						// ToDo : warning unknown root type.
+						if (blockKey == null)
+						{
+							fileLog.Error(currentLine, "Invalid indentation!");
+							break;
+						}
+						var log = new Logger();
+						var lines = parseBlock(rawLines, ref currentLine, indent, log);
+						if (lines == null)
+							blocks.Add(new BlockBase(blockLine, blockKey, null, log));
+						else
+						{
+							// Figureout type of script, then add it.
+							var keySplit = KeySplit(blockKey);
+							if (keySplit.Length == 1)
+							{
+								if (keySplit[0] == "setup")
+								{
+									scriptsLock.EnterWriteLock();
+									try
+									{ scriptSetups.Add(new Script(blockLine, blockKey, lines, log)); }
+									finally
+									{ scriptsLock.ExitWriteLock(); }
+								}
+								else
+								{
+									fileLog.Error(blockLine, "Invalid root type: " + keySplit[0]);
+									break;
+								}
+							}
+							else if (keySplit.Length == 2)
+							{
+								var key = fileKey + '.' + keySplit[1];
+								switch (keySplit[0])
+								{
+									case "script":
+										scriptsLock.EnterWriteLock();
+										try
+										{
+											var script = new Script(blockLine, blockKey, lines, log);
+											blocks.Add(script);
+											scripts[key] = new ValueScript(script);
+										}
+										finally
+										{ scriptsLock.ExitWriteLock(); }
+										break;
+									case "list":
+										scriptsLock.EnterWriteLock();
+										try
+										{ } // ToDo : List
+										finally
+										{ scriptsLock.ExitWriteLock(); }
+										break;
+									default:
+										fileLog.Error(blockLine, "Invalid root type: " + keySplit[0]);
+										return new GroupInfo(file, fileKey, fileLog, blocks.ToArray());
+								}
+							}
+						}
 					}
 				}
-				else if (keySplit.Length == 2)
-				{
-					var key = fileKey + '.' + keySplit[1];
-					switch (keySplit[0])
-					{
-						case "script":
-							scriptsLock.EnterWriteLock();
-							try
-							{ scripts[key] = new ValueScript(new Script(block)); }
-							finally
-							{ scriptsLock.ExitWriteLock(); }
-							break;
-						case "list":
-							scriptsLock.EnterWriteLock();
-							try
-							{ } // ToDo : List
-							finally
-							{ scriptsLock.ExitWriteLock(); }
-							break;
-						default:
-							// ToDo : warning unknown root type.
-							break;
-					}
-				}
+				else
+					++currentLine;
 			}
-			return true;
+			return new GroupInfo(file, fileKey, fileLog, blocks.ToArray());
 		}
 
 		/// <summary>
@@ -305,14 +338,10 @@ namespace TeaseAI_CE.Scripting
 		/// <param name="currentLine"></param>
 		/// <param name="blockIndent">Indent level this block is at.</param>
 		/// <returns>Block with lines, or null if zero lines.</returns>
-		private Block parseBlock(List<string> rawLines, ref int currentLine, int blockIndent, Logger log, bool isRoot)
+		private Line[] parseBlock(List<string> rawLines, ref int currentLine, int blockIndent, Logger log)
 		{
 			// temp list of lines, until we are finished parsing.
-			var lines = new List<Block.Line>();
-
-			bool isBase = log == null || isRoot;
-			if (log == null)
-				log = new Logger();
+			var lines = new List<Line>();
 
 			string lineData;
 			int lineIndent = 0;
@@ -335,26 +364,25 @@ namespace TeaseAI_CE.Scripting
 					// indentation unchanged, so just add the line.
 					else if (indentDifference == 0)
 					{
-						lines.Add(new Block.Line(currentLine, lineData, null));
+						lines.Add(new Line(currentLine, lineData, null));
 						++currentLine;
 					}
 					// next level of indentation. Parse as a sub block, then add to last line.
 					else if (indentDifference == +1)
 					{
-						Block subBlock;
-						if (isRoot)
-							subBlock = parseBlock(rawLines, ref currentLine, lineIndent, null, false);
-						else
-							subBlock = parseBlock(rawLines, ref currentLine, lineIndent, log, false);
+						Line[] block = parseBlock(rawLines, ref currentLine, lineIndent, log);
+						if (block == null) // ignore block if empty
+							continue;
 						if (lines.Count == 0)
 						{
 							log.Warning("Invalid indatation. (not sure if this error is even possible.)");
-							lines.Add(new Block.Line(-1, "", subBlock));
+							lines.Add(new Line(-1, "", block));
 						}
 						else
 						{
+							// replace the last line, with the new lines.
 							var tmp = lines[lines.Count - 1];
-							lines[lines.Count - 1] = new Block.Line(tmp.LineNumber, tmp.Data, subBlock);
+							lines[lines.Count - 1] = new Line(tmp.LineNumber, tmp.Data, block);
 						}
 					}
 					else // invalid indentation.
@@ -369,10 +397,7 @@ namespace TeaseAI_CE.Scripting
 
 			if (lines.Count == 0)
 				return null;
-			if (isBase)
-				return new BlockBase(log, lines.ToArray());
-			else
-				return new Block(lines.ToArray());
+			return lines.ToArray();
 		}
 
 		/// <summary>

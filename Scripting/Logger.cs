@@ -31,8 +31,18 @@ namespace TeaseAI_CE.Scripting
 		{
 			log(message, Level.Error);
 		}
+		public void Error(int line, string message)
+		{
+			SetId(line);
+			log(message, Level.Error);
+		}
 		public void Warning(string message)
 		{
+			log(message, Level.Warning);
+		}
+		public void Warning(int line, string message)
+		{
+			SetId(line);
 			log(message, Level.Warning);
 		}
 		private void log(string message, Level level)

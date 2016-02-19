@@ -5,15 +5,18 @@ using System.Text;
 
 namespace TeaseAI_CE.Scripting
 {
-	public class BlockBase : Block
+	/// <summary>
+	/// Foundation for root level blocks, eg a script, or a list.
+	/// </summary>
+	public class BlockBase : Line
 	{
 		public enum Validation { NeverRan = 0, Running, Passed, Failed }
-		public Logger Log = new Logger();
+		public Logger Log;
 
 		public Validation Valid { get; private set; }
 
-		public BlockBase(BlockBase copy) : this(copy.Log, copy.Lines) { }
-		public BlockBase(Logger log, Line[] lines) : base(lines)
+		//public BlockBase(BlockBase copy) : this(copy.LineNumber, copy.Data, copy.Lines, copy.Log) { }
+		public BlockBase(int lineNumber, string key, Line[] lines, Logger log) : base(lineNumber, key, lines)
 		{
 			Log = log;
 			Valid = Validation.NeverRan;

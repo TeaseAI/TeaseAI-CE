@@ -7,7 +7,7 @@ namespace TeaseAI_CE.Scripting
 {
 	public class Script : BlockBase
 	{
-		public Script(BlockBase copy) : base(copy)
+		public Script(int lineNumber, string key, Line[] lines, Logger log) : base(lineNumber, key, lines, log)
 		{ }
 	}
 }
