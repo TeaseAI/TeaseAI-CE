@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Runtime.Serialization;
 
-namespace WebFiles.TumblrAPI
+namespace TeaseAI_CE.WebFiles.TumblrAPI
 {
     [Serializable]
     [DataContract]

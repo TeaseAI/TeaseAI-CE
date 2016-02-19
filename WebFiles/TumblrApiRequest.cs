@@ -7,7 +7,7 @@ using System.Net;
 using System.IO;
 using TeaseAI_CE.Serialization;
 
-namespace WebFiles.TumblrAPI
+namespace TeaseAI_CE.WebFiles.TumblrAPI
 {
     public class TumblrApiRequest
     {

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace WebFiles.TumblrAPI
+namespace TeaseAI_CE.WebFiles.TumblrAPI
 {
     public enum Command
     {
