@@ -100,5 +100,17 @@ namespace TeaseAI_CE.Serialization
             return obj;
         }
 
-    }
+        public static T DeserializeFromJson<T>(string json)
+        {
+            T obj;
+
+            MemoryStream ms = new MemoryStream(Encoding.Default.GetBytes(json));
+            DataContractJsonSerializer ser = new DataContractJsonSerializer(typeof(T));
+
+            obj = (T)ser.ReadObject(ms);
+
+            return obj;
+        }
+
+}
 }
