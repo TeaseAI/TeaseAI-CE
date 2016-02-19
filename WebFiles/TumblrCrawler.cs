@@ -6,7 +6,11 @@ using System.Threading.Tasks;
 
 namespace WebFiles
 {
-    public class Class1
+    public class TumblrCrawler
     {
+        public static void Crawl(TumblrBlog blog)
+        {
+
+        }
     }
 }
