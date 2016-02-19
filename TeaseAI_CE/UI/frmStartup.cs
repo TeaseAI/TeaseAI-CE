@@ -24,13 +24,14 @@ namespace TeaseAI_CE.UI
 		{
 			vm = new VM();
 			vm.LoadScripts("scripts"); // Load all scritps from scripts folder.
+
 			// ToDo : At some point we will want to run setups.
 
 			// Create a personality for testing.
 			var persona = vm.CreatePersonality("Lisa");
 			var controller = vm.CreateController(persona);
 			controller.Interval = 2000;
-			controller.Script = ((ValueScript)persona.GetVariable(VM.KeyClean("script.test.welcome"), new Logger())).Value; // Note: this will not be common use.
+			controller.Add(((ValueScript)persona.GetVariable(VM.KeyClean("script.test.welcome"), new Logger())).Value); // Note: this will not be common use.
 
 			// test logger, for now errors show up in the output window.
 			var log = new Logger();

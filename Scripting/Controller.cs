@@ -11,7 +11,7 @@ namespace TeaseAI_CE.Scripting
 	/// </summary>
 	public class Controller
 	{
-		private readonly Personality personality;
+		public readonly Personality Personality;
 
 		/// <summary>
 		/// Time inbetween updates.
@@ -22,30 +22,97 @@ namespace TeaseAI_CE.Scripting
 		public delegate void OutputDelegate(Personality p, string text);
 		public OutputDelegate OnOutput;
 
-		// ToDo : Stack goes here. (handles the block local variables, where we are in the script, etc..)
+		private Stack<BlockScope> stack = new Stack<BlockScope>();
+		private List<BlockScope> queue = new List<BlockScope>();
+
+
 		// ToDo : A shorter list of enabled(or disabled) scripts, based off of the personalities list.
 
-
-		//Replace with stack:
-		private int line = 0;
-
-		// TEMP
-		public Script Script;
+		private StringBuilder output = new StringBuilder();
 
 		internal Controller(Personality personality)
 		{
-			this.personality = personality;
+			Personality = personality;
 		}
 
 		public void Tick()
 		{
-			if (Script == null || line >= Script.Lines.Length)
+			if (!next(output))
 				return;
 
-			if (OnOutput != null)
-				OnOutput.Invoke(personality, Script.Lines[line].Data);
+			if (OnOutput != null && output.Length > 0)
+				OnOutput.Invoke(Personality, output.ToString());
+			output.Clear();
+		}
 
-			++line;
+		/// <summary>
+		/// Executes the next line on the stack.
+		/// </summary>
+		/// <param name="output"></param>
+		/// <returns>false if there was nothing to do.</returns>
+		private bool next(StringBuilder output)
+		{
+			// populate stack with items in the queue.
+			if (queue.Count > 0)
+			{
+				foreach (BlockScope item in queue)
+					stack.Push(item);
+				queue.Clear();
+			}
+
+			if (stack.Count == 0)
+				return false;
+
+			// try to execute top item.
+			var scope = stack.Peek();
+			if (scope.Line >= scope.Block.Lines.Length)
+			{
+				stack.Pop();
+				return next(output);
+			}
+			else
+			{
+				// ToDo 2: Check for infinte loop.
+				scope.Root.Log.SetId(scope.Block.Lines[scope.Line].LineNumber);
+				// exec current line
+				Line line = scope.Block.Lines[scope.Line];
+				Personality.VM.ExecLine(scope, line.Data, output);
+
+				// always continue when validating.
+				if (scope.Root.Valid == BlockBase.Validation.Running)
+				{
+					scope.Exit = false;
+					scope.Return = false;
+				}
+
+				// advance to next line, if repeat is false.
+				if (scope.Repeat == false)
+					++scope.Line;
+				else
+					scope.Repeat = false;
+
+				if (scope.Exit)
+					stack.Clear();
+				else if (scope.Return)
+					stack.Pop();
+				// push sub block if exists
+				else if (line.Lines != null)
+					stack.Push(new BlockScope(this, scope.Root, line, 0, new Dictionary<string, ValueObj>(scope.Variables)));
+				// pop off stack, if no lines left.
+				else if (scope.Line >= scope.Block.Lines.Length)
+					stack.Pop();
+
+				return true;
+			}
+		}
+
+		/// <summary>
+		/// Enqueue a root block to be added to the stack.
+		/// </summary>
+		public void Add(BlockBase root)
+		{
+			// ToDo : queue is not thread safe.
+			queue.Add(new BlockScope(this, root, root, 0, new Dictionary<string, ValueObj>()));
 		}
 	}
 }

@@ -12,7 +12,7 @@ namespace TeaseAI_CE.Scripting
 	/// </summary>
 	public class VM
 	{
-		public delegate ValueObj Function(object sender, ValueObj[] args, Logger log);
+		public delegate ValueObj Function(BlockScope sender, ValueObj[] args, Logger log);
 
 		private Thread thread = null;
 		private volatile bool threadRun = false;
@@ -452,7 +452,11 @@ namespace TeaseAI_CE.Scripting
 
 		#region executing lines
 
-
+		internal void ExecLine(BlockScope sender, string line, StringBuilder output)
+		{
+			// ToDo : Finish
+			output.Append(line);
+		}
 
 		#endregion
 
