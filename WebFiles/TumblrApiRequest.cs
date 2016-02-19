@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Net;
+using System.IO;
+using TeaseAI_CE.Serialization;
 
 namespace WebFiles.TumblrAPI
 {
@@ -29,11 +32,46 @@ namespace WebFiles.TumblrAPI
 
         public APIResponse GetResponse()
         {
-            APIResponse response = new APIResponse();
+            APIResponse apiResponse = new APIResponse();
+            
+            WebRequest request;
+            WebResponse response;
+            StreamReader sr;
+            string responseStr;
+            
+            request = WebRequest.Create(this.RequestUrl);
 
-            throw new NotImplementedException();
+            response = request.GetResponse();
+            sr = new StreamReader(response.GetResponseStream());
 
-            return response;
+            responseStr = sr.ReadToEnd();
+            responseStr = responseStr.Replace("\\/", "/");
+
+            apiResponse = Serializer.DeserializeFromJson<APIResponse>(responseStr);
+
+            return apiResponse;
+        }
+
+        public async Task<APIResponse> GetResponseAsync()
+        {
+            APIResponse apiResponse = new APIResponse();
+
+            WebRequest request;
+            WebResponse response;
+            StreamReader sr;
+            string responseStr;
+
+            request = WebRequest.Create(this.RequestUrl);
+
+            response = await request.GetResponseAsync();
+            sr = new StreamReader(response.GetResponseStream());
+
+            responseStr = await sr.ReadToEndAsync();
+            responseStr = responseStr.Replace("\\/", "/");
+
+            apiResponse = Serializer.DeserializeFromJson<APIResponse>(responseStr);
+
+            return apiResponse;
         }
     }
 }
