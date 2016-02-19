@@ -29,6 +29,16 @@ namespace TeaseAI_CE.WebFiles.TumblrAPI
     {
         const string APIKEY = "fuiKNFp9vQFvjLNvx4sUwti4Yb5yGutBN4Xh10LXZhhRKjWlV4";
 
+        public static TumblrApiRequest Request_Info(TumblrBlog blog)
+        {
+            return BuildRequest(blog, Command.blog, Method.info);
+        }
+
+        public static TumblrApiRequest Request_Avatar(TumblrBlog blog)
+        {
+            return BuildRequest(blog, Command.blog, Method.avatar);
+        }
+
         #region No type specified
 
         public static TumblrApiRequest Request_Posts(TumblrBlog blog)
