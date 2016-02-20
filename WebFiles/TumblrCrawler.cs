@@ -8,8 +8,16 @@ using TeaseAI_CE.WebFiles.TumblrAPI;
 
 namespace TeaseAI_CE.WebFiles
 {
-    public class TumblrCrawler
+    /// <summary>
+    /// Providing crawling functionality for a TumblrBlog
+    /// </summary>
+    public static class TumblrCrawler
     {
+        /// <summary>
+        /// Crawls through all posts and extracts the URLs pointing to photos
+        /// </summary>
+        /// <param name="blog">Blog to crawl</param>
+        /// <returns>List containing all URLs</returns>
         public static List<string> GetAllPhotoUrls(TumblrBlog blog)
         {
             ulong postTotal = 0;
@@ -57,6 +65,11 @@ namespace TeaseAI_CE.WebFiles
             return urls;
         }
 
+        /// <summary>
+        /// Crawls through all posts and extracts the URLs pointing to photos asynchronosly
+        /// </summary>
+        /// <param name="blog">Blog to crawl</param>
+        /// <returns>List containing all URLs</returns>
         public static async Task<List<string>> GetAllPhotoUrlsAsync(TumblrBlog blog)
         {
             ulong postTotal = 0;
@@ -104,6 +117,11 @@ namespace TeaseAI_CE.WebFiles
             return urls;
         }
 
+        /// <summary>
+        /// Crawls through all posts and extracts the URLs pointing to videos
+        /// </summary>
+        /// <param name="blog">Blog to crawl</param>
+        /// <returns>List containing all URLs</returns>
         public static List<string> GetAllVideoUrls(TumblrBlog blog)
         {
             ulong postTotal = 0;
@@ -157,6 +175,11 @@ namespace TeaseAI_CE.WebFiles
             return urls;
         }
 
+        /// <summary>
+        /// Crawls through all posts and extracts the URLs pointing to videos asynchronosly
+        /// </summary>
+        /// <param name="blog">Blog to crawl</param>
+        /// <returns>List containing all URLs</returns>
         public static async Task<List<string>> GetAllVideoUrlsAsync(TumblrBlog blog)
         {
             ulong postTotal = 0;
@@ -210,6 +233,11 @@ namespace TeaseAI_CE.WebFiles
             return urls;
         }
 
+        /// <summary>
+        /// Gets the URL to the blog-avatar
+        /// </summary>
+        /// <param name="blog">Blog to crawl</param>
+        /// <returns>URL to avatar-image</returns>
         public static string GetAvatarUrl(TumblrBlog blog)
         {
             APIResponse response = TumblrApiRequestFactory.Request_Avatar(blog).GetResponse();
@@ -222,6 +250,11 @@ namespace TeaseAI_CE.WebFiles
             return response.Response.Avatar_url;
         }
 
+        /// <summary>
+        /// Gets the URL to the blog-avatar asynchronosly
+        /// </summary>
+        /// <param name="blog">Blog to crawl</param>
+        /// <returns>URL to avatar-image</returns>
         public static async Task<string> GetAvatarUrlAsync(TumblrBlog blog)
         {
             APIResponse response = await TumblrApiRequestFactory.Request_Avatar(blog).GetResponseAsync();

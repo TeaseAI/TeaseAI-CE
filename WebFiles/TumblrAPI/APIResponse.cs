@@ -7,6 +7,9 @@ using System.Runtime.Serialization;
 
 namespace TeaseAI_CE.WebFiles.TumblrAPI
 {
+    /// <summary>
+    /// Root of response from a TumblrApiRequest
+    /// </summary>
     [DataContract]
     public class APIResponse
     {

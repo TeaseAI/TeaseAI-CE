@@ -9,6 +9,9 @@ using TeaseAI_CE.Serialization;
 
 namespace TeaseAI_CE.WebFiles.TumblrAPI
 {
+    /// <summary>
+    /// Represents a Request to the TumblrAPI
+    /// </summary>
     public class TumblrApiRequest
     {
         string requestUrl;
@@ -17,6 +20,9 @@ namespace TeaseAI_CE.WebFiles.TumblrAPI
             this.RequestUrl = requestUrl;
         }
 
+        /// <summary>
+        /// URL to make the WebRequest to the API with
+        /// </summary>
         public string RequestUrl
         {
             get
@@ -30,6 +36,10 @@ namespace TeaseAI_CE.WebFiles.TumblrAPI
             }
         }
 
+        /// <summary>
+        /// Get the response from the TumblrAPI
+        /// </summary>
+        /// <returns>Response from TumblrAPI</returns>
         public APIResponse GetResponse()
         {
             APIResponse apiResponse = new APIResponse();
@@ -52,6 +62,10 @@ namespace TeaseAI_CE.WebFiles.TumblrAPI
             return apiResponse;
         }
 
+        /// <summary>
+        /// Get the response from the TumblrAPI asynchronosly
+        /// </summary>
+        /// <returns>Response from TumblrAPI</returns>
         public async Task<APIResponse> GetResponseAsync()
         {
             APIResponse apiResponse = new APIResponse();

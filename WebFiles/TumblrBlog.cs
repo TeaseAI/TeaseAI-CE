@@ -6,6 +6,9 @@ using System.Threading.Tasks;
 
 namespace TeaseAI_CE.WebFiles
 {
+    /// <summary>
+    /// Represenents a TumblrBlog with all needed information to compile a URLFile from it
+    /// </summary>
     public class TumblrBlog
     {
         private Uri url;
@@ -17,6 +20,10 @@ namespace TeaseAI_CE.WebFiles
             }
         }
 
+        /// <summary>
+        /// Compiles the URLFile from itself
+        /// </summary>
+        /// <returns></returns>
         public URLFile CompileUrlFile()
         {
             URLFile urlFile = new URLFile();
@@ -25,10 +32,14 @@ namespace TeaseAI_CE.WebFiles
             urlFile.VideoUrls = TumblrCrawler.GetAllVideoUrls(this);
             urlFile.AvatarUrl = TumblrCrawler.GetAvatarUrl(this);
 
-
             return urlFile;
         }
 
+
+        /// <summary>
+        /// Compiles the URLFile from itself asynchronosly
+        /// </summary>
+        /// <returns></returns>
         public async Task<URLFile> CompileUrlFileAsync()
         {
             URLFile urlFile = new URLFile();
@@ -41,6 +52,9 @@ namespace TeaseAI_CE.WebFiles
             return urlFile;
         }
 
+        /// <summary>
+        /// URL of the blog
+        /// </summary>
         public Uri Url
         {
             get
