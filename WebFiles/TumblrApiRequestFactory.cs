@@ -185,7 +185,7 @@ namespace TeaseAI_CE.WebFiles.TumblrAPI
                 case Command.user:
                     throw new NotImplementedException();                    
                 default:
-                    return null;
+                    throw new Exception("Invalid command specified!");
             }
 
             switch(method)
@@ -200,7 +200,7 @@ namespace TeaseAI_CE.WebFiles.TumblrAPI
                     method_str = "avatar";
                     break;
                 default:
-                    return null;
+                    throw new Exception("Invalid method specified!");
             }
 
             requestUrl += $"{command_str}/{blog.Url.Host}/{method_str}/?";
