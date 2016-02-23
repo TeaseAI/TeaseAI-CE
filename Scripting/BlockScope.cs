@@ -16,7 +16,7 @@ namespace TeaseAI_CE.Scripting
 		/// <summary> If true, repeat current line and block. </summary>
 		public bool Repeat = false;
 		/// <summary> Vairables local to this scope. </summary>
-		public Dictionary<string, ValueObj> Variables;
+		public Dictionary<string, Variable> Variables;
 		/// <summary> Results of last if statement, could easily just be a local variable. </summary>
 		public bool LastIf = false;
 		/// <summary> If true clear stack, and exit this scope. </summary>
@@ -24,7 +24,7 @@ namespace TeaseAI_CE.Scripting
 		/// <summary> If true exit just this scope </summary>
 		public bool Return = false;
 
-		public BlockScope(Controller controller, BlockBase root, Line block, int line, Dictionary<string, ValueObj> variables)
+		public BlockScope(Controller controller, BlockBase root, Line block, int line, Dictionary<string, Variable> variables)
 		{
 			Controller = controller;
 			Root = root;
@@ -33,11 +33,11 @@ namespace TeaseAI_CE.Scripting
 			Variables = variables;
 		}
 
-		public ValueObj GetVariable(string key)
+		public Variable GetVariable(string key)
 		{
 			if (key.StartsWith(".local"))
 			{
-				ValueObj result;
+				Variable result;
 				if (!Variables.TryGetValue(key, out result))
 					Root.Log.Error("Variable does not exist in the current scope: " + key);
 				return result;

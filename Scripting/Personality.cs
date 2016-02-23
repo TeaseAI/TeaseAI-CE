@@ -19,16 +19,16 @@ namespace TeaseAI_CE.Scripting
 		private string _key;
 
 		private ReaderWriterLockSlim varLock = new ReaderWriterLockSlim();
-		private Dictionary<string, ValueObj> variables = new Dictionary<string, ValueObj>();
+		private Dictionary<string, Variable> variables = new Dictionary<string, Variable>();
 
 		internal Personality(VM vm, string name, string key)
 		{
 			VM = vm;
-			variables["name"] = new ValueString(name);
+			variables["name"] = new Variable(name);
 			_key = key;
 		}
 
-		public ValueObj GetVariable(string key, Logger log)
+		public Variable GetVariable(string key, Logger log)
 		{
 			if (key == null || key.Length == 0)
 			{
@@ -42,28 +42,21 @@ namespace TeaseAI_CE.Scripting
 
 			return VM.GetVariable(key, log);
 		}
-		internal ValueObj getVariable_internal(string key, Logger log)
+		internal Variable getVariable_internal(string key, Logger log)
 		{
 			varLock.EnterReadLock();
 			try
 			{
-				ValueObj result;
+				Variable result;
 				if (!variables.TryGetValue(key, out result))
-					log.Error("Variable does not exist: " + key);
+				{
+					result = new Variable();
+					variables[key] = result;
+				}
 				return result;
 			}
 			finally
 			{ varLock.ExitReadLock(); }
-		}
-		public void SetVariable(string key, ValueObj value)
-		{
-			varLock.EnterWriteLock();
-			try
-			{
-				variables[key] = value;
-			}
-			finally
-			{ varLock.ExitWriteLock(); }
 		}
 	}
 }

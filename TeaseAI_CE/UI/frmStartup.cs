@@ -31,7 +31,10 @@ namespace TeaseAI_CE.UI
 			var persona = vm.CreatePersonality("Lisa");
 			var controller = vm.CreateController(persona);
 			controller.Interval = 2000;
-			controller.Add(((ValueScript)persona.GetVariable(VM.KeyClean("script.test.welcome"), new Logger())).Value); // Note: this will not be common use.
+			// Note: this will not be common use:
+			var script = persona.GetVariable("script.test.welcome", new Logger()) as Variable<Script>;
+			if (script != null && script.IsSet)
+				controller.Add(script.Value);
 
 			// test logger, for now errors show up in the output window.
 			var log = new Logger();

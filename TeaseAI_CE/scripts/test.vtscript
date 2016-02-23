@@ -19,5 +19,6 @@ Script.Two
 Script.Welcome
 	Hello, my name is @.Name .
 	Welcome to a test script.
-	There is not much here.
+	// Lets test some math, and assign a variable.
+	I am @(.Age=11*2+1) years old.
 	Bye!

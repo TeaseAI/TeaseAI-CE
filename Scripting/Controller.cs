@@ -97,7 +97,7 @@ namespace TeaseAI_CE.Scripting
 					stack.Pop();
 				// push sub block if exists
 				else if (line.Lines != null)
-					stack.Push(new BlockScope(this, scope.Root, line, 0, new Dictionary<string, ValueObj>(scope.Variables)));
+					stack.Push(new BlockScope(this, scope.Root, line, 0, new Dictionary<string, Variable>(scope.Variables)));
 				// pop off stack, if no lines left.
 				else if (scope.Line >= scope.Block.Lines.Length)
 					stack.Pop();
@@ -112,7 +112,7 @@ namespace TeaseAI_CE.Scripting
 		public void Add(BlockBase root)
 		{
 			// ToDo : queue is not thread safe.
-			queue.Add(new BlockScope(this, root, root, 0, new Dictionary<string, ValueObj>()));
+			queue.Add(new BlockScope(this, root, root, 0, new Dictionary<string, Variable>()));
 		}
 	}
 }

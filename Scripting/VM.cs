@@ -12,7 +12,7 @@ namespace TeaseAI_CE.Scripting
 	/// </summary>
 	public class VM
 	{
-		public delegate ValueObj Function(BlockScope sender, ValueObj[] args, Logger log);
+		public delegate Variable Function(BlockScope sender, Variable[] args, Logger log);
 
 		private Thread thread = null;
 		private volatile bool threadRun = false;
@@ -23,9 +23,10 @@ namespace TeaseAI_CE.Scripting
 
 		private ReaderWriterLockSlim scriptsLock = new ReaderWriterLockSlim();
 		private List<Script> scriptSetups = new List<Script>();
-		private Dictionary<string, ValueScript> scripts = new Dictionary<string, ValueScript>();
+		private Dictionary<string, Variable<Script>> scripts = new Dictionary<string, Variable<Script>>();
 
 		public const char IndentChar = '\t';
+		public static readonly char[] InvalidKeyChar = new char[] { '#', '@', '(', ',', ')', '"', '\\', '/', '*', '+', '-', '<', '=', '>' };
 
 		#region Tick thread
 		/// <summary> Starts the controller update thread </summary>
@@ -130,7 +131,7 @@ namespace TeaseAI_CE.Scripting
 		/// <param name="key">Clean key</param>
 		/// <param name="log"></param>
 		/// <returns></returns>
-		internal ValueObj GetVariable(string key, Logger log)
+		internal Variable GetVariable(string key, Logger log)
 		{
 			var keySplit = KeySplit(key);
 
@@ -151,7 +152,7 @@ namespace TeaseAI_CE.Scripting
 					scriptsLock.EnterReadLock();
 					try
 					{
-						ValueScript result;
+						Variable<Script> result;
 						if (!scripts.TryGetValue(keySplit[1], out result))
 							log.Error("Script not found: " + keySplit[1]);
 						return result;
@@ -171,7 +172,7 @@ namespace TeaseAI_CE.Scripting
 							if (pKey.Length == 2) // return variable if we have key.
 								return p.getVariable_internal(pKey[1], log);
 							else // else just return the personality.
-								return new ValuePersonality(p);
+								return new Variable<Personality>(p);
 						}
 						log.Error("Personality not found: " + pKey[0]);
 						return null;
@@ -258,7 +259,7 @@ namespace TeaseAI_CE.Scripting
 						var rootKey = KeySplit(blockKey)[0];
 						if (rootKey != "script" && rootKey != "list" && rootKey != "setup")
 						{
-							fileLog.Error(currentLine, "Invalid root type: " + rootKey);
+							fileLog.Error("Invalid root type: " + rootKey, currentLine);
 							break;
 						}
 						++currentLine;
@@ -267,7 +268,7 @@ namespace TeaseAI_CE.Scripting
 					{
 						if (blockKey == null)
 						{
-							fileLog.Error(currentLine, "Invalid indentation!");
+							fileLog.Error("Invalid indentation!", currentLine);
 							break;
 						}
 						var log = new Logger();
@@ -290,7 +291,7 @@ namespace TeaseAI_CE.Scripting
 								}
 								else
 								{
-									fileLog.Error(blockLine, "Invalid root type: " + keySplit[0]);
+									fileLog.Error("Invalid root type: " + keySplit[0], blockLine);
 									break;
 								}
 							}
@@ -305,7 +306,7 @@ namespace TeaseAI_CE.Scripting
 										{
 											var script = new Script(blockLine, blockKey, lines, log);
 											blocks.Add(script);
-											scripts[key] = new ValueScript(script);
+											scripts[key] = new Variable<Script>(script);
 										}
 										finally
 										{ scriptsLock.ExitWriteLock(); }
@@ -318,7 +319,7 @@ namespace TeaseAI_CE.Scripting
 										{ scriptsLock.ExitWriteLock(); }
 										break;
 									default:
-										fileLog.Error(blockLine, "Invalid root type: " + keySplit[0]);
+										fileLog.Error("Invalid root type: " + keySplit[0], blockLine);
 										return new GroupInfo(file, fileKey, fileLog, blocks.ToArray());
 								}
 							}
@@ -451,12 +452,17 @@ namespace TeaseAI_CE.Scripting
 		#endregion
 
 		#region executing lines
-
+		/// <summary>
+		/// Execute a line of code.
+		/// </summary>
+		/// <param name="sender"></param>
+		/// <param name="line"></param>
+		/// <param name="output"></param>
 		internal void ExecLine(BlockScope sender, string line, StringBuilder output)
 		{
 			var log = sender.Root.Log;
 			string key;
-			ValueObj[] args;
+			Variable[] args;
 
 			int i = 0;
 			char c;
@@ -471,16 +477,18 @@ namespace TeaseAI_CE.Scripting
 						execSplitCommand(sender, line, ref i, out key, out args);
 						if (key != null)
 						{
-							ValueObj variable = sender.GetVariable(key);
-							if (variable == null)
-								return;
-							if (variable is ValueFunction)
-								variable = ((ValueFunction)variable).Value(sender, args, sender.Root.Log);
+							Variable variable = sender.GetVariable(key);
+							object value = variable.Value;
+							if (variable.IsSet == false)
+								continue;
+							var func = value as Function;
+							if (func != null)
+								value = func(sender, args, sender.Root.Log);
 							// ToDo : Do we need to do anything to other value types?
 
 							// output if @
-							if (c == '@' && variable != null)
-								output.Append(variable.ToString());
+							if (c == '@' && value != null)
+								output.Append(value.ToString());
 						}
 						else
 						{
@@ -489,16 +497,20 @@ namespace TeaseAI_CE.Scripting
 						}
 						break;
 
-					case '\\':
-						// ToDo : escape character.
-						break;
+					//case '\\':
+					// ToDo : escape character.
+					//break;
 					default:
 						output.Append(c);
 						break;
 				}
 			}
 		}
-		private void execSplitCommand(BlockScope sender, string str, ref int i, out string key, out ValueObj[] args)
+		/// <summary> gets key and parentheses as args. </summary>
+		/// <param name="i"> indexer, expected to start on the first character of the key. </param>
+		/// <param name="key"> set to null if no key. </param>
+		/// <param name="args"> never null </param>
+		private void execSplitCommand(BlockScope sender, string str, ref int i, out string key, out Variable[] args)
 		{
 			args = null;
 			var sb = new StringBuilder();
@@ -517,17 +529,382 @@ namespace TeaseAI_CE.Scripting
 				sb.Append(c);
 			}
 			if (sb.Length > 0)
+			{
 				key = KeyClean(sb.ToString());
+				KeyIsValid(sender.Root.Log, key);
+			}
 			else
 				key = null;
 			if (args == null)
-				args = new ValueObj[0];
+				args = new Variable[0];
 		}
 
-		private ValueObj[] execParentheses(BlockScope sender, string str, ref int i)
+		/// <summary> temporary object to hold values and operators while executing parentheses. </summary> 
+		private struct execParenthItem
 		{
-			// ToDo : Parentheses
-			return null;
+			public Operators Operator;
+			public Variable Value;
+			public bool IsValue { get { return Value != null; } }
+			public static implicit operator execParenthItem(Variable value)
+			{
+				if (value == null)
+					return new execParenthItem() { Value = new Variable() };
+				return new execParenthItem() { Value = value };
+			}
+			public static implicit operator execParenthItem(Operators op)
+			{ return new execParenthItem() { Operator = op }; }
+		}
+		/// <summary>
+		/// Recursively parses and executes everything in the parentheses, then returns variable array.
+		/// </summary>
+		/// <param name="sender"></param>
+		/// <param name="str"></param>
+		/// <param name="i"> indexer, must be equal to the char after '(' </param>
+		/// <returns></returns>
+		private Variable[] execParentheses(BlockScope sender, string str, ref int i)
+		{
+			var log = sender.Root.Log;
+			int start = i;
+			var outArgs = new List<Variable>();
+			outArgs.Add(null); // Set to the output before return.
+			var items = new List<execParenthItem>();
+
+			// Split in to lists of values and operators.
+			var sb = new StringBuilder();
+			bool inString = false;
+			bool finished = false;
+			char c;
+			while (i < str.Length && !finished)
+			{
+				c = str[i];
+				if (inString)
+				{
+					if (c == '"') // string end
+					{
+						items.Add(new Variable(sb.ToString()));
+						inString = false;
+					}
+					// escape
+					else if (c == '\\' && i + 1 < str.Length)
+					{
+						++i;
+						char next = str[i];
+						if (next == '\\')
+							sb.Append('\\');
+						else if (next == 'n')
+							sb.Append('\n');
+						else if (next == '"')
+							sb.Append('"');
+						else
+							log.Warning("Invalid string escape character: " + next, -1, i);
+					}
+					else
+						sb.Append(c);
+					++i;
+					continue;
+				}
+				//else not in string
+				switch (c)
+				{
+					case '"': // string start
+						execParenthCheckAdd(sender, items, sb);
+						inString = true;
+						break;
+
+					// finish parenth
+					case ')':
+						finished = true;
+						break;
+					// sub parentheses
+					case '(':
+						{
+							int count = items.Count;
+							execParenthCheckAdd(sender, items, sb);
+							// check if it's attached to a function
+							bool funcParenth = false;
+							if (count < items.Count && items[items.Count - 1].IsValue)
+							{
+								var v = items[items.Count - 1].Value;
+								funcParenth = v.IsSet && v.Value is Variable<Function>;
+							}
+
+							++i;
+							var _char = i;
+							var args = execParentheses(sender, str, ref i);
+
+							if (funcParenth) // simply add the whole array as-is.
+								items.Add(new Variable<Variable[]>(args));
+							else if (args.Length == 0)
+								log.Warning("Empty sub parentheses", -1, _char);
+							else
+								items.Add(args[0]); // sense it's not for a function, we only care about the first arg.
+
+							if (args.Length > 1)
+								log.Warning("Sub parentheses have more than one argument!", -1, _char);
+						}
+						continue;
+
+					// new arg
+					case ',':
+						execParenthCheckAdd(sender, items, sb);
+						++i;
+						outArgs.AddRange(execParentheses(sender, str, ref i));
+						finished = true; // finished, sense execParentheses will go until end.
+						continue;
+
+					// white-space seprates stuffs
+					case ' ':
+					case '\t':
+						execParenthCheckAdd(sender, items, sb);
+						break;
+
+					// equal and assign
+					case '=':
+						execParenthCheckAdd(sender, items, sb);
+						// (a=b) is not eqqual to (a==b). The first assigns b to a and returns a, second returns bool if a equals b.
+						// so we must use different operators.
+						if (i + 1 < str.Length && str[i + 1] == '=') // ==
+						{ ++i; items.Add(Operators.Equal); }
+						else // just a single =
+							items.Add(Operators.Assign);
+						break;
+
+					// math
+					case '*':
+						execParenthCheckAdd(sender, items, sb);
+						items.Add(Operators.Multiply);
+						break;
+					case '/':
+						execParenthCheckAdd(sender, items, sb);
+						items.Add(Operators.Divide);
+						break;
+					case '+':
+						execParenthCheckAdd(sender, items, sb);
+						items.Add(Operators.Add);
+						break;
+					case '-':
+						execParenthCheckAdd(sender, items, sb);
+						items.Add(Operators.Subtract);
+						break;
+
+					// logic
+					// "and" "or" are handled in execParenthCheckAdd 
+					case '>':
+						execParenthCheckAdd(sender, items, sb);
+						items.Add(Operators.More);
+						break;
+					case '<':
+						execParenthCheckAdd(sender, items, sb);
+						items.Add(Operators.Less);
+						break;
+
+					default:
+						sb.Append(c);
+						break;
+				}
+				++i;
+			}
+			execParenthCheckAdd(sender, items, sb);
+			log.SetId(-1, start);
+
+			// check if empty
+			if (items.Count == 0)
+			{
+				log.Warning("Parentheses is empty!");
+				return new Variable[0];
+			}
+			else if (items[0].IsValue == false)
+			{
+				log.Error("Parentheses must start with a variable/value, not an operator.");
+				return new Variable[0];
+			}
+
+			// Evaluate
+			int j;
+
+			// Operator precedence
+			// 1. Parentheses          ( )
+			// 2. Execute functions
+			// 3. Multiply & Divide    * /
+			// 4. Add & Subtract       + -
+			// 5. logic 1              > < ==
+			// 6. logic 2             and or
+			// 7. Assignment          =
+			//Note: assignment goes right to left.
+
+			// 1. Done when we parse
+			// 2. Execute functions
+			j = 0;
+			for (; j < items.Count; ++j)
+			{
+				if (items[j].IsValue)
+				{
+					var func = items[j].Value as Variable<Function>;
+					if (func == null)
+						continue;
+					Variable[] args = null;
+					// check if args is next item
+					if (j + 1 < items.Count && items[j + 1].IsValue)
+					{
+						var argvar = items[j + 1].Value as Variable<Variable[]>;
+						if (argvar == null)
+						{
+							log.Error("Expecting function arguments.");
+							return new Variable[0];
+						}
+						args = argvar.Value;
+						items.RemoveAt(j + 1);
+					}
+					if (args == null)
+						args = new Variable[0];
+					items[j] = func.Value(sender, args, sender.Root.Log);
+				}
+			}
+
+			// At this point it is required that there is exactly one operator inbetween each variable.
+			j = 0;
+			while (j + 2 < items.Count)
+			{
+				var l = items[j];
+				var o = items[j + 1];
+				var r = items[j + 2];
+				if (l.IsValue == false || r.IsValue == false)
+				{
+					log.Error("Expecting variable/value, but got an operator.");
+					return new Variable[0];
+				}
+				else if (o.IsValue)
+				{
+					log.Error("Expecting a operator, but got a variable/value.");
+					return new Variable[0];
+				}
+				j += 2;
+			}
+
+			// 3. Multiply & Divide
+			j = 0;
+			while (j + 2 < items.Count)
+			{
+				var l = items[j].Value;
+				var op = items[j + 1].Operator;
+				var r = items[j + 2].Value;
+				if (op == Operators.Multiply || op == Operators.Divide)
+				{
+					items[j] = Variable.Evaluate(log, l, op, r);
+					items.RemoveRange(j + 1, 2);
+					++j;
+				}
+				else
+					j += 2;
+			}
+			// 4. Add & Subtract
+			j = 0;
+			while (j + 2 < items.Count)
+			{
+				var l = items[j].Value;
+				var op = items[j + 1].Operator;
+				var r = items[j + 2].Value;
+				if (op == Operators.Add || op == Operators.Subtract)
+				{
+					items[j] = Variable.Evaluate(log, l, op, r);
+					items.RemoveRange(j + 1, 2);
+					++j;
+				}
+				else
+					j += 2;
+			}
+			// 5. logic 1
+			j = 0;
+			while (j + 2 < items.Count)
+			{
+				var l = items[j].Value;
+				var op = items[j + 1].Operator;
+				var r = items[j + 2].Value;
+				if (op == Operators.More || op == Operators.Less || op == Operators.Equal)
+				{
+					items[j] = Variable.Evaluate(log, l, op, r);
+					items.RemoveRange(j + 1, 2);
+					++j;
+				}
+				else
+					j += 2;
+			}
+			// 6. logic 2
+			j = 0;
+			while (j + 2 < items.Count)
+			{
+				var l = items[j].Value;
+				var op = items[j + 1].Operator;
+				var r = items[j + 2].Value;
+				if (op == Operators.And || op == Operators.Or)
+				{
+					items[j] = Variable.Evaluate(log, l, op, r);
+					items.RemoveRange(j + 1, 2);
+					++j;
+				}
+				else
+					j += 2;
+			}
+			// 7. Assignment
+			j = 0;
+			while (j + 2 < items.Count)
+			{
+				var l = items[j].Value;
+				var op = items[j + 1].Operator;
+				var r = items[j + 2].Value;
+				if (op == Operators.Assign)
+				{
+					Variable.Evaluate(log, l, op, r);
+					items.RemoveRange(j + 1, 2);
+					++j;
+				}
+				else
+					j += 2;
+			}
+
+			// finily finished
+			if (items.Count != 1)
+			{
+				log.Error(string.Format("execParentheses items.Count is {1}, expecting a count of 1!", items.Count));
+				return new Variable[0];
+			}
+			outArgs[0] = items[0].Value;
+			return outArgs.ToArray();
+		}
+		/// <summary>
+		/// Check whats in sb, then add it to the list.
+		/// [float, bool, and, or, variable]
+		/// </summary>
+		/// <returns>false if nothing was added.</returns>
+		private bool execParenthCheckAdd(BlockScope sender, List<execParenthItem> items, StringBuilder sb)
+		{
+			if (sb.Length == 0)
+				return false;
+
+			string str = sb.ToString().Trim().ToLowerInvariant();
+			sb.Clear();
+			float f;
+			bool b;
+			// is str float?
+			if (float.TryParse(str, out f))
+				items.Add(new Variable(f));
+			// bool
+			else if (bool.TryParse(str, out b))
+				items.Add(new Variable(b));
+			// logic operators
+			else if (str == "and")
+				items.Add(Operators.And);
+			else if (str == "or")
+				items.Add(Operators.Or);
+			else // variable
+			{
+				string key = KeyClean(str);
+				if (!KeyIsValid(sender.Root.Log, key))
+					return false;
+				var variable = sender.GetVariable(key);
+				items.Add(variable);
+			}
+			return true;
 		}
 
 		#endregion
@@ -552,9 +929,20 @@ namespace TeaseAI_CE.Scripting
 			return new string(array);
 		}
 		private readonly static char[] keySeparator = { '.' };
+		/// <summary> Splits the key in two pices, first being root key, second is remaining key.
 		public static string[] KeySplit(string key)
 		{
 			return key.Split(keySeparator, 2);
+		}
+		/// <summary> true if key does not contain any InvalidKeyChar, logs error and returns false otherwise. </summary>
+		public static bool KeyIsValid(Logger log, string key)
+		{
+			if (InvalidKeyChar.Any(c => key.Contains(c)))
+			{
+				log.Error("Key contains some invalid character(s).");
+				return false;
+			}
+			return true;
 		}
 	}
 }

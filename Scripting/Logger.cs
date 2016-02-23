@@ -15,14 +15,10 @@ namespace TeaseAI_CE.Scripting
 		private int id_line;
 		private int id_char;
 
-		public void SetId(int line)
+		public void SetId(int line, int @char = 0)
 		{
-			id_line = line;
-			id_char = 0;
-		}
-		public void SetId(int line, int @char)
-		{
-			id_line = line;
+			if (line != -1)
+				id_line = line;
 			id_char = @char;
 		}
 
@@ -31,18 +27,18 @@ namespace TeaseAI_CE.Scripting
 		{
 			log(message, Level.Error);
 		}
-		public void Error(int line, string message)
+		public void Error(string message, int line, int @char = 0)
 		{
-			SetId(line);
+			SetId(line, @char);
 			log(message, Level.Error);
 		}
 		public void Warning(string message)
 		{
 			log(message, Level.Warning);
 		}
-		public void Warning(int line, string message)
+		public void Warning(string message, int line, int @char = 0)
 		{
-			SetId(line);
+			SetId(line, @char);
 			log(message, Level.Warning);
 		}
 		private void log(string message, Level level)

@@ -26,9 +26,9 @@ namespace TeaseAI_CE.UI
 			else
 			{
 				string name = "NameNotFound";
-				var nameVar = p.GetVariable(".name",new Scripting.Logger()) as Scripting.ValueString;
-				if (nameVar != null)
-					name = nameVar.Value;
+				var nameVar = p.GetVariable(".name", new Scripting.Logger());
+				if (nameVar.IsSet)
+					name = nameVar.Value.ToString();
 				chatHistory.Append(name, text);
 			}
 		}
