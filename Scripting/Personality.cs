@@ -27,6 +27,11 @@ namespace TeaseAI_CE.Scripting
 			_key = key;
 		}
 
+		public void RunSetup()
+		{
+			VM.RunSetupOn(this);
+		}
+
 		public Variable GetVariable(string key, Logger log)
 		{
 			// variables starting wtih . is short hand for this personality.

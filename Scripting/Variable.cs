@@ -58,15 +58,16 @@ namespace TeaseAI_CE.Scripting
 			return "UnSet";
 		}
 
-		public static Variable Evaluate(Logger log, Variable left, Operators op, Variable right)
+		public static Variable Evaluate(BlockScope sender, Variable left, Operators op, Variable right)
 		{
+			var log = sender.Root.Log;
+			bool validating = sender.Root.Valid == BlockBase.Validation.Running;
 			if (left == null || right == null)
 			{
 				log.Error("Cannnot evaluate a null variable!");
 				return null;
 			}
-
-			// ToDo : Validation should check only.
+			
 			object l = left.Value;
 			object r = right.Value;
 
@@ -81,7 +82,10 @@ namespace TeaseAI_CE.Scripting
 				if (left.IsSet)
 				{
 					if (l.GetType() == r.GetType())
-						left.Value = r;
+					{
+						if (!validating)
+							left.Value = r;
+					}
 					else
 					{
 						log.Error(string.Format("Tried to set a variable of type '{0}' to type '{1}'", l.GetType().Name, r.GetType().Name));
@@ -89,7 +93,12 @@ namespace TeaseAI_CE.Scripting
 					}
 				}
 				else
-					left.Value = right.Value;
+				{
+					if (validating)
+						left.Value = getDefault(right.Value.GetType());
+					else
+						left.Value = right.Value;
+				}
 				return left;
 			}
 
@@ -124,6 +133,8 @@ namespace TeaseAI_CE.Scripting
 				case Operators.Divide:
 					if (l is float && r is float)
 					{
+						if (validating)
+							return new Variable(default(float));
 						float fl = (float)l;
 						float fr = (float)r;
 						if (fr == 0)
@@ -160,6 +171,16 @@ namespace TeaseAI_CE.Scripting
 					return null;
 			}
 			log.Error("Invalid operator: " + op.ToString());
+			return null;
+		}
+		private static object getDefault(Type type)
+		{
+			try
+			{
+				if (type.IsValueType)
+					return Activator.CreateInstance(type);
+			}
+			catch { }
 			return null;
 		}
 	}

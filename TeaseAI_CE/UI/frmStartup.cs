@@ -29,6 +29,7 @@ namespace TeaseAI_CE.UI
 
 			// Create a personality for testing.
 			var persona = vm.CreatePersonality("Lisa");
+			persona.RunSetup();
 			var controller = vm.CreateController(persona);
 			controller.Interval = 2000;
 			// Note: this will not be common use:

@@ -196,6 +196,29 @@ namespace TeaseAI_CE.Scripting
 			}
 		}
 
+		/// <summary> Runs all setup scripts on the personality. </summary>
+		/// <param name="p"></param>
+		internal void RunSetupOn(Personality p)
+		{
+			var c = new Controller(p);
+			var sb = new StringBuilder();
+			scriptsLock.EnterReadLock();
+			try
+			{
+				foreach (var s in scriptSetups)
+				{
+					if (s.Valid != BlockBase.Validation.Passed)
+						continue;
+					c.Add(s);
+					while (c.next(sb))
+					{
+					}
+				}
+			}
+			finally
+			{ scriptsLock.ExitReadLock(); }
+		}
+
 		#region Loading and parsing files
 
 		/// <summary>
@@ -595,6 +618,12 @@ namespace TeaseAI_CE.Scripting
 			public Operators Operator;
 			public Variable Value;
 			public bool IsValue { get { return Value != null; } }
+			public override string ToString()
+			{
+				if (IsValue)
+					return "value: " + Value.ToString();
+				return "op: " + Operator.ToString();
+			}
 			public static implicit operator execParenthItem(Variable value)
 			{
 				if (value == null)
@@ -841,9 +870,8 @@ namespace TeaseAI_CE.Scripting
 				var r = items[j + 2].Value;
 				if (op == Operators.Multiply || op == Operators.Divide)
 				{
-					items[j] = Variable.Evaluate(log, l, op, r);
+					items[j] = Variable.Evaluate(sender, l, op, r);
 					items.RemoveRange(j + 1, 2);
-					++j;
 				}
 				else
 					j += 2;
@@ -857,9 +885,8 @@ namespace TeaseAI_CE.Scripting
 				var r = items[j + 2].Value;
 				if (op == Operators.Add || op == Operators.Subtract)
 				{
-					items[j] = Variable.Evaluate(log, l, op, r);
+					items[j] = Variable.Evaluate(sender, l, op, r);
 					items.RemoveRange(j + 1, 2);
-					++j;
 				}
 				else
 					j += 2;
@@ -873,9 +900,8 @@ namespace TeaseAI_CE.Scripting
 				var r = items[j + 2].Value;
 				if (op == Operators.More || op == Operators.Less || op == Operators.Equal)
 				{
-					items[j] = Variable.Evaluate(log, l, op, r);
+					items[j] = Variable.Evaluate(sender, l, op, r);
 					items.RemoveRange(j + 1, 2);
-					++j;
 				}
 				else
 					j += 2;
@@ -889,28 +915,25 @@ namespace TeaseAI_CE.Scripting
 				var r = items[j + 2].Value;
 				if (op == Operators.And || op == Operators.Or)
 				{
-					items[j] = Variable.Evaluate(log, l, op, r);
+					items[j] = Variable.Evaluate(sender, l, op, r);
 					items.RemoveRange(j + 1, 2);
-					++j;
 				}
 				else
 					j += 2;
 			}
 			// 7. Assignment
-			j = 0;
-			while (j + 2 < items.Count)
+			j = items.Count - 1;
+			while (j - 2 >= 0)
 			{
-				var l = items[j].Value;
-				var op = items[j + 1].Operator;
-				var r = items[j + 2].Value;
+				var l = items[j - 2].Value;
+				var op = items[j - 1].Operator;
+				var r = items[j - 0].Value;
 				if (op == Operators.Assign)
 				{
-					Variable.Evaluate(log, l, op, r);
-					items.RemoveRange(j + 1, 2);
-					++j;
+					items[j - 2] = Variable.Evaluate(sender, l, op, r);
+					items.RemoveRange(j - 1, 2);
 				}
-				else
-					j += 2;
+				j -= 2;
 			}
 
 			// finily finished
