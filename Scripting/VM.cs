@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Linq;
 using System.Text;
 using System.IO;
@@ -12,10 +13,12 @@ namespace TeaseAI_CE.Scripting
 	/// </summary>
 	public class VM
 	{
-		public delegate Variable Function(BlockScope sender, Variable[] args, Logger log);
+		public delegate Variable Function(BlockScope sender, Variable[] args);
 
 		private Thread thread = null;
 		private volatile bool threadRun = false;
+
+		private ConcurrentDictionary<string, Function> functions = new ConcurrentDictionary<string, Function>();
 
 		private ReaderWriterLockSlim personControlLock = new ReaderWriterLockSlim();
 		private Dictionary<string, Personality> personalities = new Dictionary<string, Personality>();
@@ -179,8 +182,8 @@ namespace TeaseAI_CE.Scripting
 						{
 							if (pKey.Length == 2) // return variable if we have key.
 								return p.getVariable_internal(pKey[1], log);
-							else // else just return the personality.
-								return new Variable<Personality>(p);
+							// else just return the personality.
+							return new Variable<Personality>(p);
 						}
 						log.Error("Personality not found: " + pKey[0]);
 						return null;
@@ -191,9 +194,18 @@ namespace TeaseAI_CE.Scripting
 
 
 				default: // Function?
-					log.Error("Function not found or bad namespace: " + keySplit[0]);
+					Function func;
+					if (functions.TryGetValue(key, out func))
+						return new Variable<Function>(func);
+					else
+						log.Error("Function not found or bad namespace: " + keySplit[0]);
 					return null;
 			}
+		}
+
+		public void AddFunction(string name, Function func)
+		{
+			functions[KeyClean(name)] = func;
 		}
 
 		/// <summary> Runs all setup scripts on the personality. </summary>
@@ -539,7 +551,7 @@ namespace TeaseAI_CE.Scripting
 
 			int i = 0;
 			char c;
-			while (i < line.Length)
+			while (i < line.Length && !sender.ExitLine)
 			{
 				c = line[i];
 				++i;
@@ -556,7 +568,7 @@ namespace TeaseAI_CE.Scripting
 							object value = variable.Value;
 							var func = value as Function;
 							if (func != null)
-								value = func(sender, args, sender.Root.Log);
+								value = func(sender, args);
 							// ToDo : Do we need to do anything to other value types?
 
 							// output if @
@@ -837,7 +849,7 @@ namespace TeaseAI_CE.Scripting
 					}
 					if (args == null)
 						args = new Variable[0];
-					items[j] = func.Value(sender, args, sender.Root.Log);
+					items[j] = func.Value(sender, args);
 				}
 			}
 

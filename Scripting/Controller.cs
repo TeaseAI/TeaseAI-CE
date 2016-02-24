@@ -78,6 +78,9 @@ namespace TeaseAI_CE.Scripting
 				Line line = scope.Block.Lines[scope.Line];
 				Personality.VM.ExecLine(scope, line.Data, output);
 
+				if (scope.ExitLine)
+					scope.Repeat = false;
+
 				// always continue when validating.
 				if (scope.Root.Valid == BlockBase.Validation.Running)
 				{
@@ -96,12 +99,13 @@ namespace TeaseAI_CE.Scripting
 				else if (scope.Return)
 					stack.Pop();
 				// push sub block if exists
-				else if (line.Lines != null)
+				else if (line.Lines != null && scope.ExitLine == false)
 					stack.Push(new BlockScope(this, scope.Root, line, 0, new Dictionary<string, Variable>(scope.Variables)));
 				// pop off stack, if no lines left.
 				else if (scope.Line >= scope.Block.Lines.Length)
 					stack.Pop();
 
+				scope.ExitLine = false;
 				return true;
 			}
 		}

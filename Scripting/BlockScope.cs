@@ -21,8 +21,10 @@ namespace TeaseAI_CE.Scripting
 		public bool LastIf = false;
 		/// <summary> If true clear stack, and exit this scope. </summary>
 		public bool Exit = false;
-		/// <summary> If true exit just this scope </summary>
+		/// <summary> If true exit just this scope. </summary>
 		public bool Return = false;
+		/// <summary> If true stop executing the line. </summary>
+		public bool ExitLine = false;
 
 		public BlockScope(Controller controller, BlockBase root, Line block, int line, Dictionary<string, Variable> variables)
 		{

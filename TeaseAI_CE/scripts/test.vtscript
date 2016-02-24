@@ -3,6 +3,8 @@
 // Setup is ran for every personality.
 Setup
 	#(.SomeVar = "Bye!")
+	//#(.Test = true)
+	#(.Test = false)
 
 Script.One
 	Hello // Comment test
@@ -19,7 +21,10 @@ Script.Two
 
 Script.Welcome
 	Hello, my name is @.Name .
-	Welcome to a test script.
+	#if(.test)
+		Welcome to a test script.
+	#else
+		This is just for testing!
 	// Lets test some math, and assign a variable.
 	I am @(.Age=11*2+1) years old.
 	@.somevar

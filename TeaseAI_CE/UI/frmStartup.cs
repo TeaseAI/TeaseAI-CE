@@ -23,6 +23,7 @@ namespace TeaseAI_CE.UI
 		private void frmStartup_Shown(object sender, EventArgs e)
 		{
 			vm = new VM();
+			CoreFunctions.AddTo(vm);
 			vm.LoadScripts("scripts"); // Load all scritps from scripts folder.
 			vm.ValidateScripts();
 			// ToDo : At some point we will want to run setups.
