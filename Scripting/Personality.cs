@@ -13,7 +13,6 @@ namespace TeaseAI_CE.Scripting
 	{
 		public readonly VM VM;
 
-		// ToDo : Variables go here
 		// ToDo : List of enabled(or disabled) scripts
 
 		private string _key;
@@ -30,12 +29,6 @@ namespace TeaseAI_CE.Scripting
 
 		public Variable GetVariable(string key, Logger log)
 		{
-			if (key == null || key.Length == 0)
-			{
-				log.Error("GetVariable: key is empty!");
-				return null;
-			}
-
 			// variables starting wtih . is short hand for this personality.
 			if (key[0] == '.')
 				return getVariable_internal(key.Substring(1, key.Length - 1), log);
@@ -49,10 +42,7 @@ namespace TeaseAI_CE.Scripting
 			{
 				Variable result;
 				if (!variables.TryGetValue(key, out result))
-				{
-					result = new Variable();
-					variables[key] = result;
-				}
+					variables[key] = result = new Variable();
 				return result;
 			}
 			finally

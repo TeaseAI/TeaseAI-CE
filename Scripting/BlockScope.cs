@@ -39,7 +39,7 @@ namespace TeaseAI_CE.Scripting
 			{
 				Variable result;
 				if (!Variables.TryGetValue(key, out result))
-					Root.Log.Error("Variable does not exist in the current scope: " + key);
+					Variables[key] = result = new Variable();
 				return result;
 			}
 			else

@@ -153,7 +153,15 @@ namespace TeaseAI_CE.Scripting
 					try
 					{
 						Variable<Script> result;
-						if (!scripts.TryGetValue(keySplit[1], out result))
+						if (scripts.TryGetValue(keySplit[1], out result))
+						{
+							if (result.IsSet && result.Value.Valid == BlockBase.Validation.Failed)
+							{
+								log.Error(string.Format("Requested script '{0}' failed valadation!", keySplit[1]));
+								return null;
+							}
+						}
+						else
 							log.Error("Script not found: " + keySplit[1]);
 						return result;
 					}
@@ -451,7 +459,49 @@ namespace TeaseAI_CE.Scripting
 
 		#endregion
 
-		#region executing lines
+		#region Validation
+
+		public void ValidateScripts()
+		{
+			var p = new Personality(this, "tmpValidator", "tmpValidator");
+			var c = new Controller(p);
+
+			scriptsLock.EnterReadLock();
+			try
+			{
+				// validate startup scripts.
+				foreach (var s in scriptSetups)
+					validateScript(c, s);
+
+				// validate all other scripts.
+				foreach (var s in scripts.Values)
+					if (s.IsSet)
+						validateScript(c, s.Value);
+			}
+			finally
+			{ scriptsLock.ExitReadLock(); }
+		}
+		private void validateScript(Controller c, Script s)
+		{
+			// if script has never been validated, but has errors, the do not validate they are parse errors.
+			if (s.Valid == BlockBase.Validation.NeverRan && s.Log.ErrorCount > 0)
+			{
+				s.SetValid(false); // will set valid to failed.
+				return;
+			}
+
+			s.SetValid(true);
+			c.Add(s);
+			var sb = new StringBuilder();
+			while (c.next(sb))
+			{
+
+			}
+			s.SetValid(false);
+		}
+		#endregion
+
+		#region Executing lines
 		/// <summary>
 		/// Execute a line of code.
 		/// </summary>
@@ -478,9 +528,9 @@ namespace TeaseAI_CE.Scripting
 						if (key != null)
 						{
 							Variable variable = sender.GetVariable(key);
-							object value = variable.Value;
-							if (variable.IsSet == false)
+							if (variable == null || variable.IsSet == false)
 								continue;
+							object value = variable.Value;
 							var func = value as Function;
 							if (func != null)
 								value = func(sender, args, sender.Root.Log);
@@ -582,6 +632,7 @@ namespace TeaseAI_CE.Scripting
 					if (c == '"') // string end
 					{
 						items.Add(new Variable(sb.ToString()));
+						sb.Clear();
 						inString = false;
 					}
 					// escape
@@ -865,7 +916,7 @@ namespace TeaseAI_CE.Scripting
 			// finily finished
 			if (items.Count != 1)
 			{
-				log.Error(string.Format("execParentheses items.Count is {1}, expecting a count of 1!", items.Count));
+				log.Error(string.Format("execParentheses items.Count is {0}, expecting a count of 1!", items.Count));
 				return new Variable[0];
 			}
 			outArgs[0] = items[0].Value;
@@ -921,8 +972,6 @@ namespace TeaseAI_CE.Scripting
 				c = array[i];
 				if (char.IsWhiteSpace(c))
 					array[i] = '_';
-				//else if (c == '#' || c == '@')
-				//	array[i] = '?';
 				else
 					array[i] = char.ToLowerInvariant(c);
 			}

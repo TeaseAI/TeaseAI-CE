@@ -24,7 +24,7 @@ namespace TeaseAI_CE.UI
 		{
 			vm = new VM();
 			vm.LoadScripts("scripts"); // Load all scritps from scripts folder.
-
+			vm.ValidateScripts();
 			// ToDo : At some point we will want to run setups.
 
 			// Create a personality for testing.

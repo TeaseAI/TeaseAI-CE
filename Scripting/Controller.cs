@@ -50,7 +50,7 @@ namespace TeaseAI_CE.Scripting
 		/// </summary>
 		/// <param name="output"></param>
 		/// <returns>false if there was nothing to do.</returns>
-		private bool next(StringBuilder output)
+		internal bool next(StringBuilder output)
 		{
 			// populate stack with items in the queue.
 			if (queue.Count > 0)

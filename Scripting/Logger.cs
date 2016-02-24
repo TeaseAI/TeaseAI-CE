@@ -51,5 +51,12 @@ namespace TeaseAI_CE.Scripting
 			// ToDo 4: Link with program logger, to write logs to file.
 			System.Diagnostics.Debug.WriteLine("### Scripting: " + str);
 		}
+
+		public void Clear()
+		{
+			SetId(0, 0);
+			errors.Clear();
+			warnings.Clear();
+		}
 	}
 }
