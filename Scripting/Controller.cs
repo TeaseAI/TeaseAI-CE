@@ -37,8 +37,8 @@ namespace TeaseAI_CE.Scripting
 
 		public void Tick()
 		{
-			if (!next(output))
-				return;
+			while (next(output) && output.Length == 0)
+			{ }
 
 			if (OnOutput != null && output.Length > 0)
 				OnOutput.Invoke(Personality, output.ToString());

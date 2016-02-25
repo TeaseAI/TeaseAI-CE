@@ -32,7 +32,7 @@ namespace TeaseAI_CE.UI
 			var persona = vm.CreatePersonality("Lisa");
 			persona.RunSetup();
 			var controller = vm.CreateController(persona);
-			controller.Interval = 2000;
+			controller.Interval = 500;
 			// Note: this will not be common use:
 			var script = persona.GetVariable("script.test.welcome", new Logger()) as Variable<Script>;
 			if (script != null && script.IsSet)

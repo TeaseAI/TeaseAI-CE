@@ -17,7 +17,7 @@ namespace TeaseAI_CE.Scripting
 
 		private string _key;
 
-		private ReaderWriterLockSlim varLock = new ReaderWriterLockSlim();
+		private ReaderWriterLockSlim varLock = new ReaderWriterLockSlim(LockRecursionPolicy.SupportsRecursion);
 		private Dictionary<string, Variable> variables = new Dictionary<string, Variable>();
 
 		internal Personality(VM vm, string name, string key)

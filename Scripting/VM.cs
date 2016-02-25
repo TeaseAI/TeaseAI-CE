@@ -20,11 +20,11 @@ namespace TeaseAI_CE.Scripting
 
 		private ConcurrentDictionary<string, Function> functions = new ConcurrentDictionary<string, Function>();
 
-		private ReaderWriterLockSlim personControlLock = new ReaderWriterLockSlim();
+		private ReaderWriterLockSlim personControlLock = new ReaderWriterLockSlim(LockRecursionPolicy.SupportsRecursion);
 		private Dictionary<string, Personality> personalities = new Dictionary<string, Personality>();
 		private List<Controller> controllers = new List<Controller>();
 
-		private ReaderWriterLockSlim scriptsLock = new ReaderWriterLockSlim();
+		private ReaderWriterLockSlim scriptsLock = new ReaderWriterLockSlim(LockRecursionPolicy.SupportsRecursion);
 		private List<Script> scriptSetups = new List<Script>();
 		private Dictionary<string, Variable<Script>> scripts = new Dictionary<string, Variable<Script>>();
 

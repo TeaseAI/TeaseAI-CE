@@ -56,6 +56,30 @@ namespace TeaseAI_CE.Scripting
 				return new Variable(sender.LastIf);
 			});
 			#endregion
+
+			#region goto
+			vm.AddFunction("goto", (BlockScope sender, Variable[] args) =>
+			{
+				if (args.Length == 0)
+				{
+					sender.Root.Log.Error("GoTo requires args.");
+					return null;
+				}
+				foreach (var arg in args)
+				{
+					if (!arg.IsSet)
+						continue;
+
+					if (arg.Value is Script)
+					{
+						sender.Controller.Add((Script)arg.Value);
+					}
+					else
+						sender.Root.Log.Error(string.Format("Arg is of unsupported type '{0}'.", arg.Value.GetType().Name));
+				}
+				return null;
+			});
+			#endregion
 		}
 	}
 }

@@ -17,7 +17,8 @@ Script.One
 	Bye!
 	
 Script.Two
-	Different script?
+	This is from a different script.
+	It auto returns to the caller.
 
 Script.Welcome
 	Hello, my name is @.Name .
@@ -25,6 +26,7 @@ Script.Welcome
 		Welcome to a test script.
 	#else
 		This is just for testing!
+	#goto(script.test.two)
 	// Lets test some math, and assign a variable.
 	I am @(.Age=11*2+1) years old.
 	@.somevar

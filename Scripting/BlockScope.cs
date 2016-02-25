@@ -37,7 +37,7 @@ namespace TeaseAI_CE.Scripting
 
 		public Variable GetVariable(string key)
 		{
-			if (key.StartsWith(".local"))
+			if (key.StartsWith("local"))
 			{
 				Variable result;
 				if (!Variables.TryGetValue(key, out result))
