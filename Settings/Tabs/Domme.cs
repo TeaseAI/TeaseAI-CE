@@ -28,10 +28,11 @@ namespace TeaseAI_CE.Settings
             A, B, C, D, DD, DDD, DDDP
         }
 
-        //Difficulty
-        public Level difficultyLevel { get; set; } = Domme.Level.Tease;
-        public Apathy difficultyApathy { get; set; } = Apathy.Moderate;
-
+        public enum PubicHair
+        {
+            Shaved, Sparse, Trimmed, Natural, Hairy
+        }
+        
         //Appearance
         public DateTime birthday { get; set; } = new DateTime(DateTime.Now.Year - 24, 1, 1);
         public bool tattoos { get; set; } = false;
@@ -40,18 +41,20 @@ namespace TeaseAI_CE.Settings
         public string hairLength { get; set; } = "long";
         public string eyeColor { get; set; } = "green";
         public CupSize cupSize { get; set; } = CupSize.C;
-        public string pubicHair { get; set; } = "shaved";
+        public PubicHair pubicHair { get; set; } = PubicHair.Shaved;
 
         //Orgasms
         public Rarity orgasmAllow { get; set; } = Rarity.Sometimes;
         public Rarity orgasmRuin { get; set; } = Rarity.Sometimes;
         public bool orgasmLimit { get; set; } = false;
         public int orgasmLimitCount { get; set; } = 3;
-        public int orgasmLimitDays { get; set; } = 7;
+        public DateTime orgasmLimitDate { get; set; } = DateTime.Now;
         public bool denialEnds { get; set; } = true;
         public bool orgasmEnds { get; set; } = true;
 
-        //Range
+        //Difficulty
+        public Level difficultyLevel { get; set; } = Domme.Level.Tease;
+        public Apathy difficultyApathy { get; set; } = Apathy.Moderate;
         public int lowerMoodRange { get; set; } = 5;
         public int upperMoodRange { get; set; } = 8;
 
