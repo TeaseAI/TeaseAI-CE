@@ -1,10 +1,26 @@
 ﻿// This script is just for testing.
+// It is going to look complicated because there is no real text here.
+// This is not a common amount of code in scripts.
 
 // Setup is ran for every personality.
+// It can be used to calculate the mood, or anything you want setup before any scripts are ran.
 Setup
 	#(.SomeVar = "Bye!")
 	//#(.Test = true)
 	#(.Test = false)
+
+
+// Some tag testing
+Script.Tagging
+	// assign tags:
+	#(.MyTags = ("Start", "Welcome", "Notay"))
+	#(.MyTags = .MyTags + "test" + "testing")
+
+	#SetTags(scripts.Welcome, .MyTags)
+
+	// look for a script tagged with "start" and has tag "notay" or "1885"
+	#GoTo( #QueryScript("start" and ("notay" or "1885")) )
+
 
 Script.One
 	Hello // Comment test
@@ -15,10 +31,12 @@ Script.One
 	#if(false)
 		Note: This is not executing anything yet.
 	Bye!
-	
+
+
 Script.Two
 	This is from a different script.
 	It auto returns to the caller.
+
 
 Script.Welcome
 	Hello, my name is @.Name .

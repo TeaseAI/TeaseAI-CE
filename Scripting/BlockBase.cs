@@ -13,9 +13,24 @@ namespace TeaseAI_CE.Scripting
 		public enum Validation { NeverRan = 0, Running, Passed, Failed }
 		public Validation Valid { get; private set; }
 
-		public Logger Log;
+		public readonly Logger Log;
 		public readonly GroupInfo Group;
 
+		// ToDo : Question, How can we validate tags?
+		//
+		// ex script:
+		// #(tag = "a")
+		// #if(mood == happy)
+		//     #(tag = "b)
+		// #Image(tag)
+		//
+		// With something so simple, how would the validator know we needed both an image "a" and a image "b"?
+		// We can't just check for image with both tags, because they could be sperate.
+		// Currently it would just check for a image "b".
+		// 
+		// In validatation mode, we could add to the tag, then check if there is an image for every tag.
+		// But that does not with when you use the AND operator. Because there may be a image for every tag, but there may not be any image for "a" AND "b".
+		public string[] Tags = new string[0];
 
 		public BlockBase(int lineNumber, string key, Line[] lines, GroupInfo group, Logger log) : base(lineNumber, key, lines)
 		{
