@@ -45,7 +45,7 @@ namespace TeaseAI_CE.Scripting
 				return result;
 			}
 			else
-				return Controller.Personality.GetVariable(key, Root.Log);
+				return Controller.Personality.GetVariable(key, this);
 		}
 	}
 }

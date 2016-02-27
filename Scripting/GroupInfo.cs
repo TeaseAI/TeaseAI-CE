@@ -13,13 +13,16 @@ namespace TeaseAI_CE.Scripting
 		public readonly string Path;
 		public readonly string Key;
 		public readonly Logger Log;
-		public readonly BlockBase[] Blocks;
-		public GroupInfo(string path,string key, Logger log, BlockBase[] blocks)
+		internal List<BlockBase> Blocks = new List<BlockBase>();
+		public GroupInfo(string path, string key, Logger log)
 		{
 			Path = path;
 			Key = key;
 			Log = log;
-			Blocks = blocks;
+		}
+		public BlockBase[] GetBlocks()
+		{
+			return Blocks.ToArray();
 		}
 	}
 }

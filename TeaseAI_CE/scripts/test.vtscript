@@ -26,7 +26,7 @@ Script.Welcome
 		Welcome to a test script.
 	#else
 		This is just for testing!
-	#goto(script.test.two)
+	#goto(script.two)
 	// Lets test some math, and assign a variable.
 	I am @(.Age=11*2+1) years old.
 	@.somevar

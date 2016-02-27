@@ -32,15 +32,23 @@ namespace TeaseAI_CE.Scripting
 			VM.RunSetupOn(this);
 		}
 
+		public Variable GetVariable(string key, BlockScope sender)
+		{
+			// variables starting wtih . is short hand for this personality.
+			if (key[0] == '.')
+				return getVariable_internal(key.Substring(1, key.Length - 1));
+			return VM.GetVariable(key, sender);
+		}
+		// ToDo : Remove, will not be needed once things are running properly.
 		public Variable GetVariable(string key, Logger log)
 		{
 			// variables starting wtih . is short hand for this personality.
 			if (key[0] == '.')
-				return getVariable_internal(key.Substring(1, key.Length - 1), log);
+				return getVariable_internal(key.Substring(1, key.Length - 1));
 
 			return VM.GetVariable(key, log);
 		}
-		internal Variable getVariable_internal(string key, Logger log)
+		internal Variable getVariable_internal(string key)
 		{
 			varLock.EnterReadLock();
 			try

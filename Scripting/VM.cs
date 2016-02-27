@@ -25,6 +25,7 @@ namespace TeaseAI_CE.Scripting
 		private List<Controller> controllers = new List<Controller>();
 
 		private ReaderWriterLockSlim scriptsLock = new ReaderWriterLockSlim(LockRecursionPolicy.SupportsRecursion);
+		private List<GroupInfo> scriptGroups = new List<GroupInfo>();
 		private List<Script> scriptSetups = new List<Script>();
 		private Dictionary<string, Variable<Script>> scripts = new Dictionary<string, Variable<Script>>();
 
@@ -128,6 +129,24 @@ namespace TeaseAI_CE.Scripting
 			{ personControlLock.ExitWriteLock(); }
 		}
 
+		internal Variable GetVariable(string key, BlockScope sender)
+		{
+			// allow calling local script without full key.
+			if (key.StartsWith("script."))
+			{
+				var tmpK = sender.Root.Group.Key + '.' + KeySplit(key)[1];
+				scriptsLock.EnterReadLock();
+				try
+				{
+					Variable<Script> result;
+					if (scripts.TryGetValue(tmpK, out result))
+						return result;
+				}
+				finally
+				{ scriptsLock.ExitReadLock(); }
+			}
+			return GetVariable(key, sender.Root.Log);
+		}
 		/// <summary>
 		/// Get a variable, or null if not found.
 		/// </summary>
@@ -181,7 +200,7 @@ namespace TeaseAI_CE.Scripting
 						if (personalities.TryGetValue(pKey[0], out p))
 						{
 							if (pKey.Length == 2) // return variable if we have key.
-								return p.getVariable_internal(pKey[1], log);
+								return p.getVariable_internal(pKey[1]);
 							// else just return the personality.
 							return new Variable<Personality>(p);
 						}
@@ -201,6 +220,17 @@ namespace TeaseAI_CE.Scripting
 						log.Error("Function not found or bad namespace: " + keySplit[0]);
 					return null;
 			}
+		}
+
+		public GroupInfo[] GetGroups()
+		{
+			scriptsLock.EnterReadLock();
+			try
+			{
+				return scriptGroups.ToArray();
+			}
+			finally
+			{ scriptsLock.ExitReadLock(); }
 		}
 
 		public void AddFunction(string name, Function func)
@@ -266,7 +296,7 @@ namespace TeaseAI_CE.Scripting
 			if (!File.Exists(file))
 			{
 				fileLog.Error("File does not exist!");
-				return new GroupInfo(file, fileKey, fileLog, null);
+				return new GroupInfo(file, fileKey, fileLog);
 			}
 
 			// Read the whole file into a tempary list.
@@ -280,11 +310,15 @@ namespace TeaseAI_CE.Scripting
 			catch (Exception ex)
 			{
 				fileLog.Error(ex.Message);
-				return new GroupInfo(file, fileKey, fileLog, null);
+				return new GroupInfo(file, fileKey, fileLog);
 			}
 
 			// split-up the lines in to indatation based blocks.
-			var blocks = new List<BlockBase>();
+			var group = new GroupInfo(file, fileKey, fileLog);
+			scriptsLock.EnterWriteLock();
+			scriptGroups.Add(group);
+			scriptsLock.ExitWriteLock();
+			var blocks = group.Blocks;
 			int currentLine = 0;
 			string blockKey = null;
 			int blockLine = 0;
@@ -317,7 +351,7 @@ namespace TeaseAI_CE.Scripting
 						var log = new Logger();
 						var lines = parseBlock(rawLines, ref currentLine, indent, log);
 						if (lines == null)
-							blocks.Add(new BlockBase(blockLine, blockKey, null, log));
+							blocks.Add(new BlockBase(blockLine, blockKey, null, group, log));
 						else
 						{
 							// Figureout type of script, then add it.
@@ -328,7 +362,7 @@ namespace TeaseAI_CE.Scripting
 								{
 									scriptsLock.EnterWriteLock();
 									try
-									{ scriptSetups.Add(new Script(blockLine, blockKey, lines, log)); }
+									{ scriptSetups.Add(new Script(blockLine, blockKey, lines, group, log)); }
 									finally
 									{ scriptsLock.ExitWriteLock(); }
 								}
@@ -347,7 +381,7 @@ namespace TeaseAI_CE.Scripting
 										scriptsLock.EnterWriteLock();
 										try
 										{
-											var script = new Script(blockLine, blockKey, lines, log);
+											var script = new Script(blockLine, blockKey, lines, group, log);
 											blocks.Add(script);
 											scripts[key] = new Variable<Script>(script);
 										}
@@ -363,7 +397,7 @@ namespace TeaseAI_CE.Scripting
 										break;
 									default:
 										fileLog.Error("Invalid root type: " + keySplit[0], blockLine);
-										return new GroupInfo(file, fileKey, fileLog, blocks.ToArray());
+										return group;
 								}
 							}
 						}
@@ -372,7 +406,7 @@ namespace TeaseAI_CE.Scripting
 				else
 					++currentLine;
 			}
-			return new GroupInfo(file, fileKey, fileLog, blocks.ToArray());
+			return group;
 		}
 
 		/// <summary>
