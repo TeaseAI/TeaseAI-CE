@@ -32,7 +32,11 @@ namespace TeaseAI_CE.Scripting
 	{
 		protected object _value = null;
 		public object Value { get { return getObj(); } set { setObj(value); } }
+		/// <summary> Does variable have a value? </summary>
 		public virtual bool IsSet { get { return _value != null; } }
+
+		/// <summary> If true scripts can only read. </summary>
+		public bool Readonly = false;
 
 		public Variable() { }
 		public Variable(string value)
@@ -67,7 +71,7 @@ namespace TeaseAI_CE.Scripting
 				log.Error("Cannnot evaluate a null variable!");
 				return null;
 			}
-			
+
 			object l = left.Value;
 			object r = right.Value;
 
@@ -79,11 +83,17 @@ namespace TeaseAI_CE.Scripting
 					return null;
 				}
 
+				if (left.Readonly)
+				{
+					log.Error(string.Format("Tried to assign to readonly variable."));
+					return left;
+				}
+
 				if (left.IsSet)
 				{
 					if (l.GetType() == r.GetType())
 					{
-						if (!validating)
+						if (!validating) // Don't change variable if we are validating.
 							left.Value = r;
 					}
 					else
@@ -148,6 +158,8 @@ namespace TeaseAI_CE.Scripting
 					return null;
 				// Logic
 				case Operators.Equal:
+					if (l is string && r is string) // for strings we want to ignore the case.
+						return new Variable((l as string).Equals((string)r, StringComparison.InvariantCultureIgnoreCase));
 					return new Variable(l.Equals(r));
 				case Operators.More:
 					if (l is float && r is float)

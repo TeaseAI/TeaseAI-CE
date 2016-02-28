@@ -93,19 +93,38 @@ namespace TeaseAI_CE.Scripting
 		/// <returns>New Personality or null if name already exits.</returns>
 		public Personality CreatePersonality(string name)
 		{
-			var key = KeyClean(name);
+			var id = KeyClean(name);
 			personControlLock.EnterWriteLock();
 			try
 			{
-				if (personalities.ContainsKey(key))
+				// If personality with id already exists, add number.
+				if (personalities.ContainsKey(id))
 				{
-					// ToDo : Error personality with name already exists.
-					return null;
+					int num = 1;
+					while (personalities.ContainsKey(id + (++num)))
+					{ }
+					id = id + num;
 				}
 
-				var p = new Personality(this, name, key);
-				personalities[key] = p;
+				var p = new Personality(this, name, id);
+				personalities[id] = p;
 				return p;
+			}
+			finally
+			{ personControlLock.ExitWriteLock(); }
+		}
+		public bool ChangePersonalityID(Personality p, string newID)
+		{
+			newID = KeyClean(newID);
+			personControlLock.EnterWriteLock();
+			try
+			{
+				if (personalities.ContainsKey(newID))
+					return false;
+				personalities.Remove(p.ID);
+				personalities[newID] = p;
+				p.ID = newID;
+				return true;
 			}
 			finally
 			{ personControlLock.ExitWriteLock(); }

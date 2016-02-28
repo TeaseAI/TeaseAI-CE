@@ -15,16 +15,26 @@ namespace TeaseAI_CE.Scripting
 
 		// ToDo : List of enabled(or disabled) scripts
 
-		private string _key;
+		public string ID
+		{
+			get { return (string)variables["id"].Value; }
+			internal set { variables["id"].Value = value; }
+		}
+		public string Name
+		{
+			get { return (string)variables["name"].Value; }
+			set { variables["name"].Value = value; }
+		}
 
 		private ReaderWriterLockSlim varLock = new ReaderWriterLockSlim(LockRecursionPolicy.SupportsRecursion);
 		private Dictionary<string, Variable> variables = new Dictionary<string, Variable>();
 
-		internal Personality(VM vm, string name, string key)
+		internal Personality(VM vm, string name, string id)
 		{
 			VM = vm;
+			// Variables MUST always be set:
 			variables["name"] = new Variable(name);
-			_key = key;
+			variables["id"] = new Variable(id) { Readonly = true };
 		}
 
 		public void RunSetup()
