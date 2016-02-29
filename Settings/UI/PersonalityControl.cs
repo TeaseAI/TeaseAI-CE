@@ -24,7 +24,7 @@ namespace Settings.UI
 
 		public void AssignPersonality(Personality p)
 		{
-			log = new Logger();
+			log = new Logger("PersonalityControl");
 			this.p = p;
 
 			attach(".name", txtName);

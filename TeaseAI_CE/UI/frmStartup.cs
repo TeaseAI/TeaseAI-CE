@@ -34,12 +34,12 @@ namespace TeaseAI_CE.UI
 			var controller = vm.CreateController(persona);
 			controller.Interval = 500;
 			// Note: this will not be common use:
-			var script = persona.GetVariable("script.test.welcome", new Logger()) as Variable<Script>;
+			var script = persona.GetVariable("script.test.welcome", new Logger("script.test")) as Variable<Script>;
 			if (script != null && script.IsSet)
 				controller.Add(script.Value);
 
 			// test logger, for now errors show up in the output window.
-			var log = new Logger();
+			var log = new Logger("test");
 			persona.GetVariable(".mood", log);
 			persona.GetVariable("script.fake", log);
 

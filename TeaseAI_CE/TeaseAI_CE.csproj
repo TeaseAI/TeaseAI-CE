@@ -66,6 +66,12 @@
     <Compile Include="UI\frmCombined.Designer.cs">
       <DependentUpon>frmCombined.cs</DependentUpon>
     </Compile>
+    <Compile Include="UI\frmLoading.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\frmLoading.Designer.cs">
+      <DependentUpon>frmLoading.cs</DependentUpon>
+    </Compile>
     <Compile Include="UI\frmSplitOther.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -120,6 +126,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="UI\frmCombined.resx">
       <DependentUpon>frmCombined.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\frmLoading.resx">
+      <DependentUpon>frmLoading.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="UI\frmSplitOther.resx">
       <DependentUpon>frmSplitOther.cs</DependentUpon>

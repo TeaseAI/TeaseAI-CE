@@ -308,7 +308,7 @@ namespace TeaseAI_CE.Scripting
 		/// <returns></returns>
 		private GroupInfo parseFile(string file)
 		{
-			var fileLog = new Logger();
+			var fileLog = new Logger(file);
 			// get the base script key from the file name.
 			var fileKey = KeyClean(Path.GetFileNameWithoutExtension(file));
 
@@ -367,7 +367,7 @@ namespace TeaseAI_CE.Scripting
 							fileLog.Error("Invalid indentation!", currentLine);
 							break;
 						}
-						var log = new Logger();
+						var log = new Logger(fileKey + "." + blockKey);
 						var lines = parseBlock(rawLines, ref currentLine, indent, log);
 						if (lines == null)
 							blocks.Add(new BlockBase(blockLine, blockKey, null, group, log));
