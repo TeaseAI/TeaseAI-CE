@@ -29,10 +29,11 @@
 		private void InitializeComponent()
 		{
 			this.splitContainer1 = new System.Windows.Forms.SplitContainer();
-			this.Glitter = new TeaseAI_CE.UI.Glitter();
 			this.splitContainer2 = new System.Windows.Forms.SplitContainer();
+			this.Glitter = new TeaseAI_CE.UI.Glitter();
 			this.media1 = new TeaseAI_CE.UI.Media();
 			this.Chat = new TeaseAI_CE.UI.Chat();
+			this.header1 = new TeaseAI_CE.UI.Header();
 			((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
 			this.splitContainer1.Panel1.SuspendLayout();
 			this.splitContainer1.Panel2.SuspendLayout();
@@ -46,7 +47,7 @@
 			// splitContainer1
 			// 
 			this.splitContainer1.Dock = System.Windows.Forms.DockStyle.Fill;
-			this.splitContainer1.Location = new System.Drawing.Point(0, 0);
+			this.splitContainer1.Location = new System.Drawing.Point(0, 24);
 			this.splitContainer1.Name = "splitContainer1";
 			// 
 			// splitContainer1.Panel1
@@ -56,17 +57,9 @@
 			// splitContainer1.Panel2
 			// 
 			this.splitContainer1.Panel2.Controls.Add(this.splitContainer2);
-			this.splitContainer1.Size = new System.Drawing.Size(724, 545);
+			this.splitContainer1.Size = new System.Drawing.Size(724, 521);
 			this.splitContainer1.SplitterDistance = 165;
 			this.splitContainer1.TabIndex = 2;
-			// 
-			// Glitter
-			// 
-			this.Glitter.Dock = System.Windows.Forms.DockStyle.Fill;
-			this.Glitter.Location = new System.Drawing.Point(0, 0);
-			this.Glitter.Name = "Glitter";
-			this.Glitter.Size = new System.Drawing.Size(165, 545);
-			this.Glitter.TabIndex = 0;
 			// 
 			// splitContainer2
 			// 
@@ -82,16 +75,24 @@
 			// splitContainer2.Panel2
 			// 
 			this.splitContainer2.Panel2.Controls.Add(this.Chat);
-			this.splitContainer2.Size = new System.Drawing.Size(555, 545);
-			this.splitContainer2.SplitterDistance = 376;
+			this.splitContainer2.Size = new System.Drawing.Size(555, 521);
+			this.splitContainer2.SplitterDistance = 359;
 			this.splitContainer2.TabIndex = 3;
+			// 
+			// Glitter
+			// 
+			this.Glitter.Dock = System.Windows.Forms.DockStyle.Fill;
+			this.Glitter.Location = new System.Drawing.Point(0, 0);
+			this.Glitter.Name = "Glitter";
+			this.Glitter.Size = new System.Drawing.Size(165, 521);
+			this.Glitter.TabIndex = 0;
 			// 
 			// media1
 			// 
 			this.media1.Dock = System.Windows.Forms.DockStyle.Fill;
 			this.media1.Location = new System.Drawing.Point(0, 0);
 			this.media1.Name = "media1";
-			this.media1.Size = new System.Drawing.Size(555, 376);
+			this.media1.Size = new System.Drawing.Size(555, 359);
 			this.media1.TabIndex = 0;
 			// 
 			// Chat
@@ -99,8 +100,19 @@
 			this.Chat.Dock = System.Windows.Forms.DockStyle.Fill;
 			this.Chat.Location = new System.Drawing.Point(0, 0);
 			this.Chat.Name = "Chat";
-			this.Chat.Size = new System.Drawing.Size(555, 165);
+			this.Chat.Size = new System.Drawing.Size(555, 158);
 			this.Chat.TabIndex = 0;
+			// 
+			// header1
+			// 
+			this.header1.AutoSize = true;
+			this.header1.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+			this.header1.Dock = System.Windows.Forms.DockStyle.Top;
+			this.header1.Location = new System.Drawing.Point(0, 0);
+			this.header1.MinimumSize = new System.Drawing.Size(512, 24);
+			this.header1.Name = "header1";
+			this.header1.Size = new System.Drawing.Size(724, 24);
+			this.header1.TabIndex = 3;
 			// 
 			// frmCombined
 			// 
@@ -108,6 +120,7 @@
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.ClientSize = new System.Drawing.Size(724, 545);
 			this.Controls.Add(this.splitContainer1);
+			this.Controls.Add(this.header1);
 			this.Name = "frmCombined";
 			this.Text = "TeaseAI CE";
 			this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.frmCombined_FormClosed);
@@ -120,6 +133,7 @@
 			((System.ComponentModel.ISupportInitialize)(this.splitContainer2)).EndInit();
 			this.splitContainer2.ResumeLayout(false);
 			this.ResumeLayout(false);
+			this.PerformLayout();
 
 		}
 
@@ -130,5 +144,6 @@
 		private Media media1;
 		internal Chat Chat;
 		internal Glitter Glitter;
+		private Header header1;
 	}
 }

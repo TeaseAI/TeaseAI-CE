@@ -90,6 +90,12 @@
     <Compile Include="UI\Glitter.Designer.cs">
       <DependentUpon>Glitter.cs</DependentUpon>
     </Compile>
+    <Compile Include="UI\Header.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UI\Header.Designer.cs">
+      <DependentUpon>Header.cs</DependentUpon>
+    </Compile>
     <Compile Include="UI\Media.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -126,6 +132,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="UI\Glitter.resx">
       <DependentUpon>Glitter.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\Header.resx">
+      <DependentUpon>Header.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="UI\Media.resx">
       <DependentUpon>Media.cs</DependentUpon>

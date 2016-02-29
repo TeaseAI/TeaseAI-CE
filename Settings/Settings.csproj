@@ -59,13 +59,26 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Tabs\Sub.cs" />
     <Compile Include="Tabs\Videos.cs" />
+    <Compile Include="UI\PersonalityControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UI\PersonalityControl.Designer.cs">
+      <DependentUpon>PersonalityControl.cs</DependentUpon>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="UI\frmSettings.resx">
       <DependentUpon>frmSettings.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="UI\PersonalityControl.resx">
+      <DependentUpon>PersonalityControl.cs</DependentUpon>
+    </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Scripting\Scripting.csproj">
+      <Project>{7624e975-6cbd-4229-9795-e875f3e978ec}</Project>
+      <Name>Scripting</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Serialization\Serialization.csproj">
       <Project>{800c9f41-229c-4f48-bbdf-91a0ab66b374}</Project>
       <Name>Serialization</Name>
