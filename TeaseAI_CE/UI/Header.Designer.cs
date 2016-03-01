@@ -85,6 +85,7 @@
 			this.toggleSplitViewToolStripMenuItem.Name = "toggleSplitViewToolStripMenuItem";
 			this.toggleSplitViewToolStripMenuItem.Size = new System.Drawing.Size(165, 22);
 			this.toggleSplitViewToolStripMenuItem.Text = "Toggle Split View";
+			this.toggleSplitViewToolStripMenuItem.Click += new System.EventHandler(this.toggleSplitViewToolStripMenuItem_Click);
 			// 
 			// Header
 			// 

@@ -25,5 +25,10 @@ namespace TeaseAI_CE.UI
 		{
 			MyApplicationContext.Instance.ShowSettings();
 		}
+
+		private void toggleSplitViewToolStripMenuItem_Click(object sender, EventArgs e)
+		{
+			MyApplicationContext.Instance.ToggleMainWindows();
+		}
 	}
 }

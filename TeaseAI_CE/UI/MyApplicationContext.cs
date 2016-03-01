@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Windows.Forms;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using TeaseAI_CE.Scripting;
 
 namespace TeaseAI_CE.UI
@@ -16,6 +17,8 @@ namespace TeaseAI_CE.UI
 		private Settings.AllSettings settings;
 		private VM vm;
 
+		internal bool Fail { get; private set; } = false;
+
 		internal MyApplicationContext()
 		{
 			Instance = this;
@@ -23,7 +26,11 @@ namespace TeaseAI_CE.UI
 
 			var loading = new frmLoading(load);
 			if (loading.ShowDialog() == DialogResult.Cancel)
+			{
 				ExitThread();
+				Fail = true;
+				return;
+			}
 
 			foreach (Form f in forms)
 				f.Show();
@@ -31,16 +38,38 @@ namespace TeaseAI_CE.UI
 			vm.Start();
 		}
 
+		internal void ToggleMainWindows()
+		{
+			PauseVM();
+
+			settings.Windows.Split = !settings.Windows.Split;
+			// ToDo 9: Implment control hot-swaping, so a restart is not required.
+			MessageBox.Show("Please restart the applcation for changes to take effect.");
+
+			ResumeVM();
+		}
+
 		internal void ShowSettings()
 		{
-			bool running = vm.IsRunning;
-			if (running)
-				vm.Stop();
+			PauseVM();
 
 			var frm = new Settings.frmSettings(settings);
+			settings.Windows.Settings.Attach(frm);
 			frm.ShowDialog();
 
-			if (running)
+			ResumeVM();
+		}
+
+		private bool vmWasRunning;
+		internal void PauseVM()
+		{
+			vmWasRunning = vm.IsRunning;
+			if (vmWasRunning)
+				vm.Stop();
+		}
+		internal void ResumeVM()
+		{
+			if (vmWasRunning)
 				vm.Start();
 		}
 
@@ -49,7 +78,10 @@ namespace TeaseAI_CE.UI
 			status(0, "Loading settings");
 			settings = Settings.AllSettings.Load();
 			if (settings == null)
-				return false;
+			{
+				settings = new Settings.AllSettings();
+				Thread.Sleep(4000);
+			}
 
 			status(10, "Creating scripting VM");
 			vm = new VM();
@@ -78,7 +110,7 @@ namespace TeaseAI_CE.UI
 			persona.GetVariable("script.fake", log);
 
 			status(90, "Loading UI");
-			bool split = false; //MessageBox.Show("Yes for dual window, no for single window", "", MessageBoxButtons.YesNo, MessageBoxIcon.None, MessageBoxDefaultButton.Button2) == DialogResult.Yes;
+			bool split = settings.Windows.Split;
 
 			// show the main windows and get the glitter and chat controls.
 			Glitter glitter;
@@ -87,10 +119,10 @@ namespace TeaseAI_CE.UI
 			{
 				var other = new frmSplitOther();
 				var media = new frmSplitMedia();
-				forms.Add(other);
-				forms.Add(media);
-				other.FormClosed += formClosed;
-				media.FormClosed += formClosed;
+				settings.Windows.SplitOther.Attach(other);
+				settings.Windows.SplitMedia.Attach(media);
+				addMainForm(other);
+				addMainForm(media);
 
 				chat = other.Chat;
 				glitter = other.Glitter;
@@ -98,9 +130,9 @@ namespace TeaseAI_CE.UI
 			else
 			{
 				var combined = new frmCombined();
-				combined.FormClosed += formClosed;
+				settings.Windows.Combined.Attach(combined);
+				addMainForm(combined);
 
-				forms.Add(combined);
 				chat = combined.Chat;
 				glitter = combined.Glitter;
 			}
@@ -110,6 +142,11 @@ namespace TeaseAI_CE.UI
 
 			status(100, "Displaying UI");
 			return true;
+		}
+		private void addMainForm(Form f)
+		{
+			forms.Add(f);
+			f.FormClosed += formClosed;
 		}
 
 		private void formClosed(object sender, FormClosedEventArgs e)

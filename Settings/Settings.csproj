@@ -46,6 +46,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AllSettings.cs" />
+    <Compile Include="Tabs\WindowStates.cs" />
     <Compile Include="UI\frmSettings.cs">
       <SubType>Form</SubType>
     </Compile>

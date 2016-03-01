@@ -13,6 +13,7 @@ namespace TeaseAI_CE.Settings
 	{
 		private const string filename = "settings.xml";
 
+		public Windows Windows { get; set; } = new Windows();
 		public General General { get; set; } = new General();
 		public Domme Domme { get; set; } = new Domme();
 		public Sub Sub { get; set; } = new Sub();
