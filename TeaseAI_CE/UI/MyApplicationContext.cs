@@ -53,7 +53,7 @@ namespace TeaseAI_CE.UI
 		{
 			PauseVM();
 
-			var frm = new Settings.frmSettings(settings);
+			var frm = new Settings.frmSettings(settings, vm);
 			settings.Windows.Settings.Attach(frm);
 			frm.ShowDialog();
 

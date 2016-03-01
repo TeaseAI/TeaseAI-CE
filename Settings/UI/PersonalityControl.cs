@@ -8,7 +8,7 @@ using System.Text;
 using System.Windows.Forms;
 using TeaseAI_CE.Scripting;
 
-namespace Settings.UI
+namespace TeaseAI_CE.Settings.UI
 {
 	public partial class PersonalityControl : UserControl
 	{
@@ -27,8 +27,12 @@ namespace Settings.UI
 			log = new Logger("PersonalityControl");
 			this.p = p;
 
+			if (p != null)
+				txtID.Text = p.ID;
 			attach(".name", txtName);
 			attach(".eye", comboEyeColor);
+
+			Enabled = p != null;
 		}
 
 		#region attach helper methods
@@ -88,5 +92,11 @@ namespace Settings.UI
 				((Variable)combo.Tag).Value = combo.Text;
 		}
 		#endregion
+
+		private void btnSetId_Click(object sender, EventArgs e)
+		{
+			p.VM.ChangePersonalityID(p, txtID.Text);
+			txtID.Text = p.ID;
+		}
 	}
 }

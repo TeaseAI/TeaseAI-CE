@@ -15,15 +15,26 @@ namespace TeaseAI_CE.Scripting
 
 		// ToDo : List of enabled(or disabled) scripts
 
+		public bool Enabled { get { return EnabledUser; } }
+
+		private Variable enabledUser_var;
+		public bool EnabledUser
+		{
+			get { return (bool)enabledUser_var.Value; }
+			set { enabledUser_var.Value = value; }
+		}
+
+		private Variable id_var;
 		public string ID
 		{
-			get { return (string)variables["id"].Value; }
-			internal set { variables["id"].Value = value; }
+			get { return (string)id_var.Value; }
+			internal set { id_var.Value = value; }
 		}
+		private Variable name_var;
 		public string Name
 		{
-			get { return (string)variables["name"].Value; }
-			set { variables["name"].Value = value; }
+			get { return (string)name_var.Value; }
+			set { name_var.Value = value; }
 		}
 
 		private ReaderWriterLockSlim varLock = new ReaderWriterLockSlim(LockRecursionPolicy.SupportsRecursion);
@@ -33,8 +44,9 @@ namespace TeaseAI_CE.Scripting
 		{
 			VM = vm;
 			// Variables MUST always be set:
-			variables["name"] = new Variable(name);
-			variables["id"] = new Variable(id) { Readonly = true };
+			variables["name"] = name_var = new Variable(name);
+			variables["id"] = id_var = new Variable(id) { Readonly = true };
+			variables["enabled_user"] = enabledUser_var = new Variable(true) { Readonly = true };
 		}
 
 		public void RunSetup()
@@ -70,6 +82,10 @@ namespace TeaseAI_CE.Scripting
 			}
 			finally
 			{ varLock.ExitReadLock(); }
+		}
+		public override string ToString()
+		{
+			return ID;
 		}
 	}
 }

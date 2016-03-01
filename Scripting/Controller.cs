@@ -37,6 +37,9 @@ namespace TeaseAI_CE.Scripting
 
 		public void Tick()
 		{
+			if (Personality.Enabled == false)
+				return;
+
 			while (next(output) && output.Length == 0)
 			{ }
 

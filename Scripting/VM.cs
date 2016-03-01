@@ -253,6 +253,17 @@ namespace TeaseAI_CE.Scripting
 			{ scriptsLock.ExitReadLock(); }
 		}
 
+		public Personality[] GetPersonalities()
+		{
+			personControlLock.EnterReadLock();
+			try
+			{
+				return personalities.Values.ToArray();
+			}
+			finally
+			{ personControlLock.ExitReadLock(); }
+		}
+
 		public void AddFunction(string name, Function func)
 		{
 			functions[KeyClean(name)] = func;

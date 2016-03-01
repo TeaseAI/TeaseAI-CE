@@ -104,6 +104,9 @@
 			this.tabPage5 = new System.Windows.Forms.TabPage();
 			this.tabPage6 = new System.Windows.Forms.TabPage();
 			this.tabPage7 = new System.Windows.Forms.TabPage();
+			this.tabPersonalities = new System.Windows.Forms.TabPage();
+			this.personalityControl = new TeaseAI_CE.Settings.UI.PersonalityControl();
+			this.PersonalitiesListBox = new System.Windows.Forms.CheckedListBox();
 			this.groupBox2 = new System.Windows.Forms.GroupBox();
 			this.textDescription = new System.Windows.Forms.Label();
 			this.folderBrowserDommeDirectory = new System.Windows.Forms.FolderBrowserDialog();
@@ -124,6 +127,7 @@
 			this.groupBox9.SuspendLayout();
 			this.groupBox8.SuspendLayout();
 			this.groupBox7.SuspendLayout();
+			this.tabPersonalities.SuspendLayout();
 			this.groupBox2.SuspendLayout();
 			this.SuspendLayout();
 			// 
@@ -136,10 +140,12 @@
 			this.tabControl1.Controls.Add(this.tabPage5);
 			this.tabControl1.Controls.Add(this.tabPage6);
 			this.tabControl1.Controls.Add(this.tabPage7);
-			this.tabControl1.Location = new System.Drawing.Point(-5, -3);
+			this.tabControl1.Controls.Add(this.tabPersonalities);
+			this.tabControl1.Dock = System.Windows.Forms.DockStyle.Fill;
+			this.tabControl1.Location = new System.Drawing.Point(0, 0);
 			this.tabControl1.Name = "tabControl1";
 			this.tabControl1.SelectedIndex = 0;
-			this.tabControl1.Size = new System.Drawing.Size(841, 247);
+			this.tabControl1.Size = new System.Drawing.Size(835, 244);
 			this.tabControl1.SizeMode = System.Windows.Forms.TabSizeMode.Fixed;
 			this.tabControl1.TabIndex = 0;
 			// 
@@ -153,7 +159,7 @@
 			this.tabPage1.Location = new System.Drawing.Point(4, 22);
 			this.tabPage1.Name = "tabPage1";
 			this.tabPage1.Padding = new System.Windows.Forms.Padding(3);
-			this.tabPage1.Size = new System.Drawing.Size(833, 221);
+			this.tabPage1.Size = new System.Drawing.Size(827, 218);
 			this.tabPage1.TabIndex = 0;
 			this.tabPage1.Text = "General";
 			// 
@@ -385,7 +391,7 @@
 			this.tabPage2.Location = new System.Drawing.Point(4, 22);
 			this.tabPage2.Name = "tabPage2";
 			this.tabPage2.Padding = new System.Windows.Forms.Padding(3);
-			this.tabPage2.Size = new System.Drawing.Size(833, 221);
+			this.tabPage2.Size = new System.Drawing.Size(827, 218);
 			this.tabPage2.TabIndex = 1;
 			this.tabPage2.Text = "Domme";
 			// 
@@ -919,7 +925,7 @@
 			this.tabPage3.Location = new System.Drawing.Point(4, 22);
 			this.tabPage3.Name = "tabPage3";
 			this.tabPage3.Padding = new System.Windows.Forms.Padding(3);
-			this.tabPage3.Size = new System.Drawing.Size(833, 221);
+			this.tabPage3.Size = new System.Drawing.Size(827, 218);
 			this.tabPage3.TabIndex = 2;
 			this.tabPage3.Text = "Sub";
 			// 
@@ -927,7 +933,7 @@
 			// 
 			this.tabPage4.Location = new System.Drawing.Point(4, 22);
 			this.tabPage4.Name = "tabPage4";
-			this.tabPage4.Size = new System.Drawing.Size(833, 221);
+			this.tabPage4.Size = new System.Drawing.Size(827, 218);
 			this.tabPage4.TabIndex = 3;
 			this.tabPage4.Text = "Scripts";
 			// 
@@ -935,7 +941,7 @@
 			// 
 			this.tabPage5.Location = new System.Drawing.Point(4, 22);
 			this.tabPage5.Name = "tabPage5";
-			this.tabPage5.Size = new System.Drawing.Size(833, 221);
+			this.tabPage5.Size = new System.Drawing.Size(827, 218);
 			this.tabPage5.TabIndex = 4;
 			this.tabPage5.Text = "Images";
 			// 
@@ -943,7 +949,7 @@
 			// 
 			this.tabPage6.Location = new System.Drawing.Point(4, 22);
 			this.tabPage6.Name = "tabPage6";
-			this.tabPage6.Size = new System.Drawing.Size(833, 221);
+			this.tabPage6.Size = new System.Drawing.Size(827, 218);
 			this.tabPage6.TabIndex = 5;
 			this.tabPage6.Text = "Video";
 			// 
@@ -951,16 +957,49 @@
 			// 
 			this.tabPage7.Location = new System.Drawing.Point(4, 22);
 			this.tabPage7.Name = "tabPage7";
-			this.tabPage7.Size = new System.Drawing.Size(833, 221);
+			this.tabPage7.Size = new System.Drawing.Size(827, 218);
 			this.tabPage7.TabIndex = 6;
 			this.tabPage7.Text = "Ranges";
+			// 
+			// tabPersonalities
+			// 
+			this.tabPersonalities.Controls.Add(this.personalityControl);
+			this.tabPersonalities.Controls.Add(this.PersonalitiesListBox);
+			this.tabPersonalities.Location = new System.Drawing.Point(4, 22);
+			this.tabPersonalities.Name = "tabPersonalities";
+			this.tabPersonalities.Padding = new System.Windows.Forms.Padding(3);
+			this.tabPersonalities.Size = new System.Drawing.Size(827, 218);
+			this.tabPersonalities.TabIndex = 7;
+			this.tabPersonalities.Text = "Personalities";
+			this.tabPersonalities.UseVisualStyleBackColor = true;
+			// 
+			// personalityControl
+			// 
+			this.personalityControl.Dock = System.Windows.Forms.DockStyle.Fill;
+			this.personalityControl.Enabled = false;
+			this.personalityControl.Location = new System.Drawing.Point(190, 3);
+			this.personalityControl.Name = "personalityControl";
+			this.personalityControl.Size = new System.Drawing.Size(634, 212);
+			this.personalityControl.TabIndex = 0;
+			// 
+			// PersonalitiesListBox
+			// 
+			this.PersonalitiesListBox.Dock = System.Windows.Forms.DockStyle.Left;
+			this.PersonalitiesListBox.FormattingEnabled = true;
+			this.PersonalitiesListBox.Location = new System.Drawing.Point(3, 3);
+			this.PersonalitiesListBox.Name = "PersonalitiesListBox";
+			this.PersonalitiesListBox.Size = new System.Drawing.Size(187, 212);
+			this.PersonalitiesListBox.TabIndex = 1;
+			this.PersonalitiesListBox.ItemCheck += new System.Windows.Forms.ItemCheckEventHandler(this.PersonalitiesListBox_ItemCheck);
+			this.PersonalitiesListBox.SelectedIndexChanged += new System.EventHandler(this.PersonalitiesListBox_SelectedIndexChanged);
 			// 
 			// groupBox2
 			// 
 			this.groupBox2.Controls.Add(this.textDescription);
-			this.groupBox2.Location = new System.Drawing.Point(1, 241);
+			this.groupBox2.Dock = System.Windows.Forms.DockStyle.Bottom;
+			this.groupBox2.Location = new System.Drawing.Point(0, 244);
 			this.groupBox2.Name = "groupBox2";
-			this.groupBox2.Size = new System.Drawing.Size(831, 65);
+			this.groupBox2.Size = new System.Drawing.Size(835, 65);
 			this.groupBox2.TabIndex = 3;
 			this.groupBox2.TabStop = false;
 			this.groupBox2.Text = "Description";
@@ -984,14 +1023,14 @@
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.ClientSize = new System.Drawing.Size(835, 309);
-			this.Controls.Add(this.groupBox2);
 			this.Controls.Add(this.tabControl1);
+			this.Controls.Add(this.groupBox2);
 			this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
 			this.MaximizeBox = false;
 			this.MinimizeBox = false;
 			this.Name = "frmSettings";
 			this.ShowIcon = false;
-			this.Text = "Tease AI CE Settings";
+			this.Text = "TeaseAI CE - Settings";
 			this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.frmSettings_FormClosed);
 			this.Load += new System.EventHandler(this.frmSettings_Load);
 			this.tabControl1.ResumeLayout(false);
@@ -1021,6 +1060,7 @@
 			this.groupBox8.PerformLayout();
 			this.groupBox7.ResumeLayout(false);
 			this.groupBox7.PerformLayout();
+			this.tabPersonalities.ResumeLayout(false);
 			this.groupBox2.ResumeLayout(false);
 			this.groupBox2.PerformLayout();
 			this.ResumeLayout(false);
@@ -1108,5 +1148,8 @@
         private System.Windows.Forms.Label label16;
         private System.Windows.Forms.Label label18;
         private System.Windows.Forms.DateTimePicker dateLimitDate;
-    }
+		private System.Windows.Forms.TabPage tabPersonalities;
+		private Settings.UI.PersonalityControl personalityControl;
+		private System.Windows.Forms.CheckedListBox PersonalitiesListBox;
+	}
 }
