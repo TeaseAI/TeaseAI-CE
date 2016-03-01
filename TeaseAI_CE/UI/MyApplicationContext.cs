@@ -1,33 +1,47 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
+using System.Windows.Forms;
 using System.Linq;
 using System.Text;
-using System.Windows.Forms;
 using TeaseAI_CE.Scripting;
 
 namespace TeaseAI_CE.UI
 {
-	public partial class frmStartup : Form
+	class MyApplicationContext : ApplicationContext
 	{
+		public static MyApplicationContext Instance { get; private set; }
+
 		private VM vm;
 
-		public frmStartup()
+		private List<Form> forms = new List<Form>();
+
+		internal MyApplicationContext()
 		{
-			InitializeComponent();
+			Instance = this;
+
+			var loading = new frmLoading(load);
+			if (loading.ShowDialog() == DialogResult.Cancel)
+				ExitThread();
+
+			foreach (Form f in forms)
+				f.Show();
+
+			vm.Start();
 		}
 
-		// ToDo : Threaded loading with progress.
-		private void frmStartup_Shown(object sender, EventArgs e)
+		private bool load(frmLoading.StatusDelegate status)
 		{
+			status(0, "Creating scripting VM");
 			vm = new VM();
+			status(10, "Adding functions");
 			CoreFunctions.AddTo(vm);
+			status(20, "Loading scripts");
 			vm.LoadScripts("scripts"); // Load all scritps from scripts folder.
+			status(50, "Validating scripts");
 			vm.ValidateScripts();
 			// ToDo : At some point we will want to run setups.
 
+			status(70, "Creating personalities");
 			// Create a personality for testing.
 			var persona = vm.CreatePersonality("Lisa");
 			persona.RunSetup();
@@ -43,9 +57,8 @@ namespace TeaseAI_CE.UI
 			persona.GetVariable(".mood", log);
 			persona.GetVariable("script.fake", log);
 
-
-			bool split = MessageBox.Show("Yes for dual window, no for single window", "", MessageBoxButtons.YesNo, MessageBoxIcon.None, MessageBoxDefaultButton.Button2) == DialogResult.Yes;
-			progressBar1.Value = progressBar1.Maximum;
+			status(90, "Loading UI");
+			bool split = false; //MessageBox.Show("Yes for dual window, no for single window", "", MessageBoxButtons.YesNo, MessageBoxIcon.None, MessageBoxDefaultButton.Button2) == DialogResult.Yes;
 
 			// show the main windows and get the glitter and chat controls.
 			Glitter glitter;
@@ -54,15 +67,20 @@ namespace TeaseAI_CE.UI
 			{
 				var other = new frmSplitOther();
 				var media = new frmSplitMedia();
-				other.Show();
-				media.Show();
+				forms.Add(other);
+				forms.Add(media);
+				other.FormClosed += formClosed;
+				media.FormClosed += formClosed;
+
 				chat = other.Chat;
 				glitter = other.Glitter;
 			}
 			else
 			{
 				var combined = new frmCombined();
-				combined.Show();
+				combined.FormClosed += formClosed;
+
+				forms.Add(combined);
 				chat = combined.Chat;
 				glitter = combined.Glitter;
 			}
@@ -70,15 +88,15 @@ namespace TeaseAI_CE.UI
 			// assign the output of the controller to go to the chat control.
 			controller.OnOutput = chat.Message;
 
-			vm.Start();
-
-			Hide();
+			return true;
 		}
 
-		private void frmStartup_FormClosed(object sender, FormClosedEventArgs e)
+		private void formClosed(object sender, FormClosedEventArgs e)
 		{
 			if (vm != null)
 				vm.Stop();
+
+			Application.Exit();
 		}
 	}
 }

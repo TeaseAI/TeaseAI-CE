@@ -15,7 +15,7 @@ namespace TeaseAI_CE
 		{
 			Application.EnableVisualStyles();
 			Application.SetCompatibleTextRenderingDefault(false);
-			Application.Run(new UI.frmStartup());
+			Application.Run(new UI.MyApplicationContext());
 		}
 	}
 }

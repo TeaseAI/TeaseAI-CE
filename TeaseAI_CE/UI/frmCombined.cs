@@ -15,10 +15,5 @@ namespace TeaseAI_CE.UI
 		{
 			InitializeComponent();
 		}
-
-		private void frmCombined_FormClosed(object sender, FormClosedEventArgs e)
-		{
-			Application.Exit();
-		}
 	}
 }

@@ -15,10 +15,5 @@ namespace TeaseAI_CE.UI
 		{
 			InitializeComponent();
 		}
-
-		private void frmSplitMedia_FormClosed(object sender, FormClosedEventArgs e)
-		{
-			Application.Exit();
-		}
 	}
 }

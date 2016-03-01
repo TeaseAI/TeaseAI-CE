@@ -123,7 +123,6 @@
 			this.Controls.Add(this.header1);
 			this.Name = "frmCombined";
 			this.Text = "TeaseAI CE";
-			this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.frmCombined_FormClosed);
 			this.splitContainer1.Panel1.ResumeLayout(false);
 			this.splitContainer1.Panel2.ResumeLayout(false);
 			((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();

@@ -84,12 +84,6 @@
     <Compile Include="UI\frmSplitMedia.Designer.cs">
       <DependentUpon>frmSplitMedia.cs</DependentUpon>
     </Compile>
-    <Compile Include="UI\frmStartup.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="UI\frmStartup.Designer.cs">
-      <DependentUpon>frmStartup.cs</DependentUpon>
-    </Compile>
     <Compile Include="UI\Glitter.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -114,6 +108,7 @@
     <Compile Include="UI\Metronome.Designer.cs">
       <DependentUpon>Metronome.cs</DependentUpon>
     </Compile>
+    <Compile Include="UI\MyApplicationContext.cs" />
     <Compile Include="UI\WebBrowserForChat.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -135,9 +130,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="UI\frmSplitMedia.resx">
       <DependentUpon>frmSplitMedia.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="UI\frmStartup.resx">
-      <DependentUpon>frmStartup.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="UI\Glitter.resx">
       <DependentUpon>Glitter.cs</DependentUpon>

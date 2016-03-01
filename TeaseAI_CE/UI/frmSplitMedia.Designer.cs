@@ -47,7 +47,6 @@
 			this.Controls.Add(this.media1);
 			this.Name = "frmSplitMedia";
 			this.Text = "TeaseAI CE - Media";
-			this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.frmSplitMedia_FormClosed);
 			this.ResumeLayout(false);
 
 		}

@@ -88,14 +88,14 @@ namespace TeaseAI_CE.UI
 				lblStatus.Text = message;
 			}
 		}
-		private static int precentToValue(float value, int min, int max)
+		private static int precentToValue(float percent, int min, int max)
 		{
-			value *= max;
-			if (value < min)
+			percent = percent * 0.001f * max;
+			if (percent < min)
 				return min;
-			if (value > max)
+			if (percent > max)
 				return max;
-			return (int)value;
+			return (int)percent;
 		}
 
 

@@ -15,10 +15,5 @@ namespace TeaseAI_CE.UI
 		{
 			InitializeComponent();
 		}
-
-		private void frmSplitChat_FormClosed(object sender, FormClosedEventArgs e)
-		{
-			Application.Exit();
-		}
 	}
 }
