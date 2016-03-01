@@ -15,5 +15,15 @@ namespace TeaseAI_CE.UI
 		{
 			InitializeComponent();
 		}
+
+		private void exitToolStripMenuItem_Click(object sender, EventArgs e)
+		{
+			Application.Exit();
+		}
+
+		private void settingsToolStripMenuItem_Click(object sender, EventArgs e)
+		{
+			MyApplicationContext.Instance.ShowSettings();
+		}
 	}
 }

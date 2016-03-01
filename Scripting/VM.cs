@@ -17,6 +17,7 @@ namespace TeaseAI_CE.Scripting
 
 		private Thread thread = null;
 		private volatile bool threadRun = false;
+		public bool IsRunning { get { return threadRun; } }
 
 		private ConcurrentDictionary<string, Function> functions = new ConcurrentDictionary<string, Function>();
 

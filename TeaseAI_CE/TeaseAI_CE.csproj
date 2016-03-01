@@ -153,6 +153,10 @@
       <Project>{7624e975-6cbd-4229-9795-e875f3e978ec}</Project>
       <Name>Scripting</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Settings\Settings.csproj">
+      <Project>{89d73340-09a6-41a3-8c85-bb46385742d8}</Project>
+      <Name>Settings</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

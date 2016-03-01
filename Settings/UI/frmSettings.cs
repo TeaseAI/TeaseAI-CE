@@ -6,37 +6,32 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
-using TeaseAI_CE.Serialization;
-using System.IO;
 
 namespace TeaseAI_CE.Settings
 {
-    public partial class frmSettings : Form
-    {
-        AllSettings allSettings = new AllSettings();
+	public partial class frmSettings : Form
+	{
+		AllSettings settings;
 
-        public frmSettings()
-        {
-            InitializeComponent();
-        }
+		public frmSettings(AllSettings settings)
+		{
+			this.settings = settings;
+			InitializeComponent();
+		}
 
-        private void frmSettings_Load(object sender, EventArgs e)
-        {
-            FileInfo settingsFile = new FileInfo("Settings.xml");
-            if(settingsFile.Exists)
-            {
-            }
-            else
-            {
-                Serializer.SerializeAsXML<AllSettings>(allSettings, settingsFile);
-            }
+		private void frmSettings_Load(object sender, EventArgs e)
+		{
+			flagShowTimestamps.Checked = settings.General.showTimestamps;
+		}
 
-            comboCupSize.SelectedIndex = (int)Domme.CupSize.C;
-        }
+		private void buttonSetDommeImageDir_Click(object sender, EventArgs e)
+		{
+			folderBrowserDommeDirectory.ShowDialog();
+		}
 
-        private void buttonSetDommeImageDir_Click(object sender, EventArgs e)
-        {
-            folderBrowserDommeDirectory.ShowDialog();
-        }
-    }
+		private void frmSettings_FormClosed(object sender, FormClosedEventArgs e)
+		{
+			settings.General.showTimestamps = flagShowTimestamps.Checked;
+		}
+	}
 }

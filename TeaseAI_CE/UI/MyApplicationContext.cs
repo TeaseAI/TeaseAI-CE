@@ -9,15 +9,17 @@ namespace TeaseAI_CE.UI
 {
 	class MyApplicationContext : ApplicationContext
 	{
-		public static MyApplicationContext Instance { get; private set; }
-
-		private VM vm;
+		internal static MyApplicationContext Instance { get; private set; }
 
 		private List<Form> forms = new List<Form>();
+
+		private Settings.AllSettings settings;
+		private VM vm;
 
 		internal MyApplicationContext()
 		{
 			Instance = this;
+			Application.ApplicationExit += onApplicationExit;
 
 			var loading = new frmLoading(load);
 			if (loading.ShowDialog() == DialogResult.Cancel)
@@ -29,11 +31,29 @@ namespace TeaseAI_CE.UI
 			vm.Start();
 		}
 
+		internal void ShowSettings()
+		{
+			bool running = vm.IsRunning;
+			if (running)
+				vm.Stop();
+
+			var frm = new Settings.frmSettings(settings);
+			frm.ShowDialog();
+
+			if (running)
+				vm.Start();
+		}
+
 		private bool load(frmLoading.StatusDelegate status)
 		{
-			status(0, "Creating scripting VM");
+			status(0, "Loading settings");
+			settings = Settings.AllSettings.Load();
+			if (settings == null)
+				return false;
+
+			status(10, "Creating scripting VM");
 			vm = new VM();
-			status(10, "Adding functions");
+			status(15, "Adding functions");
 			CoreFunctions.AddTo(vm);
 			status(20, "Loading scripts");
 			vm.LoadScripts("scripts"); // Load all scritps from scripts folder.
@@ -88,6 +108,7 @@ namespace TeaseAI_CE.UI
 			// assign the output of the controller to go to the chat control.
 			controller.OnOutput = chat.Message;
 
+			status(100, "Displaying UI");
 			return true;
 		}
 
@@ -97,6 +118,12 @@ namespace TeaseAI_CE.UI
 				vm.Stop();
 
 			Application.Exit();
+		}
+
+		private void onApplicationExit(object sender, EventArgs e)
+		{
+			if (settings != null)
+				settings.Save();
 		}
 	}
 }
