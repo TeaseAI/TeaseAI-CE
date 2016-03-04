@@ -24,6 +24,7 @@ namespace TeaseAI_CE.Scripting
 		private ReaderWriterLockSlim personControlLock = new ReaderWriterLockSlim(LockRecursionPolicy.SupportsRecursion);
 		private Dictionary<string, Personality> personalities = new Dictionary<string, Personality>();
 		private List<Controller> controllers = new List<Controller>();
+		private List<Dictionary<string, string>> inputReplace;
 
 		private ReaderWriterLockSlim scriptsLock = new ReaderWriterLockSlim(LockRecursionPolicy.SupportsRecursion);
 		private List<GroupInfo> scriptGroups = new List<GroupInfo>();
@@ -114,6 +115,39 @@ namespace TeaseAI_CE.Scripting
 			finally
 			{ personControlLock.ExitWriteLock(); }
 		}
+
+		public string InputToShorthand(string text)
+		{
+			if (inputReplace == null)
+				return text;
+
+			string result = " " + text.ToLowerInvariant();
+			personControlLock.EnterReadLock();
+			try
+			{
+				// Note: This is not efficient at all.
+				foreach (var level in inputReplace)
+				{
+					if (level == null)
+						continue;
+
+					text = result;
+					foreach (var kvp in level)
+					{
+						int i = text.IndexOf(kvp.Key);
+						if (i != -1)
+						{
+							result = result.Replace(kvp.Key, kvp.Value);
+							text = text.Remove(i, kvp.Key.Length);
+						}
+					}
+				}
+			}
+			finally
+			{ personControlLock.ExitReadLock(); }
+			return result.Trim();
+		}
+
 		public bool ChangePersonalityID(Personality p, string newID)
 		{
 			newID = KeyClean(newID);
@@ -302,13 +336,35 @@ namespace TeaseAI_CE.Scripting
 		{
 			if (!Directory.Exists(path))
 			{
-				// ToDo : Log directory does not exist.
+				(new Logger(path)).Error("Directory does not exist!");
 				return;
 			}
 
+			// load input replace files.
+			var files = Directory.GetFiles(path, "input replace.csv", SearchOption.AllDirectories);
+			personControlLock.EnterWriteLock();
+			try
+			{
+				inputReplace = new List<Dictionary<string, string>>();
+				foreach (var file in files)
+				{
+					var log = new Logger(file);
+					try
+					{
+						using (var sr = new StreamReader(file))
+							parseInputReplace(sr, log);
+					}
+					catch (IOException ex)
+					{ log.Error(ex.Message); }
+				}
+			}
+			finally
+			{ personControlLock.ExitWriteLock(); }
+
+			// load .vtscript files.
 			var infos = new List<GroupInfo>();
 
-			var files = Directory.GetFiles(path, "*.vtscript", SearchOption.AllDirectories);
+			files = Directory.GetFiles(path, "*.vtscript", SearchOption.AllDirectories);
 			foreach (string file in files)
 				infos.Add(parseFile(file));
 		}
@@ -555,6 +611,53 @@ namespace TeaseAI_CE.Scripting
 			// apply the start/end
 			str = str.Substring(start, end - start + 1);
 			return true;
+		}
+
+		private void parseInputReplace(StreamReader sr, Logger log)
+		{
+			int line = 0;
+			while (!sr.EndOfStream)
+			{
+				++line;
+				// get line ignore empty
+				var str = sr.ReadLine();
+				if (str == null || str.Length == 0 || line == 1)
+					continue;
+				// split line, check length.
+				var val = str.Split(',');
+				if (val.Length == 0)
+					continue;
+				if (val.Length < 2)
+				{
+					log.Warning("Pass is required!", line);
+					continue;
+				}
+				// get pass and keyward.
+				string keyword = val[1].Trim().ToLowerInvariant().Trim(new char[] { '"' });
+				int pass;
+				if (!int.TryParse(val[0], out pass) || pass < 0)
+				{
+					log.Warning("Invalid level :" + val[0], line);
+					continue;
+				}
+				pass--;
+				// fill list upto pass.
+				while (pass >= inputReplace.Count)
+				{
+					inputReplace.Add(null);
+				}
+				if (inputReplace[pass] == null)
+					inputReplace[pass] = new Dictionary<string, string>();
+				// split, trim then add to level.
+				var level = inputReplace[pass];
+				for (int i = 2; i < val.Length; ++i)
+				{
+					var tmp = val[i].Trim().ToLowerInvariant().Trim(new char[] { '"' });
+					if (tmp.Length == 0)
+						continue;
+					level[tmp] = keyword;
+				}
+			}
 		}
 
 		#endregion

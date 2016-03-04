@@ -94,6 +94,7 @@ namespace TeaseAI_CE.UI
 			// ToDo : At some point we will want to run setups.
 
 			status(70, "Creating personalities");
+			var player = vm.CreatePersonality("Player");
 			// Create a personality for testing.
 			var persona = vm.CreatePersonality("Lisa");
 			persona.RunSetup();
@@ -139,6 +140,8 @@ namespace TeaseAI_CE.UI
 
 			// assign the output of the controller to go to the chat control.
 			controller.OnOutput = chat.Message;
+			// just dump all chat input to the controller.
+			chat.OnInput = (string text) => { controller.Input(player, text); };
 
 			status(100, "Displaying UI");
 			return true;

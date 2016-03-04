@@ -10,7 +10,7 @@ Setup
 	#(.Test = false)
 
 
-// Some tag testing
+// Some tag thoughts
 Script.Tagging
 	// assign tags:
 	#(.MyTags = ("Start", "Welcome", "Notay"))
@@ -21,6 +21,22 @@ Script.Tagging
 	// look for a script tagged with "start" and has tag "notay" or "1885"
 	#GoTo( #QueryScript("start" and ("notay" or "1885")) )
 
+// Contact script thought
+Script.Contact
+	// invite lisa and set controller tags, with a timeout of 10min?
+	//#(local.contact = Invite(personalities.lisa, ("sub contact", "start"), Now + Time("10 minutes")))
+	// Wait for contact to leave?
+	//#Wait(local.contact)
+
+	// Maybe something like this could work
+	Hello from main
+	//#(local.contact = Invite(personalities.lisa, script.contact2))
+	Time for @local.contact.name to leave.
+	Bye @local.contact.name
+	That was fun!
+Script.Contact2
+	Hello
+	Okay ill leave, Bye!
 
 Script.One
 	Hello // Comment test

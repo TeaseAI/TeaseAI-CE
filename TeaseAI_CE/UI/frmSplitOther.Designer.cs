@@ -61,7 +61,7 @@
 			this.Glitter.Location = new System.Drawing.Point(0, 0);
 			this.Glitter.Name = "Glitter";
 			this.Glitter.Size = new System.Drawing.Size(251, 316);
-			this.Glitter.TabIndex = 0;
+			this.Glitter.TabIndex = 1;
 			// 
 			// Chat
 			// 
@@ -80,7 +80,7 @@
 			this.header1.MinimumSize = new System.Drawing.Size(512, 24);
 			this.header1.Name = "header1";
 			this.header1.Size = new System.Drawing.Size(753, 24);
-			this.header1.TabIndex = 1;
+			this.header1.TabIndex = 2;
 			// 
 			// frmSplitOther
 			// 

@@ -29,8 +29,8 @@
 		private void InitializeComponent()
 		{
 			this.splitContainer1 = new System.Windows.Forms.SplitContainer();
-			this.splitContainer2 = new System.Windows.Forms.SplitContainer();
 			this.Glitter = new TeaseAI_CE.UI.Glitter();
+			this.splitContainer2 = new System.Windows.Forms.SplitContainer();
 			this.media1 = new TeaseAI_CE.UI.Media();
 			this.Chat = new TeaseAI_CE.UI.Chat();
 			this.header1 = new TeaseAI_CE.UI.Header();
@@ -59,7 +59,17 @@
 			this.splitContainer1.Panel2.Controls.Add(this.splitContainer2);
 			this.splitContainer1.Size = new System.Drawing.Size(724, 521);
 			this.splitContainer1.SplitterDistance = 165;
-			this.splitContainer1.TabIndex = 2;
+			this.splitContainer1.TabIndex = 0;
+			this.splitContainer1.TabStop = false;
+			// 
+			// Glitter
+			// 
+			this.Glitter.Dock = System.Windows.Forms.DockStyle.Fill;
+			this.Glitter.Location = new System.Drawing.Point(0, 0);
+			this.Glitter.Name = "Glitter";
+			this.Glitter.Size = new System.Drawing.Size(165, 521);
+			this.Glitter.TabIndex = 0;
+			this.Glitter.TabStop = false;
 			// 
 			// splitContainer2
 			// 
@@ -77,15 +87,8 @@
 			this.splitContainer2.Panel2.Controls.Add(this.Chat);
 			this.splitContainer2.Size = new System.Drawing.Size(555, 521);
 			this.splitContainer2.SplitterDistance = 359;
-			this.splitContainer2.TabIndex = 3;
-			// 
-			// Glitter
-			// 
-			this.Glitter.Dock = System.Windows.Forms.DockStyle.Fill;
-			this.Glitter.Location = new System.Drawing.Point(0, 0);
-			this.Glitter.Name = "Glitter";
-			this.Glitter.Size = new System.Drawing.Size(165, 521);
-			this.Glitter.TabIndex = 0;
+			this.splitContainer2.TabIndex = 0;
+			this.splitContainer2.TabStop = false;
 			// 
 			// media1
 			// 
@@ -93,7 +96,7 @@
 			this.media1.Location = new System.Drawing.Point(0, 0);
 			this.media1.Name = "media1";
 			this.media1.Size = new System.Drawing.Size(555, 359);
-			this.media1.TabIndex = 0;
+			this.media1.TabIndex = 1;
 			// 
 			// Chat
 			// 
@@ -112,7 +115,7 @@
 			this.header1.MinimumSize = new System.Drawing.Size(512, 24);
 			this.header1.Name = "header1";
 			this.header1.Size = new System.Drawing.Size(724, 24);
-			this.header1.TabIndex = 3;
+			this.header1.TabIndex = 1;
 			// 
 			// frmCombined
 			// 

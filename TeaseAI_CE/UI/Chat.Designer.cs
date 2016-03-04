@@ -35,11 +35,12 @@
 			// txtUser
 			// 
 			this.txtUser.Dock = System.Windows.Forms.DockStyle.Bottom;
-			this.txtUser.Enabled = false;
 			this.txtUser.Location = new System.Drawing.Point(0, 130);
 			this.txtUser.Name = "txtUser";
 			this.txtUser.Size = new System.Drawing.Size(572, 20);
 			this.txtUser.TabIndex = 0;
+			this.txtUser.TextChanged += new System.EventHandler(this.txtUser_TextChanged);
+			this.txtUser.KeyDown += new System.Windows.Forms.KeyEventHandler(this.txtUser_KeyDown);
 			// 
 			// chatHistory
 			// 

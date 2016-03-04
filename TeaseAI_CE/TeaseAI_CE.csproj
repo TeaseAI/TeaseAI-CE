@@ -144,6 +144,9 @@
       <DependentUpon>Metronome.cs</DependentUpon>
     </EmbeddedResource>
     <None Include="app.config" />
+    <None Include="scripts\input replace.csv">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="scripts\test.vtscript">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

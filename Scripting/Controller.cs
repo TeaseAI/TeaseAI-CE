@@ -121,5 +121,12 @@ namespace TeaseAI_CE.Scripting
 			// ToDo : queue is not thread safe.
 			queue.Add(new BlockScope(this, root, root, 0, new Dictionary<string, Variable>()));
 		}
+
+		public void Input(Personality p, string text)
+		{
+			// ToDo : Finsh input.
+			if (OnOutput != null)
+				OnOutput(p, Personality.VM.InputToShorthand(text));
+		}
 	}
 }
