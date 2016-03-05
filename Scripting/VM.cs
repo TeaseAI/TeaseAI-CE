@@ -90,6 +90,8 @@ namespace TeaseAI_CE.Scripting
 		}
 		#endregion
 
+		#region Personality stuff
+
 		/// <summary>
 		/// Craete a new personality with given name.
 		/// </summary>
@@ -152,6 +154,19 @@ namespace TeaseAI_CE.Scripting
 			finally
 			{ personControlLock.ExitWriteLock(); }
 		}
+
+		public Personality[] GetPersonalities()
+		{
+			personControlLock.EnterReadLock();
+			try
+			{
+				return personalities.Values.ToArray();
+			}
+			finally
+			{ personControlLock.ExitReadLock(); }
+		}
+
+		#endregion
 
 		internal Variable GetVariable(string key, BlockScope sender)
 		{
@@ -257,17 +272,6 @@ namespace TeaseAI_CE.Scripting
 			{ scriptsLock.ExitReadLock(); }
 		}
 
-		public Personality[] GetPersonalities()
-		{
-			personControlLock.EnterReadLock();
-			try
-			{
-				return personalities.Values.ToArray();
-			}
-			finally
-			{ personControlLock.ExitReadLock(); }
-		}
-
 		public void AddFunction(string name, Function func)
 		{
 			functions[KeyClean(name)] = func;
@@ -283,17 +287,22 @@ namespace TeaseAI_CE.Scripting
 			try
 			{
 				foreach (var s in scriptSetups)
-				{
-					if (s.Valid != BlockBase.Validation.Passed)
-						continue;
-					c.Add(s);
-					while (c.next(sb))
-					{
-					}
-				}
+					runThroughScript(p, c, s, sb);
 			}
 			finally
 			{ scriptsLock.ExitReadLock(); }
+		}
+		/// <summary> Add script to controller, call next until false. </summary>
+		/// <returns> false if valid is not passed </returns>
+		private bool runThroughScript(Personality p, Controller c, BlockBase s, StringBuilder sb)
+		{
+			if (s.Valid != BlockBase.Validation.Passed)
+				return false;
+			c.Add(s);
+			while (c.next(sb))
+			{
+			}
+			return true;
 		}
 
 		#region Loading files
@@ -392,7 +401,7 @@ namespace TeaseAI_CE.Scripting
 						blockLine = currentLine;
 						// make sure key is a valid type.
 						var rootKey = KeySplit(blockKey)[0];
-						if (rootKey != "script" && rootKey != "list" && rootKey != "setup")
+						if (rootKey != "script" && rootKey != "list" && rootKey != "setup" && rootKey != "personality")
 						{
 							fileLog.Error("Invalid root type: " + rootKey, currentLine);
 							break;
@@ -432,6 +441,11 @@ namespace TeaseAI_CE.Scripting
 							}
 							else if (keySplit.Length == 2)
 							{
+								if (keySplit[1] == null || keySplit[1].Length == 0)
+								{
+									fileLog.Warning("sub key has length of zero!");
+									continue;
+								}
 								var key = fileKey + '.' + keySplit[1];
 								switch (keySplit[0])
 								{
@@ -452,6 +466,24 @@ namespace TeaseAI_CE.Scripting
 										{ } // ToDo : List
 										finally
 										{ scriptsLock.ExitWriteLock(); }
+										break;
+									case "personality":
+										{
+											key = keySplit[1];
+											// does personality already exist?
+											Personality p = null;
+											personControlLock.EnterReadLock();
+											personalities.TryGetValue(key, out p);
+											personControlLock.ExitReadLock();
+											// if not create new.
+											if (p == null)
+												p = CreatePersonality(key);
+											// run through the script to fill the personalities variables.
+											var script = new Script(blockLine, blockKey, lines, group, log);
+											var c = new Controller(p);
+											validateScript(c, script);
+											runThroughScript(p, c, script, new StringBuilder());
+										}
 										break;
 									default:
 										fileLog.Error("Invalid root type: " + keySplit[0], blockLine);
@@ -610,7 +642,7 @@ namespace TeaseAI_CE.Scripting
 		}
 		private void validateScript(Controller c, Script s)
 		{
-			// if script has never been validated, but has errors, the do not validate they are parse errors.
+			// if script has never been validated, but has errors, then do not validate, they are parse errors.
 			if (s.Valid == BlockBase.Validation.NeverRan && s.Log.ErrorCount > 0)
 			{
 				s.SetValid(false); // will set valid to failed.
