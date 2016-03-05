@@ -20,6 +20,7 @@ namespace TeaseAI_CE.Settings
 		public Images Images { get; set; } = new Images();
 		public Videos Videos { get; set; } = new Videos();
 		public Ranges Ranges { get; set; } = new Ranges();
+		public Personalities Personalities { get; set; } = new Personalities();
 
 		public static AllSettings Load()
 		{

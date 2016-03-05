@@ -4,6 +4,8 @@ using System.Windows.Forms;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using System.IO;
+using System.Diagnostics;
 using TeaseAI_CE.Scripting;
 
 namespace TeaseAI_CE.UI
@@ -89,14 +91,20 @@ namespace TeaseAI_CE.UI
 			CoreFunctions.AddTo(vm);
 			status(20, "Loading scripts");
 			vm.LoadFromDirectory("scripts"); // Load all scritps from scripts folder.
+			status(40, "Loading personalities");
+			vm.LoadFromDirectory(settings.Personalities.Path);
 			status(50, "Validating scripts");
 			vm.ValidateScripts();
 			// ToDo : At some point we will want to run setups.
 
 			status(70, "Creating personalities");
-			var player = vm.CreatePersonality("Player");
+			Personality player;
+			if (!vm.TryGetPersonality("player", out player))
+				player = vm.CreatePersonality("Player");
 			// Create a personality for testing.
-			var persona = vm.CreatePersonality("Lisa");
+			Personality persona;
+			if (!vm.TryGetPersonality("Lisa", out persona))
+				persona = vm.CreatePersonality("Lisa");
 			persona.RunSetup();
 			var controller = vm.CreateController(persona);
 			controller.Interval = 500;
@@ -162,8 +170,63 @@ namespace TeaseAI_CE.UI
 
 		private void onApplicationExit(object sender, EventArgs e)
 		{
+			// save personalities.
+			SavePersonalities();
+
+			// save settings
 			if (settings != null)
 				settings.Save();
+		}
+
+		public void SavePersonalities()
+		{
+			string path = settings.Personalities.Path;
+			try
+			{
+				path = Path.GetFullPath(path);
+			}
+			catch (Exception ex)
+			{
+				Trace.WriteLine(path + ": " + ex.Message);
+				settings.Personalities.Path = path = Path.GetFullPath("personalities");
+			}
+
+			Directory.CreateDirectory(path);
+			var personalities = vm.GetPersonalities();
+
+			// remove personality files that nolonger have a personality.
+			var files = Directory.GetFiles(path, "*.vtscript", SearchOption.TopDirectoryOnly);
+			foreach (var file in files)
+			{
+				var key = VM.KeyClean(Path.GetFileNameWithoutExtension(file));
+				bool found = false;
+				foreach (var p in personalities)
+				{
+					if (p.ID == key)
+					{
+						found = true;
+						break;
+					}
+				}
+				if (!found)
+				{
+					try
+					{
+						File.Delete(file);
+					}
+					catch (Exception ex)
+					{
+						Trace.WriteLine(ex.Message);
+					}
+				}
+			}
+
+			// save all personalities.
+			foreach (var p in personalities)
+			{
+				using (var stream = new StreamWriter(Path.Combine(path, p.ID + ".vtscript")))
+					stream.Write(p.WriteVariablesToString());
+			}
 		}
 	}
 }

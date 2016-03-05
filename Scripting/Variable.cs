@@ -62,6 +62,27 @@ namespace TeaseAI_CE.Scripting
 			return "UnSet";
 		}
 
+		public virtual void WriteValue(StringBuilder sb)
+		{
+			// ToDo : Handle other types like scripts.
+			if (!IsSet)
+				return;
+			if (Value is string)
+			{
+				sb.Append('"');
+				var str = (string)Value;
+				str = str.Replace("\"", "\\\"").Replace("\n", "\\n");
+				sb.Append(str);
+				sb.Append('"');
+			}
+			else if (Value is float || Value is bool)
+			{
+				sb.Append(Value.ToString());
+			}
+			else
+				sb.Append("Unsupported_Type");
+		}
+
 		public static Variable Evaluate(BlockScope sender, Variable left, Operators op, Variable right)
 		{
 			var log = sender.Root.Log;

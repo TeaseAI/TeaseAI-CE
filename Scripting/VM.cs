@@ -120,6 +120,17 @@ namespace TeaseAI_CE.Scripting
 			{ personControlLock.ExitWriteLock(); }
 		}
 
+		public bool TryGetPersonality(string name, out Personality p)
+		{
+			personControlLock.EnterReadLock();
+			try
+			{
+				return personalities.TryGetValue(KeyClean(name), out p);
+			}
+			finally
+			{ personControlLock.ExitReadLock(); }
+		}
+
 		public bool ChangePersonalityID(Personality p, string newID)
 		{
 			newID = KeyClean(newID);

@@ -46,7 +46,7 @@ namespace TeaseAI_CE.Scripting
 			// Variables MUST always be set:
 			variables["name"] = name_var = new Variable(name);
 			variables["id"] = id_var = new Variable(id) { Readonly = true };
-			variables["enabled_user"] = enabledUser_var = new Variable(true) { Readonly = true };
+			variables["enabled_user"] = enabledUser_var = new Variable(true);
 		}
 
 		public void RunSetup()
@@ -83,6 +83,33 @@ namespace TeaseAI_CE.Scripting
 			finally
 			{ varLock.ExitReadLock(); }
 		}
+
+		public string WriteVariablesToString()
+		{
+			var sb = new StringBuilder();
+			varLock.EnterReadLock();
+			try
+			{
+				sb.Append("Personality.");
+				sb.AppendLine(ID);
+
+				foreach (var kvp in variables)
+				{
+					if (!kvp.Value.IsSet || kvp.Key == "id")
+						continue;
+					// TAB#(.KEY=VALUE)
+					sb.Append("\t#(.");
+					sb.Append(kvp.Key);
+					sb.Append("=");
+					kvp.Value.WriteValue(sb);
+					sb.AppendLine(")");
+				}
+			}
+			finally
+			{ varLock.ExitReadLock(); }
+			return sb.ToString();
+		}
+
 		public override string ToString()
 		{
 			return ID;
