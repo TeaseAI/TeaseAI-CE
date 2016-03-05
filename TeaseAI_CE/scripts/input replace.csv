@@ -1,8 +1,8 @@
 ﻿pass, keyword   , inputs   (first line ignored.)  Each pass we replace all inputs found with the keyword.   Use "" when you need whitespace on an end.
 
-1   , " are "   , " r "
-1   , " you "   , " u ", " yu "
-1   , " your "  , " ur "
+2   , " are "   , " r "
+2   , " you "   , " u ", " yu "
+1   , " your "  , " ur ", " u are ", " u r "
 1   , your      , you are, youre, you're
 1   , thats     , that's, that is, this is
 1   , cant      , can't, can not

@@ -33,6 +33,8 @@ namespace TeaseAI_CE.Scripting
 
 		public const char IndentChar = '\t';
 		public static readonly char[] InvalidKeyChar = new char[] { '#', '@', '(', ',', ')', '"', '\\', '/', '*', '+', '-', '<', '=', '>' };
+		public static readonly char[] Punctuation = new char[] { '\'', '!', '?', '.', ',' };
+		private static readonly char[] keySeparator = { '.' };
 
 		#region Tick thread
 		/// <summary> Starts the controller update thread </summary>
@@ -114,38 +116,6 @@ namespace TeaseAI_CE.Scripting
 			}
 			finally
 			{ personControlLock.ExitWriteLock(); }
-		}
-
-		public string InputToShorthand(string text)
-		{
-			if (inputReplace == null)
-				return text;
-
-			string result = " " + text.ToLowerInvariant();
-			personControlLock.EnterReadLock();
-			try
-			{
-				// Note: This is not efficient at all.
-				foreach (var level in inputReplace)
-				{
-					if (level == null)
-						continue;
-
-					text = result;
-					foreach (var kvp in level)
-					{
-						int i = text.IndexOf(kvp.Key);
-						if (i != -1)
-						{
-							result = result.Replace(kvp.Key, kvp.Value);
-							text = text.Remove(i, kvp.Key.Length);
-						}
-					}
-				}
-			}
-			finally
-			{ personControlLock.ExitReadLock(); }
-			return result.Trim();
 		}
 
 		public bool ChangePersonalityID(Personality p, string newID)
@@ -326,13 +296,12 @@ namespace TeaseAI_CE.Scripting
 			{ scriptsLock.ExitReadLock(); }
 		}
 
-		#region Loading and parsing files
+		#region Loading files
 
 		/// <summary>
-		/// Load scripts with .vtscript in path and all sub directories.
+		/// Load files in path and all sub directories.
 		/// </summary>
-		/// <param name="path"></param>
-		public void LoadScripts(string path)
+		public void LoadFromDirectory(string path)
 		{
 			if (!Directory.Exists(path))
 			{
@@ -340,7 +309,7 @@ namespace TeaseAI_CE.Scripting
 				return;
 			}
 
-			// load input replace files.
+			// load all input replace files.
 			var files = Directory.GetFiles(path, "input replace.csv", SearchOption.AllDirectories);
 			personControlLock.EnterWriteLock();
 			try
@@ -348,60 +317,62 @@ namespace TeaseAI_CE.Scripting
 				inputReplace = new List<Dictionary<string, string>>();
 				foreach (var file in files)
 				{
-					var log = new Logger(file);
-					try
-					{
-						using (var sr = new StreamReader(file))
-							parseInputReplace(sr, log);
-					}
-					catch (IOException ex)
-					{ log.Error(ex.Message); }
+					Logger fileLog;
+					var rawLines = getFileLines(file, out fileLog);
+					if (rawLines == null)
+						continue;
+					parseInputReplace(rawLines, fileLog);
 				}
 			}
 			finally
 			{ personControlLock.ExitWriteLock(); }
 
-			// load .vtscript files.
-			var infos = new List<GroupInfo>();
-
+			// load all .vtscript files.
 			files = Directory.GetFiles(path, "*.vtscript", SearchOption.AllDirectories);
 			foreach (string file in files)
-				infos.Add(parseFile(file));
+			{
+				Logger fileLog;
+				// get all lines from the file.
+				var rawLines = getFileLines(file, out fileLog);
+				if (rawLines == null)
+					continue;
+				// get the base script key from the file name.
+				string fileKey = KeyClean(Path.GetFileNameWithoutExtension(file));
+				// parse as a group
+				parseScriptGroup(rawLines, file, fileKey, fileLog);
+			}
 		}
 
-		/// <summary>
-		/// Loads file from disk and parses in to the system.
-		/// </summary>
-		/// <param name="file"></param>
-		/// <returns></returns>
-		private GroupInfo parseFile(string file)
+		/// <summary> Gets all lines in file, returns null on IOException. </summary>
+		private List<string> getFileLines(string file, out Logger log)
 		{
-			var fileLog = new Logger(file);
-			// get the base script key from the file name.
-			var fileKey = KeyClean(Path.GetFileNameWithoutExtension(file));
-
-			if (!File.Exists(file))
-			{
-				fileLog.Error("File does not exist!");
-				return new GroupInfo(file, fileKey, fileLog);
-			}
-
-			// Read the whole file into a tempary list.
-			var rawLines = new List<string>();
+			log = new Logger(file);
+			var result = new List<string>();
 			try
 			{
-				using (var sr = new StreamReader(file))
-					while (!sr.EndOfStream)
-						rawLines.Add(sr.ReadLine());
+				using (var stream = new StreamReader(file))
+					while (!stream.EndOfStream)
+						result.Add(stream.ReadLine());
 			}
-			catch (Exception ex)
+			catch (IOException ex)
 			{
-				fileLog.Error(ex.Message);
-				return new GroupInfo(file, fileKey, fileLog);
+				log.Error(ex.Message);
+				return null;
 			}
+			return result;
+		}
 
+		#endregion
+
+		#region Parse scripts
+
+		/// <summary>
+		/// Parses raw lines in to the system.
+		/// </summary>
+		private void parseScriptGroup(List<string> rawLines, string filePath, string fileKey, Logger fileLog)
+		{
 			// split-up the lines in to indatation based blocks.
-			var group = new GroupInfo(file, fileKey, fileLog);
+			var group = new GroupInfo(filePath, fileKey, fileLog);
 			scriptsLock.EnterWriteLock();
 			scriptGroups.Add(group);
 			scriptsLock.ExitWriteLock();
@@ -484,7 +455,7 @@ namespace TeaseAI_CE.Scripting
 										break;
 									default:
 										fileLog.Error("Invalid root type: " + keySplit[0], blockLine);
-										return group;
+										return;
 								}
 							}
 						}
@@ -493,7 +464,7 @@ namespace TeaseAI_CE.Scripting
 				else
 					++currentLine;
 			}
-			return group;
+			return;
 		}
 
 		/// <summary>
@@ -611,53 +582,6 @@ namespace TeaseAI_CE.Scripting
 			// apply the start/end
 			str = str.Substring(start, end - start + 1);
 			return true;
-		}
-
-		private void parseInputReplace(StreamReader sr, Logger log)
-		{
-			int line = 0;
-			while (!sr.EndOfStream)
-			{
-				++line;
-				// get line ignore empty
-				var str = sr.ReadLine();
-				if (str == null || str.Length == 0 || line == 1)
-					continue;
-				// split line, check length.
-				var val = str.Split(',');
-				if (val.Length == 0)
-					continue;
-				if (val.Length < 2)
-				{
-					log.Warning("Pass is required!", line);
-					continue;
-				}
-				// get pass and keyward.
-				string keyword = val[1].Trim().ToLowerInvariant().Trim(new char[] { '"' });
-				int pass;
-				if (!int.TryParse(val[0], out pass) || pass < 0)
-				{
-					log.Warning("Invalid level :" + val[0], line);
-					continue;
-				}
-				pass--;
-				// fill list upto pass.
-				while (pass >= inputReplace.Count)
-				{
-					inputReplace.Add(null);
-				}
-				if (inputReplace[pass] == null)
-					inputReplace[pass] = new Dictionary<string, string>();
-				// split, trim then add to level.
-				var level = inputReplace[pass];
-				for (int i = 2; i < val.Length; ++i)
-				{
-					var tmp = val[i].Trim().ToLowerInvariant().Trim(new char[] { '"' });
-					if (tmp.Length == 0)
-						continue;
-					level[tmp] = keyword;
-				}
-			}
 		}
 
 		#endregion
@@ -1163,9 +1087,104 @@ namespace TeaseAI_CE.Scripting
 
 		#endregion
 
-		/// <summary>
-		/// Removes white-space, sets lowercase, removes invalid characters.
-		/// </summary>
+		#region Input to shorthand
+
+		/// <summary> Runs text through input replace, to convert to shorthand. </summary>
+		public string InputToShorthand(string text)
+		{
+			if (inputReplace == null)
+				return text;
+			// we add spaces on the end so we can replace " u " with " you " and not replace " you " with " yoyou "
+			string result = " " + SanitizeInputReplace(text) + " ";
+			personControlLock.EnterReadLock();
+			try
+			{
+				// Note: This method is not efficient at all.
+				foreach (var level in inputReplace)
+				{
+					if (level == null)
+						continue;
+
+					text = result;
+					foreach (var kvp in level)
+					{
+						int i = text.IndexOf(kvp.Key);
+						if (i != -1)
+						{
+							result = result.Replace(kvp.Key, kvp.Value);
+							text = text.Remove(i, kvp.Key.Length);
+						}
+					}
+				}
+			}
+			finally
+			{ personControlLock.ExitReadLock(); }
+			// Remove spaces on the ends, then return.
+			return result.Trim();
+		}
+
+		/// <summary> Parses rawLines as csv for the input replace system </summary>
+		private void parseInputReplace(List<string> rawLines, Logger log)
+		{
+			for (int line = 0; line < rawLines.Count; ++line)
+			{
+				// get line ignore empty
+				var str = rawLines[line];
+				if (str == null || str.Length == 0 || line == 0)
+					continue;
+				log.SetId(line + 1);
+				// split line, check length.
+				var val = str.Split(',');
+				if (val.Length == 0)
+					continue;
+				if (val.Length < 2)
+				{
+					log.Warning("Pass is required!");
+					continue;
+				}
+				// get pass and keyward.
+				string keyword = SanitizeInputReplace(val[1]);
+				int pass;
+				if (!int.TryParse(val[0], out pass) || pass < 0)
+				{
+					log.Warning("Invalid level :" + val[0]);
+					continue;
+				}
+				pass--;
+				// fill list upto pass.
+				while (pass >= inputReplace.Count)
+				{
+					inputReplace.Add(null);
+				}
+				if (inputReplace[pass] == null)
+					inputReplace[pass] = new Dictionary<string, string>();
+				// split, trim then add to level.
+				var level = inputReplace[pass];
+				for (int i = 2; i < val.Length; ++i)
+				{
+					var tmp = SanitizeInputReplace(val[i]);
+					if (tmp.Length == 0)
+						continue;
+					if (tmp == keyword)
+					{
+						log.Warning(string.Format("'{0}' is not needed because it is equal to the keyword '{1}'", val[i], keyword));
+						continue;
+					}
+					level[tmp] = keyword;
+				}
+			}
+		}
+
+		/// <summary> Sanitize a string for use in the input replace system. </summary>
+		public static string SanitizeInputReplace(string str)
+		{
+			str = str.Trim().Trim(new char[] { '"' }).ToLowerInvariant();
+			return new string(str.Where(c => !Punctuation.Contains(c)).ToArray());
+		}
+
+		#endregion
+
+		/// <summary> Removes white-space, sets lowercase, removes invalid characters. </summary>
 		public static string KeyClean(string key)
 		{
 			var array = key.ToCharArray();
@@ -1180,7 +1199,6 @@ namespace TeaseAI_CE.Scripting
 			}
 			return new string(array);
 		}
-		private readonly static char[] keySeparator = { '.' };
 		/// <summary> Splits the key in two pices, first being root key, second is remaining key.
 		public static string[] KeySplit(string key)
 		{

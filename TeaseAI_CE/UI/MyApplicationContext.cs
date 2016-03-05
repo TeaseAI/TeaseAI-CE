@@ -88,7 +88,7 @@ namespace TeaseAI_CE.UI
 			status(15, "Adding functions");
 			CoreFunctions.AddTo(vm);
 			status(20, "Loading scripts");
-			vm.LoadScripts("scripts"); // Load all scritps from scripts folder.
+			vm.LoadFromDirectory("scripts"); // Load all scritps from scripts folder.
 			status(50, "Validating scripts");
 			vm.ValidateScripts();
 			// ToDo : At some point we will want to run setups.
