@@ -1109,6 +1109,9 @@ namespace TeaseAI_CE.Scripting
 			// is str float?
 			if (float.TryParse(str, out f))
 				items.Add(new Variable(f));
+			// percent to float?
+			else if (str.EndsWith("%") && float.TryParse(str.Substring(0, str.Length - 1), out f))
+				items.Add(new Variable(f * 0.01f));
 			// bool
 			else if (bool.TryParse(str, out b))
 				items.Add(new Variable(b));
