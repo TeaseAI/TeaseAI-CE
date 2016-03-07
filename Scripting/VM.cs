@@ -287,6 +287,10 @@ namespace TeaseAI_CE.Scripting
 		{
 			functions[KeyClean(name)] = func;
 		}
+		public void AddFunction(Function func)
+		{
+			AddFunction(func.Method.Name, func);
+		}
 
 		/// <summary> Runs all setup scripts on the personality. </summary>
 		/// <param name="p"></param>
@@ -738,14 +742,16 @@ namespace TeaseAI_CE.Scripting
 			while (i < str.Length)
 			{
 				c = str[i];
-				++i;
 				if (c == ' ')
 					break;
 				else if (c == '(')
 				{
+					++i;
 					args = execParentheses(sender, str, ref i);
 					break;
 				}
+				else
+					++i;
 				sb.Append(c);
 			}
 			if (sb.Length > 0)
