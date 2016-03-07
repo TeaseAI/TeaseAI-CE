@@ -1,4 +1,5 @@
-﻿
+﻿using System;
+
 namespace TeaseAI_CE.Scripting
 {
 	public static class CoreFunctions
@@ -65,8 +66,10 @@ namespace TeaseAI_CE.Scripting
 					sender.Root.Log.Error("GoTo requires args.");
 					return null;
 				}
+				int i = -1;
 				foreach (var arg in args)
 				{
+					++i;
 					if (!arg.IsSet)
 						continue;
 
@@ -75,10 +78,109 @@ namespace TeaseAI_CE.Scripting
 						sender.Controller.Add((Script)arg.Value);
 					}
 					else
-						sender.Root.Log.Error(string.Format("Arg is of unsupported type '{0}'.", arg.Value.GetType().Name));
+						sender.Root.Log.Error(string.Format("Arg {0} is of unsupported type '{1}'.", i, arg.Value.GetType().Name));
 				}
 				return null;
 			});
+			#endregion
+
+
+			#region date time
+
+			vm.AddFunction("date", (BlockScope sender, Variable[] args) =>
+			{
+				if (args.Length == 0)
+					return new Variable(DateTime.Now);
+				if (args.Length == 1)
+				{
+					if (!args[0].IsSet)
+						sender.Root.Log.Error("Arg 0 is UnSet!");
+					else if (args[0].Value is string)
+					{
+						DateTime result;
+						try
+						{
+							if (DateTime.TryParse((string)args[0].Value, out result))
+								return new Variable(result);
+						}
+						catch (ArgumentOutOfRangeException ex)
+						{ sender.Root.Log.Error(ex.Message); }
+					}
+					else
+						sender.Root.Log.Error(string.Format("Arg 0 is of unsupported type '{0}'.", args[0].Value.GetType().Name));
+					return new Variable(DateTime.Now);
+				}
+				else
+				{
+					for (int i = 0; i < args.Length; ++i)
+					{
+						if (!args[i].IsSet)
+						{
+							sender.Root.Log.Error(string.Format("Arg {0} is UnSet!", i));
+							continue;
+						}
+						var value = args[i].Value;
+						if (value is string)
+						{
+							DateTime result;
+							try
+							{
+								if (DateTime.TryParse((string)args[0].Value, out result))
+									return new Variable(result);
+							}
+							catch (ArgumentOutOfRangeException ex)
+							{ sender.Root.Log.Error(ex.Message); }
+						}
+						else
+							sender.Root.Log.Error(string.Format("Arg 0 is of unsupported type '{0}'.", args[0].Value.GetType().Name));
+						return new Variable(DateTime.Now);
+					}
+				}
+				return new Variable(DateTime.Now);
+			});
+
+			vm.AddFunction("time", (BlockScope sender, Variable[] args) =>
+			{
+				if (args.Length == 0)
+					return new Variable(TimeSpan.Zero);
+				if (args.Length == 1)
+				{
+					if (!args[0].IsSet)
+						sender.Root.Log.Error("Arg 0 is UnSet!");
+					else if (args[0].Value is string)
+					{
+						TimeSpan result;
+						if (TimeSpan.TryParse((string)args[0].Value, out result))
+							return new Variable(result);
+					}
+					else
+						sender.Root.Log.Error(string.Format("Arg 0 is of unsupported type '{0}'.", args[0].Value.GetType().Name));
+					return new Variable(TimeSpan.Zero);
+				}
+				else
+				{
+					for (int i = 0; i < args.Length; ++i)
+					{
+						if (!args[i].IsSet)
+						{
+							sender.Root.Log.Error(string.Format("Arg {0} is UnSet!", i));
+							continue;
+						}
+						var value = args[i].Value;
+						if (value is string)
+						{
+							TimeSpan result;
+							if (TimeSpan.TryParse((string)args[0].Value, out result))
+								return new Variable(result);
+						}
+						else
+							sender.Root.Log.Error(string.Format("Arg 0 is of unsupported type '{0}'.", args[0].Value.GetType().Name));
+						return new Variable(TimeSpan.Zero);
+					}
+				}
+				return new Variable(TimeSpan.Zero);
+			});
+
 			#endregion
 		}
 	}

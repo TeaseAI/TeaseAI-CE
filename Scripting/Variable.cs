@@ -33,7 +33,7 @@ namespace TeaseAI_CE.Scripting
 		protected object _value = null;
 		public object Value { get { return getObj(); } set { setObj(value); } }
 		/// <summary> Does variable have a value? </summary>
-		public virtual bool IsSet { get { return _value != null; } }
+		public virtual bool IsSet { get { return getObj() != null; } }
 
 		/// <summary> If true scripts can only read. </summary>
 		public bool Readonly = false;
@@ -44,6 +44,10 @@ namespace TeaseAI_CE.Scripting
 		public Variable(bool value)
 		{ _value = value; }
 		public Variable(float value)
+		{ _value = value; }
+		public Variable(DateTime value)
+		{ _value = value; }
+		public Variable(TimeSpan value)
 		{ _value = value; }
 
 		protected virtual object getObj()
@@ -78,6 +82,18 @@ namespace TeaseAI_CE.Scripting
 			else if (Value is float || Value is bool)
 			{
 				sb.Append(Value.ToString());
+			}
+			else if (Value is DateTime)
+			{
+				sb.Append("Date(\"");
+				sb.Append(((DateTime)Value).ToString("G"));
+				sb.Append("\")");
+			}
+			else if (Value is TimeSpan)
+			{
+				sb.Append("Time(\"");
+				sb.Append(((TimeSpan)Value).ToString("G"));
+				sb.Append("\")");
 			}
 			else
 				sb.Append("Unsupported_Type");
@@ -145,22 +161,55 @@ namespace TeaseAI_CE.Scripting
 				case Operators.Add:
 					if (l is float && r is float)
 						return new Variable((float)l + (float)r);
-					else if (l is string && r is string)
+					if (l is string && r is string)
 						return new Variable(string.Concat(l, r));
+					if ((l is DateTime && r is TimeSpan))
+					{
+						try
+						{ return new Variable((DateTime)l + (TimeSpan)r); }
+						catch (ArgumentOutOfRangeException ex)
+						{ log.Error(ex.Message); }
+					}
+					if (l is TimeSpan && r is TimeSpan)
+					{
+						try
+						{ return new Variable((TimeSpan)l + (TimeSpan)r); }
+						catch (OverflowException ex)
+						{ log.Error(ex.Message); }
+					}
 					log.Error(string.Format("Unable to {0} {1} with {2}", op.ToString(), l.GetType().Name, r.GetType().Name));
 					return null;
+
 				case Operators.Subtract:
 					if (l is float && r is float)
 						return new Variable((float)l - (float)r);
-					else if (l is string && r is string)
+					if (l is string && r is string)
 						return new Variable(((string)l).Replace((string)r, ""));
+					if ((l is DateTime && r is DateTime))
+						return new Variable((DateTime)l - (DateTime)r);
+					if ((l is DateTime && r is TimeSpan))
+					{
+						try
+						{ return new Variable((DateTime)l - (TimeSpan)r); }
+						catch (ArgumentOutOfRangeException ex)
+						{ log.Error(ex.Message); }
+					}
+					if (l is TimeSpan && r is TimeSpan)
+					{
+						try
+						{ return new Variable((TimeSpan)l - (TimeSpan)r); }
+						catch (OverflowException ex)
+						{ log.Error(ex.Message); }
+					}
 					log.Error(string.Format("Unable to {0} {1} with {2}", op.ToString(), l.GetType().Name, r.GetType().Name));
 					return null;
+
 				case Operators.Multiply:
 					if (l is float && r is float)
 						return new Variable((float)l * (float)r);
 					log.Error(string.Format("Unable to {0} {1} with {2}", op.ToString(), l.GetType().Name, r.GetType().Name));
 					return null;
+
 				case Operators.Divide:
 					if (l is float && r is float)
 					{
@@ -177,6 +226,7 @@ namespace TeaseAI_CE.Scripting
 					}
 					log.Error(string.Format("Unable to {0} {1} with {2}", op.ToString(), l.GetType().Name, r.GetType().Name));
 					return null;
+
 				// Logic
 				case Operators.Equal:
 					if (l is string && r is string) // for strings we want to ignore the case.
@@ -185,11 +235,19 @@ namespace TeaseAI_CE.Scripting
 				case Operators.More:
 					if (l is float && r is float)
 						return new Variable((float)l > (float)r);
+					if (l is DateTime && r is DateTime)
+						return new Variable((DateTime)l > (DateTime)r);
+					if (l is TimeSpan && r is TimeSpan)
+						return new Variable((TimeSpan)l > (TimeSpan)r);
 					log.Error(string.Format("Unable to {0} {1} with {2}", op.ToString(), l.GetType().Name, r.GetType().Name));
 					return null;
 				case Operators.Less:
 					if (l is float && r is float)
 						return new Variable((float)l < (float)r);
+					if (l is DateTime && r is DateTime)
+						return new Variable((DateTime)l < (DateTime)r);
+					if (l is TimeSpan && r is TimeSpan)
+						return new Variable((TimeSpan)l < (TimeSpan)r);
 					log.Error(string.Format("Unable to {0} {1} with {2}", op.ToString(), l.GetType().Name, r.GetType().Name));
 					return null;
 				case Operators.And:
@@ -246,6 +304,40 @@ namespace TeaseAI_CE.Scripting
 		{
 			Interlocked.Exchange(ref _value, value as T);
 		}
+	}
 
+	/// <summary>
+	/// Allows one to do nasty things, like using methods as variables.
+	/// </summary>
+	public class VariableFunc : Variable
+	{
+		public delegate object GetDelegate();
+		public delegate void SetDelegate(object value);
+		private GetDelegate get;
+		private SetDelegate set;
+
+		/// <param name="getter"></param>
+		/// <param name="setter"> if null, Variable is readonly. </param>
+		public VariableFunc(GetDelegate getter, SetDelegate setter)
+		{
+			get = getter;
+			set = setter;
+			Readonly = set == null;
+		}
+
+		public override bool IsSet { get { return set != null || get != null; } }
+		protected override object getObj()
+		{
+			if (get == null)
+				return _value = base.getObj();
+			else
+				return get();
+		}
+		protected override void setObj(object value)
+		{
+			_value = value;
+			if (set != null)
+				set(value);
+		}
 	}
 }

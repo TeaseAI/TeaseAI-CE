@@ -852,7 +852,7 @@ namespace TeaseAI_CE.Scripting
 							if (count < items.Count && items[items.Count - 1].IsValue)
 							{
 								var v = items[items.Count - 1].Value;
-								funcParenth = v.IsSet && v.Value is Variable<Function>;
+								funcParenth = v.IsSet && v is Variable<Function>;
 							}
 
 							++i;

@@ -62,10 +62,11 @@ Script.Welcome
 		This is just for testing!
 	#goto(script.two)
 	// Lets test some math, and assign a variable.
-	I am @(.Age=11*2+1) years old.
+	I am @(.Age) years old.
 	@.somevar
 	@(50% + 25%)
 
-Personality.Stephanie
-	#(.name = "Stephanie")
+Personality.Lisa
+	#(.name = "Lisa")
 	#(.eye = "green")
+	#(.birthday = Date("1988-05-22"))

@@ -47,6 +47,24 @@ namespace TeaseAI_CE.Scripting
 			variables["name"] = name_var = new Variable(name);
 			variables["id"] = id_var = new Variable(id) { Readonly = true };
 			variables["enabled_user"] = enabledUser_var = new Variable(true);
+			variables["birthday"] = new Variable(DateTime.MinValue);
+
+			// readonly age, returns DateTime.Now - BirthDay
+			variables["age"] = new VariableFunc(() =>
+			{
+				varLock.EnterReadLock();
+				try
+				{
+					var span = DateTime.Now - (DateTime)variables["birthday"].Value;
+					return (float)(new DateTime(1, 1, 1) + span).Year - 1f;
+				}
+				catch (ArgumentOutOfRangeException)
+				{
+					return -1f;
+				}
+				finally
+				{ varLock.ExitReadLock(); }
+			}, null);
 		}
 
 		public void RunSetup()
@@ -95,7 +113,7 @@ namespace TeaseAI_CE.Scripting
 
 				foreach (var kvp in variables)
 				{
-					if (!kvp.Value.IsSet || kvp.Key == "id")
+					if (!kvp.Value.IsSet || kvp.Value.Readonly)
 						continue;
 					// TAB#(.KEY=VALUE)
 					sb.Append("\t#(.");
