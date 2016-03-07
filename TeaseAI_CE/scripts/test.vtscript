@@ -8,6 +8,8 @@ Setup
 	#(.SomeVar = "Bye!")
 	//#(.Test = true)
 	#(.Test = false)
+	#if(not(.lastknown))
+		#(.lastknown = date)
 
 
 // Some tag thoughts
@@ -62,7 +64,7 @@ Script.Welcome
 		This is just for testing!
 	#goto(script.two)
 	// Lets test some math, and assign a variable.
-	I am @(.Age) years old.
+	I am @.Age years old.
 	@.somevar
 	@(50% + 25%)
 

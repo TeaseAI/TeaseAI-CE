@@ -56,6 +56,20 @@ namespace TeaseAI_CE.Scripting
 				sender.LastIf = !sender.ExitLine;
 				return new Variable(sender.LastIf);
 			});
+			vm.AddFunction("not", (BlockScope sender, Variable[] args) =>
+			{
+				if (args.Length != 0)
+					return new Variable(false);
+				if (args.Length > 1)
+					sender.Root.Log.Warning("Function not, only supports one or zero argument(s)!");
+				if (!args[0].IsSet)
+					sender.Root.Log.Error("Function not, argument is not set!");
+				else if (args[0].Value is bool)
+					return new Variable((bool)args[0].Value);
+				else
+					sender.Root.Log.Error(string.Format("Function not, Invalid arg type {0}", args[0].Value.GetType().Name));
+				return new Variable(true);
+			});
 			#endregion
 
 			#region goto

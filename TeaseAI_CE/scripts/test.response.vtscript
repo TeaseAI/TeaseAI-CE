@@ -1,0 +1,11 @@
+﻿// This script is just for testing.
+
+Setup
+	// Don't really like how this is yet. But it would be easy to do.
+	#Response(script.yourhot, "your sexyhot", "you look sexyhot")
+	#Response(script.yourhot, [your sexyhot, you look sexyhot])
+
+
+// Responses can be scripts or lists.
+List.YourHot
+	Thanks!

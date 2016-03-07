@@ -147,6 +147,12 @@
     <None Include="scripts\input replace.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="scripts\emote.vtscript">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="scripts\test.response.vtscript">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="scripts\test.vtscript">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

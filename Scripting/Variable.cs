@@ -207,6 +207,8 @@ namespace TeaseAI_CE.Scripting
 				case Operators.Multiply:
 					if (l is float && r is float)
 						return new Variable((float)l * (float)r);
+					if (l is float && r is bool)
+						return new Variable((float)l * ((bool)r ? 1f : 0f));
 					log.Error(string.Format("Unable to {0} {1} with {2}", op.ToString(), l.GetType().Name, r.GetType().Name));
 					return null;
 
