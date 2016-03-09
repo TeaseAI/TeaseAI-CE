@@ -32,7 +32,6 @@ namespace TeaseAI_CE.Scripting
 		private Dictionary<string, Variable<Script>> scripts = new Dictionary<string, Variable<Script>>();
 
 		public const char IndentChar = '\t';
-		public static readonly char[] InvalidKeyChar = new char[] { '#', '@', '(', ',', ')', '"', '\\', '/', '*', '+', '-', '<', '=', '>' };
 		public static readonly char[] Punctuation = new char[] { '\'', '!', '?', '.', ',' };
 		private static readonly char[] keySeparator = { '.' };
 
@@ -756,8 +755,11 @@ namespace TeaseAI_CE.Scripting
 			}
 			if (sb.Length > 0)
 			{
-				key = KeyClean(sb.ToString());
-				KeyIsValid(sender.Root.Log, key);
+				bool isFloat;
+				bool isPercent;
+				key = KeyClean(sb.ToString(), out isFloat, out isPercent, sender.Root.Log);
+				if (isFloat || isPercent)
+					sender.Root.Log.Warning(string.Format("Expected a key but got a number '{0}'", key));
 			}
 			else
 				key = null;
@@ -1103,39 +1105,38 @@ namespace TeaseAI_CE.Scripting
 		/// [float, bool, and, or, variable]
 		/// </summary>
 		/// <returns>false if nothing was added.</returns>
-		private bool execParenthCheckAdd(Context sender, List<execParenthItem> items, StringBuilder sb)
+		private void execParenthCheckAdd(Context sender, List<execParenthItem> items, StringBuilder sb)
 		{
 			if (sb.Length == 0)
-				return false;
+				return;
 
-			string str = sb.ToString().Trim().ToLowerInvariant();
+			bool isFloat;
+			bool isPercent;
+			string str = KeyClean(sb.ToString(), out isFloat, out isPercent, sender.Root.Log);
 			sb.Clear();
-			float f;
-			bool b;
+			if (str == null)
+				return;
 			// is str float?
-			if (float.TryParse(str, out f))
-				items.Add(new Variable(f));
+			if (isFloat)
+				items.Add(new Variable(float.Parse(str)));
 			// percent to float?
-			else if (str.EndsWith("%") && float.TryParse(str.Substring(0, str.Length - 1), out f))
-				items.Add(new Variable(f * 0.01f));
+			else if (isPercent)
+				items.Add(new Variable(float.Parse(str) * 0.01f));
 			// bool
-			else if (bool.TryParse(str, out b))
-				items.Add(new Variable(b));
+			else if (str == "true")
+				items.Add(new Variable(true));
+			else if (str == "false")
+				items.Add(new Variable(false));
 			// logic operators
 			else if (str == "and")
 				items.Add(Operators.And);
 			else if (str == "or")
 				items.Add(Operators.Or);
 			else // variable
-			{
-				string key = KeyClean(str);
-				if (!KeyIsValid(sender.Root.Log, key))
-					return false;
-				var variable = sender.GetVariable(key);
-				items.Add(variable);
-			}
-			return true;
+				items.Add(sender.GetVariable(str));
+			return;
 		}
+
 
 		#endregion
 
@@ -1236,35 +1237,77 @@ namespace TeaseAI_CE.Scripting
 
 		#endregion
 
-		/// <summary> Removes white-space, sets lowercase, removes invalid characters. </summary>
-		public static string KeyClean(string key)
+		/// <summary> Removes white-space, sets lowercase, removes invalid characters, trims white-space. </summary>
+		public static string KeyClean(string key, Logger log = null)
 		{
+			bool tmp;
+			return KeyClean(key, out tmp, out tmp, log);
+		}
+		/// <summary> Removes white-space, sets lowercase, removes invalid characters, trims white-space. </summary>
+		private static string KeyClean(string key, out bool isFloat, out bool isPercent, Logger log = null)
+		{
+			isPercent = false;
+			isFloat = true;
+			int start = 0;
 			var array = key.ToCharArray();
+			// ignore white-space at the start. Similar effect to TrimStart()
+			for (; start < array.Length; ++start)
+				if (!char.IsWhiteSpace(array[start]))
+					break;
+			// return if it was all white-space.
+			if (start >= array.Length)
+			{
+				isFloat = false;
+				return null;
+			}
+
+			int i = start;
+			int end = start;
 			char c;
-			for (int i = 0; i < array.Length; ++i)
+			for (; i < array.Length; ++i)
 			{
 				c = array[i];
 				if (char.IsWhiteSpace(c))
 					array[i] = '_';
 				else
-					array[i] = char.ToLowerInvariant(c);
+				{
+					end = i; // only set end when it's not white-space. Similar effect to TrimEnd()
+					if (isFloat && !isNumberChar(c))
+					{
+						isFloat = false;
+						if (c == '%')
+							isPercent = true;
+					}
+					else if (isPercent && !isNumberChar(c))
+					{
+						isPercent = false;
+					}
+
+					// allow . but not anything under 0 or betwen 9 and A
+					if ((c < 48 && c != 46) || (c > 57 && c < 65))
+					{
+						array[i] = '_';
+						if (log != null)
+							log.Warning(string.Format("Invalid charecter '{0}' in '{1}'", c, key));
+					}
+					else if (c > 64)
+						array[i] = char.ToLowerInvariant(c);
+				}
 			}
-			return new string(array);
+			if (isPercent) // precent has a non number char on the end, so ignore it.
+				return new string(array, start, end - start);
+			else
+				return new string(array, start, end - start + 1);
+		}
+		/// <returns> true if char is dot .  or a ascii number. </returns>
+		private static bool isNumberChar(char c)
+		{
+			return c == 46 || (c >= 48 && c <= 57);
 		}
 		/// <summary> Splits the key in two pices, first being root key, second is remaining key.
 		public static string[] KeySplit(string key)
 		{
 			return key.Split(keySeparator, 2);
-		}
-		/// <summary> true if key does not contain any InvalidKeyChar, logs error and returns false otherwise. </summary>
-		public static bool KeyIsValid(Logger log, string key)
-		{
-			if (InvalidKeyChar.Any(c => key.Contains(c)))
-			{
-				log.Error("Key contains some invalid character(s).");
-				return false;
-			}
-			return true;
 		}
 	}
 }
