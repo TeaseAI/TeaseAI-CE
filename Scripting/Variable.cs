@@ -99,7 +99,7 @@ namespace TeaseAI_CE.Scripting
 				sb.Append("Unsupported_Type");
 		}
 
-		public static Variable Evaluate(BlockScope sender, Variable left, Operators op, Variable right)
+		public static Variable Evaluate(Context sender, Variable left, Operators op, Variable right)
 		{
 			var log = sender.Root.Log;
 			bool validating = sender.Root.Valid == BlockBase.Validation.Running;
@@ -274,6 +274,8 @@ namespace TeaseAI_CE.Scripting
 					return Activator.CreateInstance(type);
 			}
 			catch { }
+			if (type == typeof(string))
+				return "";
 			return null;
 		}
 	}

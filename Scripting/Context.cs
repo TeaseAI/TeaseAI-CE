@@ -5,7 +5,7 @@ using System.Text;
 
 namespace TeaseAI_CE.Scripting
 {
-	public class BlockScope
+	public class Context
 	{
 		public readonly Controller Controller;
 		public readonly BlockBase Root;
@@ -26,7 +26,7 @@ namespace TeaseAI_CE.Scripting
 		/// <summary> If true stop executing the line. </summary>
 		public bool ExitLine = false;
 
-		public BlockScope(Controller controller, BlockBase root, Line block, int line, Dictionary<string, Variable> variables)
+		public Context(Controller controller, BlockBase root, Line block, int line, Dictionary<string, Variable> variables)
 		{
 			Controller = controller;
 			Root = root;

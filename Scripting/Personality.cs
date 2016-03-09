@@ -72,7 +72,7 @@ namespace TeaseAI_CE.Scripting
 			VM.RunSetupOn(this);
 		}
 
-		public Variable GetVariable(string key, BlockScope sender)
+		public Variable GetVariable(string key, Context sender)
 		{
 			// variables starting wtih . is short hand for this personality.
 			if (key[0] == '.')

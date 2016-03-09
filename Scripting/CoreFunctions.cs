@@ -23,7 +23,7 @@ namespace TeaseAI_CE.Scripting
 		}
 
 		#region if statements
-		private static Variable @if(BlockScope sender, Variable[] args)
+		private static Variable @if(Context sender, Variable[] args)
 		{
 			sender.ExitLine = false;
 			foreach (var arg in args)
@@ -42,14 +42,14 @@ namespace TeaseAI_CE.Scripting
 			sender.LastIf = !sender.ExitLine;
 			return new Variable(sender.LastIf);
 		}
-		private static Variable elseif(BlockScope sender, Variable[] args)
+		private static Variable elseif(Context sender, Variable[] args)
 		{
 			if (sender.LastIf == true)
 				return new Variable(false);
 
 			return @if(sender, args);
 		}
-		private static Variable @else(BlockScope sender, Variable[] args)
+		private static Variable @else(Context sender, Variable[] args)
 		{
 			if (args.Length != 0)
 				sender.Root.Log.Error("Else stements do not use any agruments!");
@@ -60,7 +60,7 @@ namespace TeaseAI_CE.Scripting
 		#endregion
 
 		#region not goto
-		private static Variable not(BlockScope sender, Variable[] args)
+		private static Variable not(Context sender, Variable[] args)
 		{
 			if (args.Length != 0)
 				return new Variable(false);
@@ -75,7 +75,7 @@ namespace TeaseAI_CE.Scripting
 			return new Variable(true);
 		}
 
-		private static Variable @goto(BlockScope sender, Variable[] args)
+		private static Variable @goto(Context sender, Variable[] args)
 		{
 			if (args.Length == 0)
 			{
@@ -101,7 +101,7 @@ namespace TeaseAI_CE.Scripting
 		#endregion
 
 		#region date time
-		private static Variable date(BlockScope sender, Variable[] args)
+		private static Variable date(Context sender, Variable[] args)
 		{
 			if (args.Length == 0)
 				return new Variable(DateTime.Now);
@@ -153,7 +153,7 @@ namespace TeaseAI_CE.Scripting
 			return new Variable(DateTime.Now);
 		}
 
-		private static Variable time(BlockScope sender, Variable[] args)
+		private static Variable time(Context sender, Variable[] args)
 		{
 			if (args.Length == 0)
 				return new Variable(TimeSpan.Zero);

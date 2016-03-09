@@ -13,7 +13,7 @@ namespace TeaseAI_CE.Scripting
 	/// </summary>
 	public class VM
 	{
-		public delegate Variable Function(BlockScope sender, Variable[] args);
+		public delegate Variable Function(Context sender, Variable[] args);
 
 		private Thread thread = null;
 		private volatile bool threadRun = false;
@@ -179,7 +179,7 @@ namespace TeaseAI_CE.Scripting
 
 		#endregion
 
-		internal Variable GetVariable(string key, BlockScope sender)
+		internal Variable GetVariable(string key, Context sender)
 		{
 			// allow calling local script without full key.
 			if (key.StartsWith("script."))
@@ -682,7 +682,7 @@ namespace TeaseAI_CE.Scripting
 		/// <param name="sender"></param>
 		/// <param name="line"></param>
 		/// <param name="output"></param>
-		internal void ExecLine(BlockScope sender, string line, StringBuilder output)
+		internal void ExecLine(Context sender, string line, StringBuilder output)
 		{
 			var log = sender.Root.Log;
 			string key;
@@ -734,7 +734,7 @@ namespace TeaseAI_CE.Scripting
 		/// <param name="i"> indexer, expected to start on the first character of the key. </param>
 		/// <param name="key"> set to null if no key. </param>
 		/// <param name="args"> never null </param>
-		private void execSplitCommand(BlockScope sender, string str, ref int i, out string key, out Variable[] args)
+		private void execSplitCommand(Context sender, string str, ref int i, out string key, out Variable[] args)
 		{
 			args = null;
 			var sb = new StringBuilder();
@@ -793,7 +793,7 @@ namespace TeaseAI_CE.Scripting
 		/// <param name="str"></param>
 		/// <param name="i"> indexer, must be equal to the char after '(' </param>
 		/// <returns></returns>
-		private Variable[] execParentheses(BlockScope sender, string str, ref int i)
+		private Variable[] execParentheses(Context sender, string str, ref int i)
 		{
 			var log = sender.Root.Log;
 			int start = i;
@@ -1103,7 +1103,7 @@ namespace TeaseAI_CE.Scripting
 		/// [float, bool, and, or, variable]
 		/// </summary>
 		/// <returns>false if nothing was added.</returns>
-		private bool execParenthCheckAdd(BlockScope sender, List<execParenthItem> items, StringBuilder sb)
+		private bool execParenthCheckAdd(Context sender, List<execParenthItem> items, StringBuilder sb)
 		{
 			if (sb.Length == 0)
 				return false;

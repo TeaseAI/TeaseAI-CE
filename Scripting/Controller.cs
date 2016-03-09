@@ -22,8 +22,8 @@ namespace TeaseAI_CE.Scripting
 		public delegate void OutputDelegate(Personality p, string text);
 		public OutputDelegate OnOutput;
 
-		private Stack<BlockScope> stack = new Stack<BlockScope>();
-		private List<BlockScope> queue = new List<BlockScope>();
+		private Stack<Context> stack = new Stack<Context>();
+		private List<Context> queue = new List<Context>();
 
 
 		// ToDo : A shorter list of enabled(or disabled) scripts, based off of the personalities list.
@@ -58,7 +58,7 @@ namespace TeaseAI_CE.Scripting
 			// populate stack with items in the queue.
 			if (queue.Count > 0)
 			{
-				foreach (BlockScope item in queue)
+				foreach (Context item in queue)
 					stack.Push(item);
 				queue.Clear();
 			}
@@ -103,7 +103,7 @@ namespace TeaseAI_CE.Scripting
 					stack.Pop();
 				// push sub block if exists
 				else if (line.Lines != null && scope.ExitLine == false)
-					stack.Push(new BlockScope(this, scope.Root, line, 0, new Dictionary<string, Variable>(scope.Variables)));
+					stack.Push(new Context(this, scope.Root, line, 0, new Dictionary<string, Variable>(scope.Variables)));
 				// pop off stack, if no lines left.
 				else if (scope.Line >= scope.Block.Lines.Length)
 					stack.Pop();
@@ -119,7 +119,7 @@ namespace TeaseAI_CE.Scripting
 		public void Add(BlockBase root)
 		{
 			// ToDo : queue is not thread safe.
-			queue.Add(new BlockScope(this, root, root, 0, new Dictionary<string, Variable>()));
+			queue.Add(new Context(this, root, root, 0, new Dictionary<string, Variable>()));
 		}
 
 		public void Input(Personality p, string text)
