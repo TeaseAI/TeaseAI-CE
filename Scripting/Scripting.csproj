@@ -41,6 +41,7 @@
     <Compile Include="GroupInfo.cs" />
     <Compile Include="Line.cs" />
     <Compile Include="Controller.cs" />
+    <Compile Include="List.cs" />
     <Compile Include="Logger.cs" />
     <Compile Include="Personality.cs" />
     <Compile Include="Script.cs" />

@@ -6,8 +6,10 @@
 // It can be used to calculate the mood, or anything you want setup before any scripts are ran.
 Setup
 	#(.SomeVar = "Bye!")
-	//#(.Test = true)
-	#(.Test = false)
+	#if(.Test)
+		#(.test = not(.test))
+	#else
+		#(.Test = true)
 	#if(not(.lastknown))
 		#(.lastknown = date)
 
@@ -66,7 +68,7 @@ Script.Welcome
 	// Lets test some math, and assign a variable.
 	I am @.Age years old.
 	@.somevar
-	@(50% + 25%)
+	@(50% + 25%) @List.Emote.Happy @List.Emote.Happy @List.Emote.Happy @List.Emote.Happy
 
 Personality.Lisa
 	#(.name = "Lisa")

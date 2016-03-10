@@ -20,6 +20,8 @@ namespace TeaseAI_CE.Scripting
 			vm.AddFunction(date);
 			vm.AddFunction(time);
 
+			vm.AddFunction("x", (Context sender, Variable[] args) => { return new Variable(); });
+
 		}
 
 		#region if statements

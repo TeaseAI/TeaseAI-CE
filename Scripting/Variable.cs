@@ -62,10 +62,25 @@ namespace TeaseAI_CE.Scripting
 		public override string ToString()
 		{
 			if (IsSet)
-				return Value.ToString();
-			return "UnSet";
+				return "Value is: " + Value.ToString();
+			return "Value is UnSet";
 		}
 
+		public virtual void WriteValueUser(Context sender, StringBuilder output)
+		{
+			if (!IsSet || sender.Root.Valid == BlockBase.Validation.Running)
+				return;
+
+			if (Value is List)
+				((List)Value).Execute(sender, output);
+			else
+				output.Append(Value.ToString());
+		}
+
+		/// <summary>
+		/// Use to write a value as a string, when writing to files.
+		/// </summary>
+		/// <param name="sb"></param>
 		public virtual void WriteValue(StringBuilder sb)
 		{
 			// ToDo : Handle other types like scripts.

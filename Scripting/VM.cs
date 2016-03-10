@@ -30,6 +30,7 @@ namespace TeaseAI_CE.Scripting
 		private List<GroupInfo> scriptGroups = new List<GroupInfo>();
 		private List<Script> scriptSetups = new List<Script>();
 		private Dictionary<string, Variable<Script>> scripts = new Dictionary<string, Variable<Script>>();
+		private Dictionary<string, Variable<List>> scriptLists = new Dictionary<string, Variable<List>>();
 
 		public const char IndentChar = '\t';
 		public static readonly char[] Punctuation = new char[] { '\'', '!', '?', '.', ',' };
@@ -210,6 +211,7 @@ namespace TeaseAI_CE.Scripting
 			{
 				switch (keySplit[0])
 				{
+					case "list":
 					case "script":
 					case "personality":
 						log.Error("No " + keySplit[0] + " specified!");
@@ -234,6 +236,25 @@ namespace TeaseAI_CE.Scripting
 						}
 						else
 							log.Error("Script not found: " + keySplit[1]);
+						return result;
+					}
+					finally
+					{ scriptsLock.ExitReadLock(); }
+				case "list":
+					scriptsLock.EnterReadLock();
+					try
+					{
+						Variable<List> result;
+						if (scriptLists.TryGetValue(keySplit[1], out result))
+						{
+							if (result.IsSet && result.Value.Valid == BlockBase.Validation.Failed)
+							{
+								log.Error(string.Format("Requested list '{0}' failed valadation!", keySplit[1]));
+								return null;
+							}
+						}
+						else
+							log.Error("List not found: " + keySplit[1]);
 						return result;
 					}
 					finally
@@ -477,7 +498,11 @@ namespace TeaseAI_CE.Scripting
 									case "list":
 										scriptsLock.EnterWriteLock();
 										try
-										{ } // ToDo : List
+										{
+											var list = new List(this, blockLine, blockKey, lines, group, log);
+											blocks.Add(list);
+											scriptLists[key] = new Variable<List>(list);
+										}
 										finally
 										{ scriptsLock.ExitWriteLock(); }
 										break;
@@ -646,10 +671,16 @@ namespace TeaseAI_CE.Scripting
 				foreach (var s in scriptSetups)
 					validateScript(c, s);
 
+				// validate all list scripts.
+				foreach (var list in scriptLists.Values)
+					if (list.IsSet)
+						list.Value.Execute(new Context(c, list.Value, list.Value, 0, new Dictionary<string, Variable>()), new StringBuilder());
+
 				// validate all other scripts.
 				foreach (var s in scripts.Values)
 					if (s.IsSet)
 						validateScript(c, s.Value);
+
 			}
 			finally
 			{ scriptsLock.ExitReadLock(); }
@@ -703,20 +734,19 @@ namespace TeaseAI_CE.Scripting
 							Variable variable = sender.GetVariable(key);
 							if (variable == null || variable.IsSet == false)
 								continue;
-							object value = variable.Value;
-							var func = value as Function;
+							var func = variable.Value as Function;
 							if (func != null)
-								value = func(sender, args);
+								variable = func(sender, args);
 							// ToDo : Do we need to do anything to other value types?
 
 							// output if @
-							if (c == '@' && value != null)
-								output.Append(value.ToString());
+							if (c == '@' && variable != null)
+								variable.WriteValueUser(sender, output);
 						}
 						else
 						{
 							if (c == '@' && args != null && args.Length > 0 && args[0] != null)
-								output.Append(args[0].ToString());
+								args[0].WriteValueUser(sender, output);
 						}
 						break;
 
@@ -733,7 +763,7 @@ namespace TeaseAI_CE.Scripting
 		/// <param name="i"> indexer, expected to start on the first character of the key. </param>
 		/// <param name="key"> set to null if no key. </param>
 		/// <param name="args"> never null </param>
-		private void execSplitCommand(Context sender, string str, ref int i, out string key, out Variable[] args)
+		internal void execSplitCommand(Context sender, string str, ref int i, out string key, out Variable[] args)
 		{
 			args = null;
 			var sb = new StringBuilder();
@@ -1276,7 +1306,10 @@ namespace TeaseAI_CE.Scripting
 					{
 						isFloat = false;
 						if (c == '%')
+						{
 							isPercent = true;
+							continue;
+						}
 					}
 					else if (isPercent && !isNumberChar(c))
 					{

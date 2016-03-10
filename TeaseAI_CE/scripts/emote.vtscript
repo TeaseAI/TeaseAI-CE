@@ -3,6 +3,10 @@ Setup
 	#(.IsYoung = .age < 24)
 	#(.Crazy = true)
 
+List.Random
+	@List.Happy
+	@List.Sad
+
 List.Happy
 	#x(6) :)
 	#x(4 * .Crazy) : D
@@ -11,4 +15,7 @@ List.Happy
 		:3
 	#x(7 * .IsYoung) (^_^)
 	#x(6 * .IsYoung) (n_n)
-	
+
+List.Sad
+	:(
+	#x(.Crazy) ):
