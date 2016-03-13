@@ -58,9 +58,12 @@ namespace TeaseAI_CE.Scripting
 			// populate stack with items in the queue.
 			if (queue.Count > 0)
 			{
-				foreach (Context item in queue)
-					stack.Push(item);
-				queue.Clear();
+				lock (queue)
+				{
+					foreach (Context item in queue)
+						stack.Push(item);
+					queue.Clear();
+				}
 			}
 
 			if (stack.Count == 0)
@@ -75,7 +78,6 @@ namespace TeaseAI_CE.Scripting
 			}
 			else
 			{
-				// ToDo 2: Check for infinte loop.
 				scope.Root.Log.SetId(scope.Block.Lines[scope.Line].LineNumber);
 				// exec current line
 				Line line = scope.Block.Lines[scope.Line];
@@ -103,7 +105,14 @@ namespace TeaseAI_CE.Scripting
 					stack.Pop();
 				// push sub block if exists
 				else if (line.Lines != null && scope.ExitLine == false)
+				{
 					stack.Push(new Context(this, scope.Root, line, 0, new Dictionary<string, Variable>(scope.Variables)));
+					if (stack.Count > 128)
+					{
+						scope.Root.Log.Error("Stack > 128, Infinite loop, or improper use.");
+						stack.Clear();
+					}
+				}
 				// pop off stack, if no lines left.
 				else if (scope.Line >= scope.Block.Lines.Length)
 					stack.Pop();
@@ -118,8 +127,16 @@ namespace TeaseAI_CE.Scripting
 		/// </summary>
 		public void Add(BlockBase root)
 		{
-			// ToDo : queue is not thread safe.
-			queue.Add(new Context(this, root, root, 0, new Dictionary<string, Variable>()));
+			lock (queue)
+			{
+				queue.Add(new Context(this, root, root, 0, new Dictionary<string, Variable>()));
+
+				if (queue.Count > 128)
+				{
+					root.Log.Error("Queue > 128, Infinite loop, or improper use.");
+					queue.Clear();
+				}
+			}
 		}
 
 		public void Input(Personality p, string text)

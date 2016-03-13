@@ -50,12 +50,12 @@ namespace TeaseAI_CE.Scripting
 		}
 		private void log(string message, Level level)
 		{
-			string str = "[" + id_line + "][" + id_char + "]: " + message;
+			string str = string.Format("[{0,2}, {1,2}]: {2}", id_line, id_char, message);
 			if (level == Level.Error)
 				errors.Add(level.ToString() + message);
 			else if (level == Level.Warning)
 				warnings.Add(level.ToString() + message);
-			System.Diagnostics.Trace.WriteLine(level.ToString() + "[" + prefix + "]" + str);
+			System.Diagnostics.Trace.WriteLine(string.Format("{0,-7}[{1}]{2}", level, prefix, str));
 		}
 
 		public void Clear()

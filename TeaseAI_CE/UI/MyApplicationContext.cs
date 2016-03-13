@@ -107,6 +107,10 @@ namespace TeaseAI_CE.UI
 			if (!vm.TryGetPersonality("Lisa", out persona))
 				persona = vm.CreatePersonality("Lisa");
 			persona.RunSetup();
+
+			status(70, "Validating scripts");
+			vm.ValidateScripts();
+
 			var controller = vm.CreateController(persona);
 			controller.Interval = 500;
 			// Note: this will not be common use:
@@ -114,8 +118,6 @@ namespace TeaseAI_CE.UI
 			if (script != null && script.IsSet)
 				controller.Add(script.Value);
 
-			status(70, "Validating scripts");
-			vm.ValidateScripts();
 			// ToDo : At some point we will want to run setups.
 
 			status(90, "Loading UI");

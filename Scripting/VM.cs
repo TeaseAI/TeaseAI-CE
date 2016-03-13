@@ -179,7 +179,6 @@ namespace TeaseAI_CE.Scripting
 		public Controller CreateController(Personality p)
 		{
 			personControlLock.EnterWriteLock();
-			Dirty = true;
 			try
 			{
 				var c = new Controller(p);
@@ -254,7 +253,7 @@ namespace TeaseAI_CE.Scripting
 						{
 							if (result.IsSet && result.Value.Valid == BlockBase.Validation.Failed)
 							{
-								log.Error(string.Format("Requested script '{0}' failed valadation!", keySplit[1]));
+								log.Error(string.Format("Requested script '{0}' failed validation!", keySplit[1]));
 								return null;
 							}
 						}
@@ -273,7 +272,7 @@ namespace TeaseAI_CE.Scripting
 						{
 							if (result.IsSet && result.Value.Valid == BlockBase.Validation.Failed)
 							{
-								log.Error(string.Format("Requested list '{0}' failed valadation!", keySplit[1]));
+								log.Error(string.Format("Requested list '{0}' failed validation!", keySplit[1]));
 								return null;
 							}
 						}

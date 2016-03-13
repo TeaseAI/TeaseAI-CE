@@ -61,7 +61,7 @@ namespace TeaseAI_CE.Scripting
 		}
 		#endregion
 
-		#region not goto
+		#region goto, not
 		private static Variable not(Context sender, Variable[] args)
 		{
 			if (args.Length != 0)
@@ -91,9 +91,13 @@ namespace TeaseAI_CE.Scripting
 				if (!arg.IsSet)
 					continue;
 
-				if (arg.Value is Script)
+				Script script = arg.Value as Script;
+				if (script != null)
 				{
-					sender.Controller.Add((Script)arg.Value);
+					if (ReferenceEquals(script, sender.Root))
+						sender.Root.Log.Error("Tried to goto self!");
+					else
+						sender.Controller.Add(script);
 				}
 				else
 					sender.Root.Log.Error(string.Format("Arg {0} is of unsupported type '{1}'.", i, arg.Value.GetType().Name));
