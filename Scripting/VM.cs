@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.IO;
 using System.Threading;
+using System.Diagnostics;
 
 namespace TeaseAI_CE.Scripting
 {
@@ -32,6 +33,9 @@ namespace TeaseAI_CE.Scripting
 		private Dictionary<string, Variable<Script>> scripts = new Dictionary<string, Variable<Script>>();
 		private Dictionary<string, Variable<List>> scriptLists = new Dictionary<string, Variable<List>>();
 
+		private volatile int _dirty = 0;
+		public bool Dirty { get { return _dirty != 0; } private set { Interlocked.Exchange(ref _dirty, value ? 1 : 0); } }
+
 		public const char IndentChar = '\t';
 		public static readonly char[] Punctuation = new char[] { '\'', '!', '?', '.', ',' };
 		private static readonly char[] keySeparator = { '.' };
@@ -40,7 +44,11 @@ namespace TeaseAI_CE.Scripting
 		/// <summary> Starts the controller update thread </summary>
 		public void Start()
 		{
-			if (thread == null || !thread.IsAlive)
+			if (Dirty)
+			{
+				Trace.WriteLine("Can not start when VM is dirty!");
+			}
+			else if (thread == null || !thread.IsAlive)
 			{
 				threadRun = true;
 				thread = new Thread(threadTick);
@@ -72,21 +80,27 @@ namespace TeaseAI_CE.Scripting
 		{
 			try
 			{
-				while (threadRun)
+				while (threadRun && !Dirty)
 				{
 					// update all controllers
-					foreach (var c in controllers)
+					personControlLock.EnterReadLock();
+					try
 					{
-						if (!c.timmer.IsRunning)
-							c.timmer.Start();
-						if (c.timmer.ElapsedMilliseconds > c.Interval)
+						foreach (var c in controllers)
 						{
-							c.timmer.Stop();
-							c.timmer.Reset();
-							c.timmer.Start();
-							c.Tick();
+							if (!c.timmer.IsRunning)
+								c.timmer.Start();
+							if (c.timmer.ElapsedMilliseconds > c.Interval)
+							{
+								c.timmer.Stop();
+								c.timmer.Reset();
+								c.timmer.Start();
+								c.Tick();
+							}
 						}
 					}
+					finally
+					{ personControlLock.ExitReadLock(); }
 					Thread.Sleep(50);
 				}
 			}
@@ -108,6 +122,7 @@ namespace TeaseAI_CE.Scripting
 		{
 			var id = KeyClean(name);
 			personControlLock.EnterWriteLock();
+			Dirty = true;
 			try
 			{
 				// If personality with id already exists, add number.
@@ -146,6 +161,7 @@ namespace TeaseAI_CE.Scripting
 			{
 				if (personalities.ContainsKey(newID))
 					return false;
+				Dirty = true;
 				personalities.Remove(p.ID);
 				personalities[newID] = p;
 				p.ID = newID;
@@ -163,6 +179,7 @@ namespace TeaseAI_CE.Scripting
 		public Controller CreateController(Personality p)
 		{
 			personControlLock.EnterWriteLock();
+			Dirty = true;
 			try
 			{
 				var c = new Controller(p);
@@ -312,6 +329,7 @@ namespace TeaseAI_CE.Scripting
 
 		public void AddFunction(string name, Function func)
 		{
+			Dirty = true;
 			functions[KeyClean(name)] = func;
 		}
 		public void AddFunction(Function func)
@@ -691,6 +709,8 @@ namespace TeaseAI_CE.Scripting
 			}
 			finally
 			{ scriptsLock.ExitReadLock(); }
+
+			Dirty = false;
 		}
 		private void validateScript(Controller c, Script s)
 		{

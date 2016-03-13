@@ -93,11 +93,8 @@ namespace TeaseAI_CE.UI
 			vm.LoadFromDirectory("scripts"); // Load all scritps from scripts folder.
 			status(40, "Loading personalities");
 			vm.LoadFromDirectory(settings.Personalities.Path);
-			status(50, "Validating scripts");
-			vm.ValidateScripts();
-			// ToDo : At some point we will want to run setups.
 
-			status(70, "Creating personalities");
+			status(60, "Creating personalities");
 			Personality player;
 			if (!vm.TryGetPersonality("player", out player))
 				player = vm.CreatePersonality("Player");
@@ -112,7 +109,11 @@ namespace TeaseAI_CE.UI
 			var script = persona.GetVariable("script.test.welcome", new Logger("script.test")) as Variable<Script>;
 			if (script != null && script.IsSet)
 				controller.Add(script.Value);
-			
+
+			status(70, "Validating scripts");
+			vm.ValidateScripts();
+			// ToDo : At some point we will want to run setups.
+
 			status(90, "Loading UI");
 			bool split = settings.Windows.Split;
 
