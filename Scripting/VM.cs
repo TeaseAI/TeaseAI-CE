@@ -581,7 +581,7 @@ namespace TeaseAI_CE.Scripting
 			// currentLine should be added to once we are done with the line.
 			while (currentLine < rawLines.Count)
 			{
-				log.SetId(currentLine);
+				log.SetId(currentLine + 1);
 				// get raw line, cut it and get indent level.
 				lineData = rawLines[currentLine];
 				if (parseCutLine(ref lineData, ref lineIndent))
@@ -595,7 +595,7 @@ namespace TeaseAI_CE.Scripting
 					// indentation unchanged, so just add the line.
 					else if (indentDifference == 0)
 					{
-						lines.Add(new Line(currentLine, lineData, null));
+						lines.Add(new Line(currentLine + 1, lineData, null));
 						++currentLine;
 					}
 					// next level of indentation. Parse as a sub block, then add to last line.
