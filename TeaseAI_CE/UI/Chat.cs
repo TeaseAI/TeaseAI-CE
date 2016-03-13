@@ -29,7 +29,7 @@ namespace TeaseAI_CE.UI
 			}
 			else
 			{
-				chatHistory.Append(p.Name, text);
+				chatHistory.Append(p, text);
 			}
 		}
 

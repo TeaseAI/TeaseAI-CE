@@ -112,12 +112,7 @@ namespace TeaseAI_CE.UI
 			var script = persona.GetVariable("script.test.welcome", new Logger("script.test")) as Variable<Script>;
 			if (script != null && script.IsSet)
 				controller.Add(script.Value);
-
-			// test logger, for now errors show up in the output window.
-			var log = new Logger("test");
-			persona.GetVariable(".mood", log);
-			persona.GetVariable("script.fake", log);
-
+			
 			status(90, "Loading UI");
 			bool split = settings.Windows.Split;
 

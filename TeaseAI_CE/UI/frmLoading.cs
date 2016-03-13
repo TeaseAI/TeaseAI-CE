@@ -14,6 +14,7 @@ namespace TeaseAI_CE.UI
 	public partial class frmLoading : Form
 	{
 		public delegate void StatusDelegate(float percent, string message);
+		public delegate void SubStatusDelegate(string message);
 		public delegate bool LoadDelegate(StatusDelegate status);
 
 		private delegate void FinishDelegate(bool result);
@@ -28,7 +29,7 @@ namespace TeaseAI_CE.UI
 			this.load = load;
 
 			try
-			{ Trace.Listeners.Add(new traceToStatus(Status)); }
+			{ Trace.Listeners.Add(new traceToStatus(SubStatus)); }
 			catch
 			{ }
 
@@ -75,19 +76,28 @@ namespace TeaseAI_CE.UI
 		public void Status(float percent, string message)
 		{
 			if (InvokeRequired)
-			{
 				BeginInvoke((StatusDelegate)Status, percent, message);
-				return;
-			}
-
-			if (percent != -1)
-				progressBar.Value = precentToValue(percent, progressBar.Minimum, progressBar.Maximum);
-
-			if (message != null && message.Length > 0)
+			else
 			{
-				lblStatus.Text = message;
+				if (percent != -1)
+					progressBar.Value = precentToValue(percent, progressBar.Minimum, progressBar.Maximum);
+
+				if (message != null && message.Length > 0)
+				{
+					lblStatus.Text = "Status: " + message;
+					lblSubStatus.Text = "Log: ";
+				}
 			}
 		}
+
+		public void SubStatus(string message)
+		{
+			if (InvokeRequired)
+				BeginInvoke((SubStatusDelegate)SubStatus, message);
+			else
+				lblSubStatus.Text = "Log: " + message;
+		}
+
 		private static int precentToValue(float percent, int min, int max)
 		{
 			percent = percent * 0.001f * max;
@@ -101,9 +111,9 @@ namespace TeaseAI_CE.UI
 
 		private class traceToStatus : TraceListener
 		{
-			StatusDelegate status;
+			SubStatusDelegate status;
 			StringBuilder buffer = new StringBuilder();
-			public traceToStatus(StatusDelegate status)
+			public traceToStatus(SubStatusDelegate status)
 			{
 				this.status = status;
 			}
@@ -115,11 +125,11 @@ namespace TeaseAI_CE.UI
 			{
 				if (buffer.Length > 0)
 				{
-					status(-1, buffer.ToString() + message);
+					status(buffer.ToString() + message);
 					buffer.Clear();
 				}
 				else
-					status(-1, message);
+					status(message);
 			}
 		}
 	}

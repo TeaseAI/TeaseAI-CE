@@ -31,6 +31,7 @@
 			this.progressBar = new System.Windows.Forms.ProgressBar();
 			this.lblStatus = new System.Windows.Forms.Label();
 			this.labelTemp = new System.Windows.Forms.Label();
+			this.lblSubStatus = new System.Windows.Forms.Label();
 			this.SuspendLayout();
 			// 
 			// progressBar
@@ -42,14 +43,14 @@
 			this.progressBar.Maximum = 1000;
 			this.progressBar.Name = "progressBar";
 			this.progressBar.Size = new System.Drawing.Size(624, 23);
-			this.progressBar.Style = System.Windows.Forms.ProgressBarStyle.Marquee;
+			this.progressBar.Style = System.Windows.Forms.ProgressBarStyle.Continuous;
 			this.progressBar.TabIndex = 2;
 			// 
 			// lblStatus
 			// 
 			this.lblStatus.Dock = System.Windows.Forms.DockStyle.Bottom;
 			this.lblStatus.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(192)))), ((int)(((byte)(192)))));
-			this.lblStatus.Location = new System.Drawing.Point(0, 196);
+			this.lblStatus.Location = new System.Drawing.Point(0, 173);
 			this.lblStatus.Name = "lblStatus";
 			this.lblStatus.Size = new System.Drawing.Size(624, 23);
 			this.lblStatus.TabIndex = 4;
@@ -64,10 +65,21 @@
 			this.labelTemp.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(192)))), ((int)(((byte)(192)))));
 			this.labelTemp.Location = new System.Drawing.Point(0, 0);
 			this.labelTemp.Name = "labelTemp";
-			this.labelTemp.Size = new System.Drawing.Size(624, 196);
+			this.labelTemp.Size = new System.Drawing.Size(624, 173);
 			this.labelTemp.TabIndex = 3;
 			this.labelTemp.Text = "Loading...";
 			this.labelTemp.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+			// 
+			// lblSubStatus
+			// 
+			this.lblSubStatus.Dock = System.Windows.Forms.DockStyle.Bottom;
+			this.lblSubStatus.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(192)))), ((int)(((byte)(192)))));
+			this.lblSubStatus.Location = new System.Drawing.Point(0, 196);
+			this.lblSubStatus.Name = "lblSubStatus";
+			this.lblSubStatus.Size = new System.Drawing.Size(624, 23);
+			this.lblSubStatus.TabIndex = 5;
+			this.lblSubStatus.Text = "Log:";
+			this.lblSubStatus.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
 			// 
 			// frmLoading
 			// 
@@ -77,6 +89,7 @@
 			this.ClientSize = new System.Drawing.Size(624, 242);
 			this.Controls.Add(this.labelTemp);
 			this.Controls.Add(this.lblStatus);
+			this.Controls.Add(this.lblSubStatus);
 			this.Controls.Add(this.progressBar);
 			this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
 			this.MaximizeBox = false;
@@ -94,5 +107,6 @@
 		private System.Windows.Forms.ProgressBar progressBar;
 		private System.Windows.Forms.Label lblStatus;
 		private System.Windows.Forms.Label labelTemp;
+		private System.Windows.Forms.Label lblSubStatus;
 	}
 }

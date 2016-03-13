@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Windows.Forms;
 using System.Linq;
 using System.Text;
+using TeaseAI_CE.Scripting;
 
 namespace TeaseAI_CE.UI
 {
@@ -45,15 +46,20 @@ namespace TeaseAI_CE.UI
 			ResumeLayout(false);
 		}
 
-
-		public void Append(string name, string message)
+		Personality lastPersona = null;
+		public void Append(Personality p, string message)
 		{
-			name = System.Security.SecurityElement.Escape(name);
 			message = System.Security.SecurityElement.Escape(message);
 
 			textBox.AppendText("\n");
-			textBox.AppendText(name);
-			textBox.AppendText(" Says:\n");
+			if (lastPersona != p)
+			{
+				lastPersona = p;
+				var name = System.Security.SecurityElement.Escape(p.Name);
+				textBox.AppendText(name);
+				textBox.AppendText(" Says:\n");
+			}
+			textBox.AppendText("    ");
 			textBox.AppendText(message);
 
 			textBox.Select(textBox.TextLength - 1, 0);

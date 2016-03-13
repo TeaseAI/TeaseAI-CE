@@ -70,22 +70,29 @@ namespace TeaseAI_CE.Scripting
 		/// <summary> Updates all controllers. </summary>
 		private void threadTick()
 		{
-			while (threadRun)
+			try
 			{
-				// update all controllers
-				foreach (var c in controllers)
+				while (threadRun)
 				{
-					if (!c.timmer.IsRunning)
-						c.timmer.Start();
-					if (c.timmer.ElapsedMilliseconds > c.Interval)
+					// update all controllers
+					foreach (var c in controllers)
 					{
-						c.timmer.Stop();
-						c.timmer.Reset();
-						c.timmer.Start();
-						c.Tick();
+						if (!c.timmer.IsRunning)
+							c.timmer.Start();
+						if (c.timmer.ElapsedMilliseconds > c.Interval)
+						{
+							c.timmer.Stop();
+							c.timmer.Reset();
+							c.timmer.Start();
+							c.Tick();
+						}
 					}
+					Thread.Sleep(50);
 				}
-				Thread.Sleep(50);
+			}
+			catch (ThreadAbortException)
+			{
+				return;
 			}
 		}
 		#endregion
