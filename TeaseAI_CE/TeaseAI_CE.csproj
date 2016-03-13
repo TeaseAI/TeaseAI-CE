@@ -54,6 +54,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <Compile Include="TraceToFileListener.cs" />
     <Compile Include="UI\Chat.cs">
       <SubType>UserControl</SubType>
     </Compile>

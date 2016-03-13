@@ -14,6 +14,8 @@ namespace TeaseAI_CE.UI
 	{
 		internal static MyApplicationContext Instance { get; private set; }
 
+		private TraceToFileListener traceToFile;
+
 		private List<Form> forms = new List<Form>();
 
 		private Settings.AllSettings settings;
@@ -24,6 +26,8 @@ namespace TeaseAI_CE.UI
 		internal MyApplicationContext()
 		{
 			Instance = this;
+			traceToFile = new TraceToFileListener();
+			Trace.Listeners.Add(traceToFile);
 			Application.ApplicationExit += onApplicationExit;
 
 			var loading = new frmLoading(load);
@@ -172,6 +176,8 @@ namespace TeaseAI_CE.UI
 			// save settings
 			if (settings != null)
 				settings.Save();
+
+			traceToFile.Dispose();
 		}
 
 		public void SavePersonalities()
