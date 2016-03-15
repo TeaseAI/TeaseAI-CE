@@ -9,6 +9,31 @@ namespace Matchgame
     public class Deck : List<Card>
     {
         Random rng = new Random();
+
+        public bool GameOver()
+        {
+            foreach(Card card in this)
+            {
+                if(card.FaceUp == false)
+                {
+                    return false;
+                }               
+            }
+
+            return true;
+        }
+
+        public void FaceDownAllCrads()
+        {
+            foreach (Card card in this)
+            {
+                if (card.FaceUp == true)
+                {
+                    card.Flip();
+                }
+            }
+        }
+
         public void Shuffle()
         {
             this.Shuffle(10);
