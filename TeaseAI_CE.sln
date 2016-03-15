@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
-VisualStudioVersion = 14.0.23107.0
+VisualStudioVersion = 14.0.24720.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TeaseAI_CE", "TeaseAI_CE\TeaseAI_CE.csproj", "{02134F4D-723D-4515-949F-AEB64C014133}"
 EndProject
@@ -14,6 +14,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VLCTest", "VLCTest\VLCTest.csproj", "{40F5EDCB-4EE7-4B09-A591-50168B742C85}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebFiles", "WebFiles\WebFiles.csproj", "{0D7C867D-E2CD-4679-B903-9E84AC3EBD08}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Matchgame", "Matchgame\Matchgame.csproj", "{0D97738A-5481-48A1-851B-36DB5DF6F047}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -45,6 +47,10 @@ Global
 		{0D7C867D-E2CD-4679-B903-9E84AC3EBD08}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0D7C867D-E2CD-4679-B903-9E84AC3EBD08}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0D7C867D-E2CD-4679-B903-9E84AC3EBD08}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0D97738A-5481-48A1-851B-36DB5DF6F047}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0D97738A-5481-48A1-851B-36DB5DF6F047}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0D97738A-5481-48A1-851B-36DB5DF6F047}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0D97738A-5481-48A1-851B-36DB5DF6F047}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
