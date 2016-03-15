@@ -3,11 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Drawing;
 
 namespace Matchgame
 {
     public class Deck : List<Card>
     {
+        public Image CardBG = GameManager.DefaultCardBG;
+
         Random rng = new Random();
 
         public bool GameOver()

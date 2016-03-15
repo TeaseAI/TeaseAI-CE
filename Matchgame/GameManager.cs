@@ -10,7 +10,8 @@ namespace Matchgame
     public class GameManager
     {
         public static Deck Cards = new Deck();
-        static Dictionary<int, Image> Images = new Dictionary<int, Image>();
+
+        public static Image DefaultCardBG;
 
         public static void Load()
         {

@@ -13,7 +13,7 @@
       </Delegate>
     </NestedTypes>
     <TypeIdentifier>
-      <HashCode>IAACACAAAAAAAAAAAAAAAAEAAAAQAAAAAAAAAAAAAgA=</HashCode>
+      <HashCode>IAAAACAAAAAAAgAgAAAAIAEAECAQABAAAAAAAAAAAAA=</HashCode>
       <FileName>Card.cs</FileName>
     </TypeIdentifier>
   </Class>
@@ -34,20 +34,17 @@
   <Class Name="Matchgame.GameManager">
     <Position X="4.25" Y="0.5" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>AAAAgAAAAAAAAAAAAAAAAAAIAAAAABAAAAAAAAAAAAA=</HashCode>
+      <HashCode>AAAAgAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAACAAAAA=</HashCode>
       <FileName>GameManager.cs</FileName>
     </TypeIdentifier>
     <ShowAsAssociation>
       <Field Name="Cards" />
     </ShowAsAssociation>
-    <ShowAsCollectionAssociation>
-      <Field Name="Images" />
-    </ShowAsCollectionAssociation>
   </Class>
   <Class Name="Matchgame.Deck">
     <Position X="4.25" Y="2.5" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>AAAEgAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAA=</HashCode>
+      <HashCode>AAAEgAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAEAA=</HashCode>
       <FileName>Deck.cs</FileName>
     </TypeIdentifier>
   </Class>
