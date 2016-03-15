@@ -45,18 +45,5 @@ namespace Matchgame
                 id = value;
             }
         }
-
-        public Rectangle Rect
-        {
-            get
-            {
-                return rect;
-            }
-
-            set
-            {
-                rect = value;
-            }
-        } 
     }
 }
