@@ -10,7 +10,6 @@ namespace Matchgame
     {
         bool faceUp = false;
         int id;
-        Rectangle rect;
 
         public delegate void FlippedEventHandler(Card sender);
         public event FlippedEventHandler CardFlipped;
