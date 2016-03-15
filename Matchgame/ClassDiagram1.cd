@@ -13,14 +13,21 @@
       </Delegate>
     </NestedTypes>
     <TypeIdentifier>
-      <HashCode>IAACACAAAAAAAAAAAAAAAAEAACAQAAAAAAAAAAAAAgA=</HashCode>
+      <HashCode>IAACACAAAAAAAAAAAAAAAAEAAAAQAAAAAAAAAAAAAgA=</HashCode>
       <FileName>Card.cs</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="Matchgame.Game">
     <Position X="0.5" Y="0.5" Width="1.5" />
+    <NestedTypes>
+      <Delegate Name="Matchgame.Game.GameOverEventHandler" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>Game.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Delegate>
+    </NestedTypes>
     <TypeIdentifier>
-      <HashCode>AAIAAgAAACEAAAAAAAAAAAAAQAAAAAAIAAAAAAACAAI=</HashCode>
+      <HashCode>AAIAggAAACEAAAAAAAAAAAAIQABAAAgIAAAAAAACAAA=</HashCode>
       <FileName>Game.cs</FileName>
     </TypeIdentifier>
   </Class>
