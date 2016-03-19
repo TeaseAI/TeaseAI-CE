@@ -1,0 +1,1 @@
+labelTemp.Text=en-US Welcome!

@@ -28,6 +28,7 @@
 		/// </summary>
 		private void InitializeComponent()
 		{
+			System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(frmLoading));
 			this.progressBar = new System.Windows.Forms.ProgressBar();
 			this.lblStatus = new System.Windows.Forms.Label();
 			this.labelTemp = new System.Windows.Forms.Label();
@@ -37,56 +38,36 @@
 			// progressBar
 			// 
 			this.progressBar.BackColor = System.Drawing.Color.Black;
-			this.progressBar.Dock = System.Windows.Forms.DockStyle.Bottom;
+			resources.ApplyResources(this.progressBar, "progressBar");
 			this.progressBar.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(192)))), ((int)(((byte)(192)))));
-			this.progressBar.Location = new System.Drawing.Point(0, 219);
 			this.progressBar.Maximum = 1000;
 			this.progressBar.Name = "progressBar";
-			this.progressBar.Size = new System.Drawing.Size(624, 23);
 			this.progressBar.Style = System.Windows.Forms.ProgressBarStyle.Continuous;
-			this.progressBar.TabIndex = 2;
 			// 
 			// lblStatus
 			// 
-			this.lblStatus.Dock = System.Windows.Forms.DockStyle.Bottom;
+			resources.ApplyResources(this.lblStatus, "lblStatus");
 			this.lblStatus.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(192)))), ((int)(((byte)(192)))));
-			this.lblStatus.Location = new System.Drawing.Point(0, 173);
 			this.lblStatus.Name = "lblStatus";
-			this.lblStatus.Size = new System.Drawing.Size(624, 23);
-			this.lblStatus.TabIndex = 4;
-			this.lblStatus.Text = "Status: ";
-			this.lblStatus.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
 			// 
 			// labelTemp
 			// 
 			this.labelTemp.BackColor = System.Drawing.Color.Black;
-			this.labelTemp.Dock = System.Windows.Forms.DockStyle.Fill;
-			this.labelTemp.Font = new System.Drawing.Font("Microsoft Sans Serif", 24F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+			resources.ApplyResources(this.labelTemp, "labelTemp");
 			this.labelTemp.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(192)))), ((int)(((byte)(192)))));
-			this.labelTemp.Location = new System.Drawing.Point(0, 0);
 			this.labelTemp.Name = "labelTemp";
-			this.labelTemp.Size = new System.Drawing.Size(624, 173);
-			this.labelTemp.TabIndex = 3;
-			this.labelTemp.Text = "Loading...";
-			this.labelTemp.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
 			// 
 			// lblSubStatus
 			// 
-			this.lblSubStatus.Dock = System.Windows.Forms.DockStyle.Bottom;
+			resources.ApplyResources(this.lblSubStatus, "lblSubStatus");
 			this.lblSubStatus.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(192)))), ((int)(((byte)(192)))));
-			this.lblSubStatus.Location = new System.Drawing.Point(0, 196);
 			this.lblSubStatus.Name = "lblSubStatus";
-			this.lblSubStatus.Size = new System.Drawing.Size(624, 23);
-			this.lblSubStatus.TabIndex = 5;
-			this.lblSubStatus.Text = "Log:";
-			this.lblSubStatus.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
 			// 
 			// frmLoading
 			// 
-			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+			resources.ApplyResources(this, "$this");
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.BackColor = System.Drawing.Color.Black;
-			this.ClientSize = new System.Drawing.Size(624, 242);
 			this.Controls.Add(this.labelTemp);
 			this.Controls.Add(this.lblStatus);
 			this.Controls.Add(this.lblSubStatus);
@@ -94,8 +75,6 @@
 			this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
 			this.MaximizeBox = false;
 			this.Name = "frmLoading";
-			this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
-			this.Text = "TeaseAI CE - Loading...";
 			this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.frmLoading_FormClosing);
 			this.Shown += new System.EventHandler(this.frmLoading_Shown);
 			this.ResumeLayout(false);
