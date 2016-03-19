@@ -11,9 +11,15 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Serialization", "Serializat
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Settings", "Settings\Settings.csproj", "{89D73340-09A6-41A3-8C85-BB46385742D8}"
 EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Files", "Files\Files.shproj", "{FC56C73F-FDA9-4F03-9316-D9B9673DBB48}"
+EndProject
 Global
 	GlobalSection(Performance) = preSolution
 		HasPerformanceSessions = true
+	EndGlobalSection
+	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		Files\Files.projitems*{fc56c73f-fda9-4f03-9316-d9b9673dbb48}*SharedItemsImports = 13
+		Files\Files.projitems*{02134f4d-723d-4515-949f-aeb64c014133}*SharedItemsImports = 4
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
