@@ -6,6 +6,7 @@ using System.Text;
 using System.IO;
 using System.Threading;
 using System.Diagnostics;
+using MyResources;
 
 namespace TeaseAI_CE.Scripting
 {
@@ -46,7 +47,7 @@ namespace TeaseAI_CE.Scripting
 		{
 			if (Dirty)
 			{
-				Trace.WriteLine("Can not start when VM is dirty!");
+				Trace.WriteLine(StringsScripting.Log_VM_Dirty);
 			}
 			else if (thread == null || !thread.IsAlive)
 			{
@@ -237,7 +238,7 @@ namespace TeaseAI_CE.Scripting
 					case "list":
 					case "script":
 					case "personality":
-						log.Error("No " + keySplit[0] + " specified!");
+						log.Error(string.Format(StringsScripting.Formatted_Sub_key_missing, keySplit[0]));
 						return null;
 				}
 			}
@@ -253,12 +254,12 @@ namespace TeaseAI_CE.Scripting
 						{
 							if (result.IsSet && result.Value.Valid == BlockBase.Validation.Failed)
 							{
-								log.Error(string.Format("Requested script '{0}' failed validation!", keySplit[1]));
+								log.Error(string.Format(StringsScripting.Formatted_Get_failed_script, keySplit[1]));
 								return null;
 							}
 						}
 						else
-							log.Error("Script not found: " + keySplit[1]);
+							log.Error(string.Format(StringsScripting.Formatted_Script_not_found, keySplit[1]));
 						return result;
 					}
 					finally
@@ -272,12 +273,12 @@ namespace TeaseAI_CE.Scripting
 						{
 							if (result.IsSet && result.Value.Valid == BlockBase.Validation.Failed)
 							{
-								log.Error(string.Format("Requested list '{0}' failed validation!", keySplit[1]));
+								log.Error(string.Format(StringsScripting.Formatted_Get_failed_list, keySplit[1]));
 								return null;
 							}
 						}
 						else
-							log.Error("List not found: " + keySplit[1]);
+							log.Error(string.Format(StringsScripting.Formatted_List_not_found, keySplit[1]));
 						return result;
 					}
 					finally
@@ -297,7 +298,7 @@ namespace TeaseAI_CE.Scripting
 							// else just return the personality.
 							return new Variable<Personality>(p);
 						}
-						log.Error("Personality not found: " + pKey[0]);
+						log.Error(string.Format(StringsScripting.Formatted_Personality_not_found, pKey[0]));
 						return null;
 					}
 					finally
@@ -310,7 +311,7 @@ namespace TeaseAI_CE.Scripting
 					if (functions.TryGetValue(key, out func))
 						return new Variable<Function>(func);
 					else
-						log.Error("Function not found or bad namespace: " + keySplit[0]);
+						log.Error(string.Format(StringsScripting.Formatted_Function_not_found, keySplit[0]));
 					return null;
 			}
 		}
@@ -374,11 +375,11 @@ namespace TeaseAI_CE.Scripting
 			var log = new Logger("Loader");
 			if (!Directory.Exists(path))
 			{
-				log.Error(string.Format("Directory \"{0}\" does not exist!", path));
+				log.Error(string.Format(StringsScripting.Formatted_Directory_not_found, path));
 				return;
 			}
 
-			using (new LogTimed(log, string.Format("Starting in path \"{0}\"", path), string.Format("Finished path \"{0}\"", path)))
+			using (new LogTimed(log, string.Format(StringsScripting.Formatted_Log_Load_Start, path), string.Format(StringsScripting.Formatted_Log_Load_Finish, path)))
 			{
 				// load all input replace files.
 				var files = Directory.GetFiles(path, "input replace.csv", SearchOption.AllDirectories);
@@ -388,7 +389,7 @@ namespace TeaseAI_CE.Scripting
 					inputReplace = new List<Dictionary<string, string>>();
 					foreach (var file in files)
 					{
-						log.Info("Loading file: " + file);
+						log.Info(string.Format(StringsScripting.Formatted_Log_Loading_file, file));
 						Logger fileLog;
 						var rawLines = getFileLines(file, out fileLog);
 						if (rawLines == null)
@@ -403,7 +404,7 @@ namespace TeaseAI_CE.Scripting
 				files = Directory.GetFiles(path, "*.vtscript", SearchOption.AllDirectories);
 				foreach (string file in files)
 				{
-					log.Info("Loading file: " + file);
+					log.Info(string.Format(StringsScripting.Formatted_Log_Loading_file, file));
 					Logger fileLog;
 					// get all lines from the file.
 					var rawLines = getFileLines(file, out fileLog);
@@ -468,7 +469,7 @@ namespace TeaseAI_CE.Scripting
 						var rootKey = KeySplit(blockKey)[0];
 						if (rootKey != "script" && rootKey != "list" && rootKey != "setup" && rootKey != "personality")
 						{
-							fileLog.Error("Invalid root type: " + rootKey, currentLine);
+							fileLog.Error(string.Format(StringsScripting.Formatted_Error_Invalid_root_type, rootKey), currentLine);
 							break;
 						}
 						++currentLine;
@@ -477,7 +478,7 @@ namespace TeaseAI_CE.Scripting
 					{
 						if (blockKey == null)
 						{
-							fileLog.Error("Invalid indentation!", currentLine);
+							fileLog.Error(StringsScripting.Invalid_Indentation, currentLine);
 							break;
 						}
 						var log = new Logger(fileKey + "." + blockKey);
@@ -500,7 +501,7 @@ namespace TeaseAI_CE.Scripting
 								}
 								else
 								{
-									fileLog.Error("Invalid root type: " + keySplit[0], blockLine);
+									fileLog.Error(string.Format(StringsScripting.Formatted_Error_Invalid_root_type, keySplit[0]), blockLine);
 									break;
 								}
 							}
@@ -508,7 +509,7 @@ namespace TeaseAI_CE.Scripting
 							{
 								if (keySplit[1] == null || keySplit[1].Length == 0)
 								{
-									fileLog.Warning("sub key has length of zero!");
+									fileLog.Warning(StringsScripting.Warning_Empty_sub_key);
 									continue;
 								}
 								var key = fileKey + '.' + keySplit[1];
@@ -555,7 +556,7 @@ namespace TeaseAI_CE.Scripting
 										}
 										break;
 									default:
-										fileLog.Error("Invalid root type: " + keySplit[0], blockLine);
+										fileLog.Error(string.Format(StringsScripting.Formatted_Error_Invalid_root_type, keySplit[0]), blockLine);
 										return;
 								}
 							}
@@ -612,7 +613,7 @@ namespace TeaseAI_CE.Scripting
 							continue;
 						if (lines.Count == 0)
 						{
-							log.Warning("Invalid indatation. (not sure if this error is even possible.)");
+							log.Warning(StringsScripting.Invalid_Indentation);
 							lines.Add(new Line(-1, "", block));
 						}
 						else
@@ -624,7 +625,7 @@ namespace TeaseAI_CE.Scripting
 					}
 					else // invalid indentation.
 					{
-						log.Warning("Invalid indentation.");
+						log.Warning(StringsScripting.Invalid_Indentation);
 						++currentLine;
 					}
 				}
@@ -705,9 +706,9 @@ namespace TeaseAI_CE.Scripting
 				try
 				{
 					if (personalities.Count == 0)
-						log.Error("No personalities exist!");
+						log.Error(StringsScripting.No_personalities);
 					if (inputReplace == null || inputReplace.Count == 0)
-						log.Warning("No 'input replace' found!");
+						log.Warning(StringsScripting.No_input_replace);
 				}
 				finally
 				{ personControlLock.ExitReadLock(); }
@@ -717,9 +718,9 @@ namespace TeaseAI_CE.Scripting
 				try
 				{
 					if (scripts.Count == 0)
-						log.Error("No scripts found!");
+						log.Error(StringsScripting.No_scripts);
 					if (scriptLists.Count == 0)
-						log.Warning("No list scripts found.");
+						log.Warning(StringsScripting.No_lists);
 
 
 					// validate startup scripts.
@@ -850,7 +851,7 @@ namespace TeaseAI_CE.Scripting
 				bool isPercent;
 				key = KeyClean(sb.ToString(), out isFloat, out isPercent, sender.Root.Log);
 				if (isFloat || isPercent)
-					sender.Root.Log.Warning(string.Format("Expected a key but got a number '{0}'", key));
+					sender.Root.Log.Warning(string.Format(StringsScripting.Formatted_Expected_key_got_number, key));
 			}
 			else
 				key = null;
@@ -922,7 +923,7 @@ namespace TeaseAI_CE.Scripting
 						else if (next == '"')
 							sb.Append('"');
 						else
-							log.Warning("Invalid string escape character: " + next, -1, i);
+							log.Warning(string.Format(StringsScripting.Formatted_Invalid_string_escape_character, next), -1, i);
 					}
 					else
 						sb.Append(c);
@@ -961,12 +962,12 @@ namespace TeaseAI_CE.Scripting
 							if (funcParenth) // simply add the whole array as-is.
 								items.Add(new Variable<Variable[]>(args));
 							else if (args.Length == 0)
-								log.Warning("Empty sub parentheses", -1, _char);
+								log.Warning(StringsScripting.Sub_parentheses_zero_arguments, -1, _char);
 							else
 								items.Add(args[0]); // sense it's not for a function, we only care about the first arg.
 
 							if (args.Length > 1)
-								log.Warning("Sub parentheses have more than one argument!", -1, _char);
+								log.Warning(StringsScripting.Sub_parentheses_too_many_arguments, -1, _char);
 						}
 						continue;
 
@@ -1036,12 +1037,12 @@ namespace TeaseAI_CE.Scripting
 			// check if empty
 			if (items.Count == 0)
 			{
-				log.Warning("Parentheses is empty!");
+				log.Warning(StringsScripting.Parentheses_empty);
 				return new Variable[0];
 			}
 			else if (items[0].IsValue == false)
 			{
-				log.Error("Parentheses must start with a variable/value, not an operator.");
+				log.Error(StringsScripting.Parentheses_first_item_is_not_variable);
 				return new Variable[0];
 			}
 
@@ -1075,7 +1076,7 @@ namespace TeaseAI_CE.Scripting
 						var argvar = items[j + 1].Value as Variable<Variable[]>;
 						if (argvar == null)
 						{
-							log.Error("Expecting function arguments.");
+							log.Error(StringsScripting.Parentheses_Expected_function_arguments);
 							return new Variable[0];
 						}
 						args = argvar.Value;
@@ -1096,12 +1097,12 @@ namespace TeaseAI_CE.Scripting
 				var r = items[j + 2];
 				if (l.IsValue == false || r.IsValue == false)
 				{
-					log.Error("Expecting variable/value, but got an operator.");
+					log.Error(StringsScripting.Parentheses_Expected_variable_got_operator);
 					return new Variable[0];
 				}
 				else if (o.IsValue)
 				{
-					log.Error("Expecting a operator, but got a variable/value.");
+					log.Error(StringsScripting.Parentheses_Expected_operator_got_variable);
 					return new Variable[0];
 				}
 				j += 2;
@@ -1185,6 +1186,7 @@ namespace TeaseAI_CE.Scripting
 			// finily finished
 			if (items.Count != 1)
 			{
+				// ToDo : probley just return a array of the items? (if not add to StringsScripting.txt)
 				log.Error(string.Format("execParentheses items.Count is {0}, expecting a count of 1!", items.Count));
 				return new Variable[0];
 			}
@@ -1283,7 +1285,7 @@ namespace TeaseAI_CE.Scripting
 					continue;
 				if (val.Length < 2)
 				{
-					log.Warning("Pass is required!");
+					log.Warning(StringsScripting.InputReplace_Pass_empty);
 					continue;
 				}
 				// get pass and keyward.
@@ -1291,7 +1293,7 @@ namespace TeaseAI_CE.Scripting
 				int pass;
 				if (!int.TryParse(val[0], out pass) || pass < 0)
 				{
-					log.Warning("Invalid level :" + val[0]);
+					log.Warning(StringsScripting.InputReplace_Pass_not_a_number);
 					continue;
 				}
 				pass--;
@@ -1311,7 +1313,7 @@ namespace TeaseAI_CE.Scripting
 						continue;
 					if (tmp == keyword)
 					{
-						log.Warning(string.Format("'{0}' is not needed because it is equal to the keyword '{1}'", val[i], keyword));
+						log.Warning(string.Format(StringsScripting.Formatted_InputReplace_Duplicate_keyword, keyword, val[i]));
 						continue;
 					}
 					level[tmp] = keyword;
@@ -1382,7 +1384,7 @@ namespace TeaseAI_CE.Scripting
 					{
 						array[i] = '_';
 						if (log != null)
-							log.Warning(string.Format("Invalid charecter '{0}' in '{1}'", c, key));
+							log.Warning(string.Format(StringsScripting.Formatted_KeyClean_Invalid_character, c, key));
 					}
 					else if (c > 64)
 						array[i] = char.ToLowerInvariant(c);

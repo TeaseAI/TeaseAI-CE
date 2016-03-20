@@ -1,0 +1,52 @@
+﻿
+# Logging
+Log VM Dirty = Can not start when VM is dirty! Run validator then try again.
+
+# 0 = The root key(script, list)
+Formatted Sub key missing = No {0} specified!
+
+# 0 = Key of script/list/personality.
+Formatted Get failed script = Requested script "{0}" failed validation!
+Formatted Get failed list = Requested list "{0}" failed validation!
+Formatted Script not found = Script not found "{0}"
+Formatted List not found = List not found "{0}"
+Formatted Personality not found = Personality not found "{0}"
+# 0 = Key of the unknown
+Formatted Function not found = Function not found or bad namespace "{0}"
+Formatted Expected key got number = Expected a key but got a number "{0}"
+
+# 0 = Directory
+Formatted Directory not found = Directory "{0}" does not exist!
+Formatted Log Load Start = Starting in directory "{0}"
+Formatted Log Load Finish= Finished "{0}"
+
+# 0 = File
+Formatted Log Loading file = Loading file "{0}"
+
+# 0 = Root key
+Formatted Error Invalid root type = Invalid root type "{0}"
+
+# 0 = Character
+Formatted Invalid string escape character = Invalid string escape character "{0}"
+# 0 = Character 1 = key
+Formatted KeyClean Invalid character = Invalid character "{0}" in key "{1}".
+
+Invalid Indentation = Invalid indentation!
+Warning Empty sub key = Sub key has a length of zero!
+No scripts = No scripts found!
+No lists = No list scripts found.
+No personalities = No personalities exist!
+No input replace = No 'input replace' found!
+
+Sub parentheses zero arguments = Empty sub parentheses.
+Sub parentheses too many arguments = Sub parentheses have more than one argument!
+Parentheses empty = Parentheses is empty!
+Parentheses first item is not variable = Parentheses must start with a variable/value, not an operator.
+Parentheses Expected variable got operator = Expecting variable/value, but got an operator.
+Parentheses Expected operator got variable = Expecting an operator, but got a variable/value.
+Parentheses Expected function arguments = Expecting function arguments.
+
+InputReplace Pass empty = The pass number is empty!
+InputReplace Pass not a number = Unable to parse pass as a number!
+# 0 = existing keyword. 1 = new keyword
+Formatted InputReplace Duplicate keyword = Keyword "{1}" is not needed sense it is equal to the existing keyword "{0}".
