@@ -371,43 +371,49 @@ namespace TeaseAI_CE.Scripting
 		/// </summary>
 		public void LoadFromDirectory(string path)
 		{
+			var log = new Logger("Loader");
 			if (!Directory.Exists(path))
 			{
-				(new Logger(path)).Error("Directory does not exist!");
+				log.Error(string.Format("Directory \"{0}\" does not exist!", path));
 				return;
 			}
 
-			// load all input replace files.
-			var files = Directory.GetFiles(path, "input replace.csv", SearchOption.AllDirectories);
-			personControlLock.EnterWriteLock();
-			try
+			using (new LogTimed(log, string.Format("Starting in path \"{0}\"", path), string.Format("Finished path \"{0}\"", path)))
 			{
-				inputReplace = new List<Dictionary<string, string>>();
-				foreach (var file in files)
+				// load all input replace files.
+				var files = Directory.GetFiles(path, "input replace.csv", SearchOption.AllDirectories);
+				personControlLock.EnterWriteLock();
+				try
 				{
+					inputReplace = new List<Dictionary<string, string>>();
+					foreach (var file in files)
+					{
+						log.Info("Loading file: " + file);
+						Logger fileLog;
+						var rawLines = getFileLines(file, out fileLog);
+						if (rawLines == null)
+							continue;
+						parseInputReplace(rawLines, fileLog);
+					}
+				}
+				finally
+				{ personControlLock.ExitWriteLock(); }
+
+				// load all .vtscript files.
+				files = Directory.GetFiles(path, "*.vtscript", SearchOption.AllDirectories);
+				foreach (string file in files)
+				{
+					log.Info("Loading file: " + file);
 					Logger fileLog;
+					// get all lines from the file.
 					var rawLines = getFileLines(file, out fileLog);
 					if (rawLines == null)
 						continue;
-					parseInputReplace(rawLines, fileLog);
+					// get the base script key from the file name.
+					string fileKey = KeyClean(Path.GetFileNameWithoutExtension(file));
+					// parse as a group
+					parseScriptGroup(rawLines, file, fileKey, fileLog);
 				}
-			}
-			finally
-			{ personControlLock.ExitWriteLock(); }
-
-			// load all .vtscript files.
-			files = Directory.GetFiles(path, "*.vtscript", SearchOption.AllDirectories);
-			foreach (string file in files)
-			{
-				Logger fileLog;
-				// get all lines from the file.
-				var rawLines = getFileLines(file, out fileLog);
-				if (rawLines == null)
-					continue;
-				// get the base script key from the file name.
-				string fileKey = KeyClean(Path.GetFileNameWithoutExtension(file));
-				// parse as a group
-				parseScriptGroup(rawLines, file, fileKey, fileLog);
 			}
 		}
 
@@ -683,32 +689,61 @@ namespace TeaseAI_CE.Scripting
 
 		#region Validation
 
-		public void ValidateScripts()
+		public void Validate()
 		{
-			var p = new Personality(this, "tmpValidator", "tmpValidator");
-			var c = new Controller(p);
-
-			scriptsLock.EnterReadLock();
-			try
+			var log = new Logger("Validator");
+			using (new LogTimed(log, "Starting", "Finished"))
 			{
-				// validate startup scripts.
-				foreach (var s in scriptSetups)
-					validateScript(c, s);
+				// dummy variables used to run scripts without effecting user data.
+				var p = new Personality(this, "tmpValidator", "tmpValidator");
+				var c = new Controller(p);
+				var output = new StringBuilder();
+				var vars = new Dictionary<string, Variable>();
 
-				// validate all list scripts.
-				foreach (var list in scriptLists.Values)
-					if (list.IsSet)
-						list.Value.Execute(new Context(c, list.Value, list.Value, 0, new Dictionary<string, Variable>()), new StringBuilder());
 
-				// validate all other scripts.
-				foreach (var s in scripts.Values)
-					if (s.IsSet)
-						validateScript(c, s.Value);
+				personControlLock.EnterReadLock();
+				try
+				{
+					if (personalities.Count == 0)
+						log.Error("No personalities exist!");
+					if (inputReplace == null || inputReplace.Count == 0)
+						log.Warning("No 'input replace' found!");
+				}
+				finally
+				{ personControlLock.ExitReadLock(); }
 
+
+				scriptsLock.EnterReadLock();
+				try
+				{
+					if (scripts.Count == 0)
+						log.Error("No scripts found!");
+					if (scriptLists.Count == 0)
+						log.Warning("No list scripts found.");
+
+
+					// validate startup scripts.
+					foreach (var s in scriptSetups)
+						validateScript(c, s);
+
+					// validate all list scripts.
+					foreach (var list in scriptLists.Values)
+					{
+						if (!list.IsSet)
+							continue;
+						vars.Clear();
+						list.Value.Execute(new Context(c, list.Value, list.Value, 0, vars), output);
+					}
+
+					// validate all other scripts.
+					foreach (var s in scripts.Values)
+						if (s.IsSet)
+							validateScript(c, s.Value);
+
+				}
+				finally
+				{ scriptsLock.ExitReadLock(); }
 			}
-			finally
-			{ scriptsLock.ExitReadLock(); }
-
 			Dirty = false;
 		}
 		private void validateScript(Controller c, Script s)

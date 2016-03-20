@@ -109,7 +109,7 @@ namespace TeaseAI_CE.UI
 			persona.RunSetup();
 
 			status(70, "Validating scripts");
-			vm.ValidateScripts();
+			vm.Validate();
 
 			var controller = vm.CreateController(persona);
 			controller.Interval = 500;

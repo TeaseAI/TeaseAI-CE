@@ -2,12 +2,13 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Diagnostics;
 
 namespace TeaseAI_CE.Scripting
 {
 	public class Logger
 	{
-		private enum Level { Error, Warning }
+		private enum Level { Error, Warning, Info }
 
 		private string prefix;
 
@@ -48,6 +49,11 @@ namespace TeaseAI_CE.Scripting
 			SetId(line, @char);
 			log(message, Level.Warning);
 		}
+		public void Info(string message)
+		{
+			log_global(prefix, message, Level.Info);
+		}
+
 		private void log(string message, Level level)
 		{
 			string str = string.Format("[{0,2}, {1,2}]: {2}", id_line, id_char, message);
@@ -55,7 +61,11 @@ namespace TeaseAI_CE.Scripting
 				errors.Add(level.ToString() + message);
 			else if (level == Level.Warning)
 				warnings.Add(level.ToString() + message);
-			System.Diagnostics.Trace.WriteLine(string.Format("{0,-7}[{1}]{2}", level, prefix, str));
+			log_global(prefix, str, level);
+		}
+		private static void log_global(string prefix, string str, Level level)
+		{
+			Trace.WriteLine(string.Format("{0,-7}[{1}]{2}", level, prefix, str));
 		}
 
 		public void Clear()
@@ -63,6 +73,39 @@ namespace TeaseAI_CE.Scripting
 			SetId(0, 0);
 			errors.Clear();
 			warnings.Clear();
+		}
+	}
+	/// <summary>
+	/// Logs start message on creation, then end message with the elapsed time on dispose.
+	/// </summary>
+	public class LogTimed : IDisposable
+	{
+		public string EndMessage;
+		private Stopwatch timmer;
+		private Logger log;
+		public LogTimed(Logger log, string startMessage, string endMessage = null)
+		{
+			this.log = log;
+
+			if (startMessage != null && startMessage.Length != 0)
+				log.Info(startMessage);
+			if (endMessage != null)
+				EndMessage = endMessage;
+			else
+				EndMessage = startMessage;
+
+			timmer = new Stopwatch();
+			timmer.Start();
+		}
+		public void Dispose()
+		{
+			if (timmer != null)
+			{
+				timmer.Stop();
+				log.Info(EndMessage + " in " + timmer.ElapsedMilliseconds + "ms");
+				log = null;
+				timmer = null;
+			}
 		}
 	}
 }
