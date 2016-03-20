@@ -1,0 +1,10 @@
+﻿
+# Status
+Status Load Settings = Loading settings
+Status Creating VM = Creating scripting VM
+Status Add Functions = Adding functions
+Status Load Scripts = Loading scripts
+Status Load Personalities = Loading personalities
+Status Validate = Validating scripts
+Status Load UI = Loading UI 
+Status Display UI = Displaying UI

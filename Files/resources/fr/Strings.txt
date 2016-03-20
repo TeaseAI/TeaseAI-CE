@@ -1,0 +1,3 @@
+﻿
+# Status
+Status Load Settings = Chargement des paramètres
