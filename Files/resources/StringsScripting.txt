@@ -1,5 +1,5 @@
 ﻿
-# Logging
+### VM.cs
 Log VM Dirty = Can not start when VM is dirty! Run validator then try again.
 
 # 0 = The root key(script, list)
@@ -50,3 +50,49 @@ InputReplace Pass empty = The pass number is empty!
 InputReplace Pass not a number = Unable to parse pass as a number!
 # 0 = existing keyword. 1 = new keyword
 Formatted InputReplace Duplicate keyword = Keyword "{1}" is not needed sense it is equal to the existing keyword "{0}".
+
+
+### Variable.cs
+
+Evaluate null variable = Cannot evaluate a null variable!
+Evaluate Assign to unset = Tried to assign a variable to a unset variable!
+Evaluate Assign Readonly = Tried to assign to a read-only variable!
+# 0 = left type 1 = right type
+Formatted Evaluate Assign type mismatch =  Tried to set a variable of type "{0}" to type "{1}"
+# 0 = Operator
+Formatted Evaluate Operator unset variable = Cannot apply operator "{0}" with unset variable(s)!
+Formatted Evaluate Invalid operator = Invalid operator "{0}".
+# 0=Operator 1=Left type 2=Right type
+Formatted Evaluate Operator type invalid = Unable to {0} "{1}" with "{2}"!
+
+Divide by zero = Tried to divide by zero!
+
+
+### List.cs
+List empty = List has zero items!
+List no return = List.Execute did not return a value!
+# 0=value type
+Formatted List invalid weight type = Weight must be a float or bool but got a {0}
+
+
+### CoreFunctions.cs
+
+# 0=function name
+Formatted Function arguments empty = "{0}" requires at least one argument!
+Formatted Function arguments not empty = "{0}" can not accept any arguments!
+Formatted Function arguments more than one = "{0}" can not have more than one argument!
+Formatted Function arguments less than two = "{0}" can only have zero or one argument!
+# 0=function name 1=argument number
+Formatted Function argument unset = "{0}" argument {1} must be set!
+# 0=function name 1=argument type 2=expected type
+Formatted Function invalid type = "{0}" invalid argument type "{1}" expecting type "{2}"
+
+FunctionGoTo cannot goto self = Tried to GoTo self!
+
+# 0=function name 1=string to parse 2=type
+Formatted Unable to parse = "{0}" unable to parse "{1}" as "{2}"
+
+### Controller.cs
+# 0=size
+Formatted Stack too big = Stack > {0}, infinite loop, or improper script calling usage.
+Formatted Queue too big = Queue > {0}, infinite loop, or improper script calling usage.

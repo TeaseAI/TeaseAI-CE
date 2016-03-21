@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using MyResources;
 
 namespace TeaseAI_CE.Scripting
 {
@@ -19,7 +20,7 @@ namespace TeaseAI_CE.Scripting
 		{
 			if (Lines.Length == 0)
 			{
-				sender.Root.Log.Error("List has zero items!");
+				sender.Root.Log.Error(StringsScripting.List_empty);
 				return;
 			}
 			if (Lines.Length == 1)
@@ -47,7 +48,7 @@ namespace TeaseAI_CE.Scripting
 					return;
 				}
 			}
-			sender.Root.Log.Error("List.Execute did not return a value!");
+			sender.Root.Log.Error(StringsScripting.List_no_return);
 		}
 		private float[] getWeight(Context sender)
 		{
@@ -77,7 +78,7 @@ namespace TeaseAI_CE.Scripting
 						}
 						else
 						{
-							sender.Root.Log.Error(string.Format("Expecting float or bool but got {0}", val.GetType().Name));
+							sender.Root.Log.Error(string.Format(StringsScripting.Formatted_List_invalid_weight_type, val.GetType().Name));
 							weight[l] = -1f;
 						}
 					}

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using MyResources;
 
 namespace TeaseAI_CE.Scripting
 {
@@ -120,7 +121,7 @@ namespace TeaseAI_CE.Scripting
 			bool validating = sender.Root.Valid == BlockBase.Validation.Running;
 			if (left == null || right == null)
 			{
-				log.Error("Cannnot evaluate a null variable!");
+				log.Error(StringsScripting.Evaluate_null_variable);
 				return null;
 			}
 
@@ -131,13 +132,13 @@ namespace TeaseAI_CE.Scripting
 			{
 				if (!right.IsSet)
 				{
-					log.Error("Tried to set a variable to a unset variable.");
+					log.Error(StringsScripting.Evaluate_Assign_to_unset);
 					return null;
 				}
 
 				if (left.Readonly)
 				{
-					log.Error(string.Format("Tried to assign to readonly variable."));
+					log.Error(StringsScripting.Evaluate_Assign_Readonly);
 					return left;
 				}
 
@@ -150,7 +151,7 @@ namespace TeaseAI_CE.Scripting
 					}
 					else
 					{
-						log.Error(string.Format("Tried to set a variable of type '{0}' to type '{1}'", l.GetType().Name, r.GetType().Name));
+						log.Error(string.Format(StringsScripting.Formatted_Evaluate_Assign_type_mismatch, l.GetType().Name, r.GetType().Name));
 						return null;
 					}
 				}
@@ -166,7 +167,7 @@ namespace TeaseAI_CE.Scripting
 
 			if (!left.IsSet || !right.IsSet)
 			{
-				log.Error("Cannot apply operator '" + op.ToString() + "' with unset variables!");
+				log.Error(string.Format(StringsScripting.Formatted_Evaluate_Operator_unset_variable, op.ToString()));
 				return null;
 			}
 
@@ -192,7 +193,7 @@ namespace TeaseAI_CE.Scripting
 						catch (OverflowException ex)
 						{ log.Error(ex.Message); }
 					}
-					log.Error(string.Format("Unable to {0} {1} with {2}", op.ToString(), l.GetType().Name, r.GetType().Name));
+					log.Error(string.Format(StringsScripting.Formatted_Evaluate_Operator_type_invalid, op.ToString(), l.GetType().Name, r.GetType().Name));
 					return null;
 
 				case Operators.Subtract:
@@ -216,7 +217,7 @@ namespace TeaseAI_CE.Scripting
 						catch (OverflowException ex)
 						{ log.Error(ex.Message); }
 					}
-					log.Error(string.Format("Unable to {0} {1} with {2}", op.ToString(), l.GetType().Name, r.GetType().Name));
+					log.Error(string.Format(StringsScripting.Formatted_Evaluate_Operator_type_invalid, op.ToString(), l.GetType().Name, r.GetType().Name));
 					return null;
 
 				case Operators.Multiply:
@@ -224,7 +225,7 @@ namespace TeaseAI_CE.Scripting
 						return new Variable((float)l * (float)r);
 					if (l is float && r is bool)
 						return new Variable((float)l * ((bool)r ? 1f : 0f));
-					log.Error(string.Format("Unable to {0} {1} with {2}", op.ToString(), l.GetType().Name, r.GetType().Name));
+					log.Error(string.Format(StringsScripting.Formatted_Evaluate_Operator_type_invalid, op.ToString(), l.GetType().Name, r.GetType().Name));
 					return null;
 
 				case Operators.Divide:
@@ -236,12 +237,12 @@ namespace TeaseAI_CE.Scripting
 						float fr = (float)r;
 						if (fr == 0)
 						{
-							log.Warning("Tried to devide by zero!");
+							log.Warning(StringsScripting.Divide_by_zero);
 							fr = 1;
 						}
 						return new Variable(fl / fr);
 					}
-					log.Error(string.Format("Unable to {0} {1} with {2}", op.ToString(), l.GetType().Name, r.GetType().Name));
+					log.Error(string.Format(StringsScripting.Formatted_Evaluate_Operator_type_invalid, op.ToString(), l.GetType().Name, r.GetType().Name));
 					return null;
 
 				// Logic
@@ -256,7 +257,7 @@ namespace TeaseAI_CE.Scripting
 						return new Variable((DateTime)l > (DateTime)r);
 					if (l is TimeSpan && r is TimeSpan)
 						return new Variable((TimeSpan)l > (TimeSpan)r);
-					log.Error(string.Format("Unable to {0} {1} with {2}", op.ToString(), l.GetType().Name, r.GetType().Name));
+					log.Error(string.Format(StringsScripting.Formatted_Evaluate_Operator_type_invalid, op.ToString(), l.GetType().Name, r.GetType().Name));
 					return null;
 				case Operators.Less:
 					if (l is float && r is float)
@@ -265,20 +266,20 @@ namespace TeaseAI_CE.Scripting
 						return new Variable((DateTime)l < (DateTime)r);
 					if (l is TimeSpan && r is TimeSpan)
 						return new Variable((TimeSpan)l < (TimeSpan)r);
-					log.Error(string.Format("Unable to {0} {1} with {2}", op.ToString(), l.GetType().Name, r.GetType().Name));
+					log.Error(string.Format(StringsScripting.Formatted_Evaluate_Operator_type_invalid, op.ToString(), l.GetType().Name, r.GetType().Name));
 					return null;
 				case Operators.And:
 					if (l is bool && r is bool)
 						return new Variable((bool)l && (bool)r);
-					log.Error(string.Format("Unable to {0} {1} with {2}", op.ToString(), l.GetType().Name, r.GetType().Name));
+					log.Error(string.Format(StringsScripting.Formatted_Evaluate_Operator_type_invalid, op.ToString(), l.GetType().Name, r.GetType().Name));
 					return null;
 				case Operators.Or:
 					if (l is bool && r is bool)
 						return new Variable((bool)l || (bool)r);
-					log.Error(string.Format("Unable to {0} {1} with {2}", op.ToString(), l.GetType().Name, r.GetType().Name));
+					log.Error(string.Format(StringsScripting.Formatted_Evaluate_Operator_type_invalid, op.ToString(), l.GetType().Name, r.GetType().Name));
 					return null;
 			}
-			log.Error("Invalid operator: " + op.ToString());
+			log.Error(string.Format(StringsScripting.Formatted_Evaluate_Invalid_operator, op.ToString()));
 			return null;
 		}
 		private static object getDefault(Type type)

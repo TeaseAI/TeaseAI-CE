@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Diagnostics;
+using MyResources;
 
 namespace TeaseAI_CE.Scripting
 {
@@ -109,7 +110,7 @@ namespace TeaseAI_CE.Scripting
 					stack.Push(new Context(this, scope.Root, line, 0, new Dictionary<string, Variable>(scope.Variables)));
 					if (stack.Count > 128)
 					{
-						scope.Root.Log.Error("Stack > 128, Infinite loop, or improper use.");
+						scope.Root.Log.ErrorF(StringsScripting.Formatted_Stack_too_big, 128);
 						stack.Clear();
 					}
 				}
@@ -133,7 +134,7 @@ namespace TeaseAI_CE.Scripting
 
 				if (queue.Count > 128)
 				{
-					root.Log.Error("Queue > 128, Infinite loop, or improper use.");
+					root.Log.ErrorF(StringsScripting.Formatted_Queue_too_big, 128);
 					queue.Clear();
 				}
 			}

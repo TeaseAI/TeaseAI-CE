@@ -35,6 +35,18 @@ namespace TeaseAI_CE.Scripting
 		{
 			log(message, Level.Error);
 		}
+		public void ErrorF(string format, params object[] args)
+		{
+			try
+			{
+				log(string.Format(format, args), Level.Error);
+			}
+			catch
+			{
+				log("Logging format error.", Level.Warning);
+				log(format, Level.Error);
+			}
+		}
 		public void Error(string message, int line, int @char = 0)
 		{
 			SetId(line, @char);
@@ -43,6 +55,18 @@ namespace TeaseAI_CE.Scripting
 		public void Warning(string message)
 		{
 			log(message, Level.Warning);
+		}
+		public void WarningF(string format, params object[] args)
+		{
+			try
+			{
+				log(string.Format(format, args), Level.Warning);
+			}
+			catch
+			{
+				log("Logging format error.", Level.Warning);
+				log(format, Level.Warning);
+			}
 		}
 		public void Warning(string message, int line, int @char = 0)
 		{
