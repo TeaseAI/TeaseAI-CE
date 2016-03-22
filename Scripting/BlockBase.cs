@@ -30,13 +30,16 @@ namespace TeaseAI_CE.Scripting
 		// 
 		// In validatation mode, we could add to the tag, then check if there is an image for every tag.
 		// But that does not with when you use the AND operator. Because there may be a image for every tag, but there may not be any image for "a" AND "b".
-		public string[] Tags = new string[0];
+		private HashSet<string> tags = null;
 
-		public BlockBase(int lineNumber, string key, Line[] lines, GroupInfo group, Logger log) : base(lineNumber, key, lines)
+		public BlockBase(string key, Line[] lines, string[] tags, GroupInfo group, Logger log) : base(-1, key, lines)
 		{
 			Group = group;
 			Log = log;
 			Valid = Validation.NeverRan;
+
+			if (tags != null && tags.Length > 0)
+				this.tags = new HashSet<string>(tags);
 		}
 
 		/// <summary>
@@ -56,5 +59,11 @@ namespace TeaseAI_CE.Scripting
 			}
 		}
 
+		public bool ContainsTag(string key)
+		{
+			if (tags == null)
+				return false;
+			return tags.Contains(key);
+		}
 	}
 }

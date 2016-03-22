@@ -37,6 +37,8 @@ No scripts = No scripts found!
 No lists = No list scripts found.
 No personalities = No personalities exist!
 No input replace = No 'input replace' found!
+Setup has tags = Setup does not support tags.
+Setup has responses = Setup does not support responses.
 
 Sub parentheses zero arguments = Empty sub parentheses.
 Sub parentheses too many arguments = Sub parentheses have more than one argument!

@@ -11,7 +11,8 @@ namespace TeaseAI_CE.Scripting
 		private static Random random = new Random();
 
 		private VM vm;
-		public List(VM vm, int lineNumber, string key, Line[] lines, GroupInfo group, Logger log) : base(lineNumber, key, lines, group, log)
+		public List(VM vm, string key, Line[] lines, string[] tags, GroupInfo group, Logger log)
+			: base(key, lines, tags, group, log)
 		{
 			this.vm = vm;
 		}

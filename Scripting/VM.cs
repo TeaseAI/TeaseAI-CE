@@ -32,7 +32,10 @@ namespace TeaseAI_CE.Scripting
 		private List<GroupInfo> scriptGroups = new List<GroupInfo>();
 		private List<Script> scriptSetups = new List<Script>();
 		private Dictionary<string, Variable<Script>> scripts = new Dictionary<string, Variable<Script>>();
+		private Dictionary<string, List<Script>> scriptTags = new Dictionary<string, List<Script>>();
 		private Dictionary<string, Variable<List>> scriptLists = new Dictionary<string, Variable<List>>();
+		private Dictionary<string, List<List>> scriptListTags = new Dictionary<string, List<List>>();
+		private Dictionary<string, List<BlockBase>> scriptResponses = new Dictionary<string, List<BlockBase>>();
 
 		private volatile int _dirty = 0;
 		public bool Dirty { get { return _dirty != 0; } private set { Interlocked.Exchange(ref _dirty, value ? 1 : 0); } }
@@ -365,6 +368,81 @@ namespace TeaseAI_CE.Scripting
 			return true;
 		}
 
+		private void addScript(Script script, string key, string[] tags, string[] responses)
+		{
+			scriptsLock.EnterWriteLock();
+			try
+			{
+				scripts[key] = new Variable<Script>(script);
+
+				// tags
+				if (tags != null)
+				{
+					foreach (string tag in tags)
+					{
+						if (tag == null || tag.Length == 0)
+							continue;
+						List<Script> list;
+						if (!scriptTags.TryGetValue(tag, out list))
+							list = scriptTags[tag] = new List<Script>();
+						list.Add(script);
+					}
+				}
+				// responses
+				if (responses != null)
+				{
+					foreach (string keyword in responses)
+					{
+						if (keyword == null || keyword.Length == 0)
+							continue;
+						List<BlockBase> list;
+						if (!scriptResponses.TryGetValue(keyword, out list))
+							list = scriptResponses[keyword] = new List<BlockBase>();
+						list.Add(script);
+					}
+				}
+			}
+			finally
+			{ scriptsLock.ExitWriteLock(); }
+		}
+		private void addScriptList(List scriptList, string key, string[] tags, string[] responses)
+		{
+			scriptsLock.EnterWriteLock();
+			try
+			{
+				scriptLists[key] = new Variable<List>(scriptList);
+
+				// tags
+				if (tags != null)
+				{
+					foreach (string tag in tags)
+					{
+						if (tag == null || tag.Length == 0)
+							continue;
+						List<List> list;
+						if (!scriptListTags.TryGetValue(tag, out list))
+							list = scriptListTags[tag] = new List<List>();
+						list.Add(scriptList);
+					}
+				}
+				// responses
+				if (responses != null)
+				{
+					foreach (string keyword in responses)
+					{
+						if (keyword == null || keyword.Length == 0)
+							continue;
+						List<BlockBase> list;
+						if (!scriptResponses.TryGetValue(keyword, out list))
+							list = scriptResponses[keyword] = new List<BlockBase>();
+						list.Add(scriptList);
+					}
+				}
+			}
+			finally
+			{ scriptsLock.ExitWriteLock(); }
+		}
+
 		#region Loading files
 
 		/// <summary>
@@ -454,16 +532,27 @@ namespace TeaseAI_CE.Scripting
 			var blocks = group.Blocks;
 			int currentLine = 0;
 			string blockKey = null;
+			string[] blockTags = null;
+			string[] blockResponses = null;
 			int blockLine = 0;
 			while (currentLine < rawLines.Count)
 			{
 				string str = rawLines[currentLine];
 				int indent = 0;
+				fileLog.SetId(currentLine);
 				if (parseCutLine(ref str, ref indent)) // line empty?
 				{
 					if (indent == 0) // indent 0 defines what the key of the upcoming object is.
 					{
-						blockKey = KeyClean(str);
+						List<string[]> args;
+						parseBlockStart(str, out blockKey, out args, fileLog);
+						blockTags = null;
+						blockResponses = null;
+						if (args.Count > 0)
+							blockTags = KeyClean(args[0], fileLog);
+						if (args.Count > 1)
+							blockResponses = SanitizeInputReplace(args[1]);
+
 						blockLine = currentLine;
 						// make sure key is a valid type.
 						var rootKey = KeySplit(blockKey)[0];
@@ -484,7 +573,7 @@ namespace TeaseAI_CE.Scripting
 						var log = new Logger(fileKey + "." + blockKey);
 						var lines = parseBlock(rawLines, ref currentLine, indent, log);
 						if (lines == null)
-							blocks.Add(new BlockBase(blockLine, blockKey, null, group, log));
+							blocks.Add(new BlockBase(blockKey, null, blockTags, group, log));
 						else
 						{
 							// Figureout type of script, then add it.
@@ -495,9 +584,14 @@ namespace TeaseAI_CE.Scripting
 								{
 									scriptsLock.EnterWriteLock();
 									try
-									{ scriptSetups.Add(new Script(blockLine, blockKey, lines, group, log)); }
+									{ scriptSetups.Add(new Script(blockKey, lines, blockTags, group, log)); }
 									finally
 									{ scriptsLock.ExitWriteLock(); }
+									// warn if has tags or responses
+									if (blockTags != null && blockTags.Length > 0)
+										fileLog.Warning(StringsScripting.Setup_has_tags, blockLine);
+									if (blockResponses != null && blockResponses.Length >= 0)
+										fileLog.Warning(StringsScripting.Setup_has_responses, blockLine);
 								}
 								else
 								{
@@ -516,26 +610,18 @@ namespace TeaseAI_CE.Scripting
 								switch (keySplit[0])
 								{
 									case "script":
-										scriptsLock.EnterWriteLock();
-										try
 										{
-											var script = new Script(blockLine, blockKey, lines, group, log);
+											var script = new Script(blockKey, lines, blockTags, group, log);
 											blocks.Add(script);
-											scripts[key] = new Variable<Script>(script);
+											addScript(script, key, blockTags, blockResponses);
 										}
-										finally
-										{ scriptsLock.ExitWriteLock(); }
 										break;
 									case "list":
-										scriptsLock.EnterWriteLock();
-										try
 										{
-											var list = new List(this, blockLine, blockKey, lines, group, log);
+											var list = new List(this, blockKey, lines, blockTags, group, log);
 											blocks.Add(list);
-											scriptLists[key] = new Variable<List>(list);
+											addScriptList(list, key, blockTags, blockResponses);
 										}
-										finally
-										{ scriptsLock.ExitWriteLock(); }
 										break;
 									case "personality":
 										{
@@ -549,7 +635,7 @@ namespace TeaseAI_CE.Scripting
 											if (p == null)
 												p = CreatePersonality(key);
 											// run through the script to fill the personalities variables.
-											var script = new Script(blockLine, blockKey, lines, group, log);
+											var script = new Script(blockKey, lines, null, group, log);
 											var c = new Controller(p);
 											validateScript(c, script);
 											runThroughScript(p, c, script, new StringBuilder());
@@ -576,7 +662,7 @@ namespace TeaseAI_CE.Scripting
 		/// <param name="currentLine"></param>
 		/// <param name="blockIndent">Indent level this block is at.</param>
 		/// <returns>Block with lines, or null if zero lines.</returns>
-		private Line[] parseBlock(List<string> rawLines, ref int currentLine, int blockIndent, Logger log)
+		private static Line[] parseBlock(List<string> rawLines, ref int currentLine, int blockIndent, Logger log)
 		{
 			// temp list of lines, until we are finished parsing.
 			var lines = new List<Line>();
@@ -644,7 +730,7 @@ namespace TeaseAI_CE.Scripting
 		/// <param name="str"></param>
 		/// <param name="indentCount"></param>
 		/// <returns>false if str would be empty.</returns>
-		private bool parseCutLine(ref string str, ref int indentCount)
+		private static bool parseCutLine(ref string str, ref int indentCount)
 		{
 			if (str.Length == 0)
 				return false;
@@ -684,6 +770,106 @@ namespace TeaseAI_CE.Scripting
 			// apply the start/end
 			str = str.Substring(start, end - start + 1);
 			return true;
+		}
+
+		private static void parseBlockStart(string str, out string key, out List<string[]> args, Logger log)
+		{
+			args = new List<string[]>();
+			var sb = new StringBuilder();
+			bool iskey = true;
+			int i = 0;
+			char c;
+			while (i < str.Length)
+			{
+				c = str[i++];
+				if (c == '[')
+				{
+					args.Add(parseStringArray(str, ref i, log));
+					iskey = false;
+				}
+				else if (iskey && c != ' ')
+					sb.Append(c);
+			}
+			key = KeyClean(sb.ToString(), log);
+		}
+
+		/// <summary> Parse "" as a string</summary>
+		/// <param name="i">should be the next character after the first " </param>
+		private static string parseStringQuoted(string str, ref int i, Logger log)
+		{
+			var sb = new StringBuilder();
+			char c;
+			while (i < str.Length)
+			{
+				c = str[i++];
+
+				if (c == '"') // string end
+					return sb.ToString();
+
+				// escape
+				else if (c == '\\' && i + 1 < str.Length)
+				{
+					char next = str[i++];
+					if (next == '\\')
+						sb.Append('\\');
+					else if (next == 'n')
+						sb.Append('\n');
+					else if (next == '"')
+						sb.Append('"');
+					else
+						log.Warning(string.Format(StringsScripting.Formatted_Invalid_string_escape_character, next), -1, i);
+				}
+				else
+					sb.Append(c);
+			}
+			return sb.ToString();
+		}
+
+		/// <summary> Parse [] as an array of strings</summary>
+		/// <param name="i"> should be the next character after [ </param>
+		private static string[] parseStringArray(string str, ref int i, Logger log)
+		{
+			var result = new List<string>();
+			var sb = new StringBuilder();
+			char c;
+			int lastLength = 0; // ignore white-space on the end. (TrimEnd)
+			while (i < str.Length)
+			{
+				c = str[i++];
+				switch (c)
+				{
+					case '"':
+						if (sb.Length == 0)
+							sb.Append(parseStringQuoted(str, ref i, log));
+						else
+							sb.Append(c);
+						lastLength = sb.Length;
+						break;
+					case '\t':
+					case ' ':
+						// ignore what-space on the biginning. (TrimStart)
+						if (sb.Length > 0)
+							sb.Append(c);
+						break;
+					case ',':
+						result.Add(sb.ToString(0, lastLength));
+						sb.Clear();
+						break;
+					case ']': // End
+						result.Add(sb.ToString(0, lastLength));
+						if (result.Count == 0)
+							return null;
+						return result.ToArray();
+					default:
+						sb.Append(c);
+						lastLength = sb.Length;
+						break;
+				}
+			}
+			result.Add(sb.ToString(0, lastLength));
+			if (result.Count == 0)
+				return null;
+			return result.ToArray();
 		}
 
 		#endregion
@@ -897,48 +1083,21 @@ namespace TeaseAI_CE.Scripting
 
 			// Split in to lists of values and operators.
 			var sb = new StringBuilder();
-			bool inString = false;
 			bool finished = false;
 			char c;
 			while (i < str.Length && !finished)
 			{
 				c = str[i];
-				if (inString)
-				{
-					if (c == '"') // string end
-					{
-						items.Add(new Variable(sb.ToString()));
-						sb.Clear();
-						inString = false;
-					}
-					// escape
-					else if (c == '\\' && i + 1 < str.Length)
-					{
-						++i;
-						char next = str[i];
-						if (next == '\\')
-							sb.Append('\\');
-						else if (next == 'n')
-							sb.Append('\n');
-						else if (next == '"')
-							sb.Append('"');
-						else
-							log.Warning(string.Format(StringsScripting.Formatted_Invalid_string_escape_character, next), -1, i);
-					}
-					else
-						sb.Append(c);
-					++i;
-					continue;
-				}
-				//else not in string
 				switch (c)
 				{
-					case '"': // string start
+					// string
+					case '"':
 						execParenthCheckAdd(sender, items, sb);
-						inString = true;
-						break;
+						++i;
+						items.Add(new Variable(parseStringQuoted(str, ref i, log)));
+						continue;
 
-					// finish parenth
+					// finish parentheses
 					case ')':
 						finished = true;
 						break;
@@ -1321,6 +1480,11 @@ namespace TeaseAI_CE.Scripting
 			}
 		}
 
+		/// <summary> Sanitize strings for use in the input replace system. </summary>
+		public static string[] SanitizeInputReplace(string[] strings)
+		{
+			return strings.Select(str => SanitizeInputReplace(str)).ToArray();
+		}
 		/// <summary> Sanitize a string for use in the input replace system. </summary>
 		public static string SanitizeInputReplace(string str)
 		{
@@ -1335,6 +1499,12 @@ namespace TeaseAI_CE.Scripting
 		{
 			bool tmp;
 			return KeyClean(key, out tmp, out tmp, log);
+		}
+		/// <summary> Removes white-space, sets lowercase, removes invalid characters, trims white-space. </summary>
+		public static string[] KeyClean(string[] keys, Logger log = null)
+		{
+			bool tmp;
+			return keys.Select(key => KeyClean(key, out tmp, out tmp, log)).ToArray();
 		}
 		/// <summary> Removes white-space, sets lowercase, removes invalid characters, trims white-space. </summary>
 		private static string KeyClean(string key, out bool isFloat, out bool isPercent, Logger log = null)
