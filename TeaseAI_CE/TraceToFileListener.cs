@@ -27,6 +27,7 @@ namespace TeaseAI_CE
 			catch { }
 
 			writer = new StreamWriter(file);
+			writer.AutoFlush = true;
 
 		}
 
