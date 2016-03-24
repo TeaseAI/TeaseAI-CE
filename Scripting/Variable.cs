@@ -111,6 +111,10 @@ namespace TeaseAI_CE.Scripting
 				sb.Append(((TimeSpan)Value).ToString("G"));
 				sb.Append("\")");
 			}
+			else if (Value is VariableQuery.Item)
+			{
+				// ToDo : Save query variables.
+			}
 			else
 				sb.Append("Unsupported_Type");
 		}
@@ -123,6 +127,11 @@ namespace TeaseAI_CE.Scripting
 			{
 				log.Error(StringsScripting.Evaluate_null_variable);
 				return null;
+			}
+
+			if (left is VariableQuery || right is VariableQuery)
+			{
+				return VariableQuery.Evaluate(sender, left, op, right);
 			}
 
 			object l = left.Value;
@@ -271,11 +280,15 @@ namespace TeaseAI_CE.Scripting
 				case Operators.And:
 					if (l is bool && r is bool)
 						return new Variable((bool)l && (bool)r);
+					if (l is string && r is string)
+						return VariableQuery.Evaluate(sender, left, op, right);
 					log.Error(string.Format(StringsScripting.Formatted_Evaluate_Operator_type_invalid, op.ToString(), l.GetType().Name, r.GetType().Name));
 					return null;
 				case Operators.Or:
 					if (l is bool && r is bool)
 						return new Variable((bool)l || (bool)r);
+					if (l is string && r is string)
+						return VariableQuery.Evaluate(sender, left, op, right);
 					log.Error(string.Format(StringsScripting.Formatted_Evaluate_Operator_type_invalid, op.ToString(), l.GetType().Name, r.GetType().Name));
 					return null;
 			}

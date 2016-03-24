@@ -12,18 +12,15 @@ Setup
 		#(.Test = true)
 	#if(not(.lastknown))
 		#(.lastknown = date)
+	#(.startquery = "start" and "notay")
 
 
 // Some tag thoughts
 Script.Tagging
-	// assign tags:
-	#(.MyTags = ("Start", "Welcome", "Notay"))
-	#(.MyTags = .MyTags + "test" + "testing")
-
-	#SetTags(scripts.Welcome, .MyTags)
 
 	// look for a script tagged with "start" and has tag "notay" or "1885"
 	#GoTo( #QueryScript("start" and ("notay" or "1885")) )
+	
 
 // Contact script thought
 Script.Contact
@@ -68,6 +65,13 @@ Script.Welcome[tags, start, welcome, notay][]
 	I am @.Age years old.
 	@.somevar
 	@(50% + 25%) @List.Emote.Happy @List.Emote.Happy @List.Emote.Happy @List.Emote.Happy
+
+Script.Welcome2[start, notay][]
+	You found welcome 2!
+	#goto(script.welcome)
+Script.Welcome3[start, welcome, notay][]
+	You found welcome 3!
+	#goto(script.welcome)
 
 Personality.Lisa
 	#(.name = "Lisa")

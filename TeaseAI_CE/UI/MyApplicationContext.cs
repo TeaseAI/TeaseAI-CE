@@ -106,19 +106,18 @@ namespace TeaseAI_CE.UI
 			Personality persona;
 			if (!vm.TryGetPersonality("Lisa", out persona))
 				persona = vm.CreatePersonality("Lisa");
-			persona.RunSetup();
 
 			status(70, Strings.Status_Validate);
 			vm.Validate();
 
+			// ToDo : At some point we will want to run all setups.
+			persona.RunSetup();
+
 			var controller = vm.CreateController(persona);
 			controller.Interval = 500;
-			// Note: this will not be common use:
-			var script = persona.GetVariable("script.test.welcome", new Logger("script.test")) as Variable<Script>;
-			if (script != null && script.IsSet)
-				controller.Add(script.Value);
+			var fakelog = new Logger("fakelog");
+			controller.Add(vm.QueryScript(persona.GetVariable(".startquery", fakelog), fakelog));
 
-			// ToDo : At some point we will want to run setups.
 
 			status(90, Strings.Status_Load_UI);
 			bool split = settings.Windows.Split;

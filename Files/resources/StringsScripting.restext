@@ -98,3 +98,8 @@ Formatted Unable to parse = "{0}" unable to parse "{1}" as "{2}"
 # 0=size
 Formatted Stack too big = Stack > {0}, infinite loop, or improper script calling usage.
 Formatted Queue too big = Queue > {0}, infinite loop, or improper script calling usage.
+
+
+### VariableQuery.cs
+Query cannot start with operator = Query can not start with an operator!
+

@@ -21,6 +21,8 @@ namespace TeaseAI_CE.Scripting
 		private volatile bool threadRun = false;
 		public bool IsRunning { get { return threadRun; } }
 
+		private Random random = new Random();
+
 		private ConcurrentDictionary<string, Function> functions = new ConcurrentDictionary<string, Function>();
 
 		private ReaderWriterLockSlim personControlLock = new ReaderWriterLockSlim(LockRecursionPolicy.SupportsRecursion);
@@ -36,6 +38,7 @@ namespace TeaseAI_CE.Scripting
 		private Dictionary<string, Variable<List>> scriptLists = new Dictionary<string, Variable<List>>();
 		private Dictionary<string, List<List>> scriptListTags = new Dictionary<string, List<List>>();
 		private Dictionary<string, List<BlockBase>> scriptResponses = new Dictionary<string, List<BlockBase>>();
+
 
 		private volatile int _dirty = 0;
 		public bool Dirty { get { return _dirty != 0; } private set { Interlocked.Exchange(ref _dirty, value ? 1 : 0); } }
@@ -205,6 +208,30 @@ namespace TeaseAI_CE.Scripting
 		}
 
 		#endregion
+
+		public Script QueryScript(Variable query, Logger log)
+		{
+			if (query == null || !query.IsSet)
+				// ToDo : Error
+				return null;
+			if (query.Value is VariableQuery.Item == false)
+				// ToDo : Error
+				return null;
+
+			scriptsLock.EnterReadLock();
+			try
+			{
+				var list = scripts.Values.ToList();
+				VariableQuery.QueryReduceByTag(list, query.Value as VariableQuery.Item, log);
+				if (list == null || list.Count == 0)
+					return null;
+				// ToDo6: Make not random.
+				int r = random.Next(0, list.Count);
+				return list[r].Value;
+			}
+			finally
+			{ scriptsLock.ExitReadLock(); }
+		}
 
 		internal Variable GetVariable(string key, Context sender)
 		{
@@ -1521,7 +1548,7 @@ namespace TeaseAI_CE.Scripting
 			if (start >= array.Length)
 			{
 				isFloat = false;
-				return null;
+				return "";
 			}
 
 			int i = start;

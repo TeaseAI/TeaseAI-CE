@@ -50,6 +50,7 @@
     <Compile Include="Script.cs" />
     <Compile Include="BlockBase.cs" />
     <Compile Include="Variable.cs" />
+    <Compile Include="VariableQuery.cs" />
     <Compile Include="VM.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
