@@ -217,12 +217,18 @@ namespace TeaseAI_CE.Scripting
 			if (query.Value is VariableQuery.Item == false)
 				// ToDo : Error
 				return null;
-
+			return QueryScript(query.Value as VariableQuery.Item, log);
+		}
+		public Script QueryScript(VariableQuery.Item query, Logger log)
+		{
+			if (query == null)
+				// ToDo : Error
+				return null;
 			scriptsLock.EnterReadLock();
 			try
 			{
 				var list = scripts.Values.ToList();
-				VariableQuery.QueryReduceByTag(list, query.Value as VariableQuery.Item, log);
+				VariableQuery.QueryReduceByTag(list, query, log);
 				if (list == null || list.Count == 0)
 					return null;
 				// ToDo6: Make not random.

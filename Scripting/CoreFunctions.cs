@@ -92,16 +92,25 @@ namespace TeaseAI_CE.Scripting
 				if (!arg.IsSet)
 					continue;
 
-				Script script = arg.Value as Script;
+				BlockBase script = null;
+
+				object value = arg.Value;
+				if (value is BlockBase)
+					script = (BlockBase)value;
+				else if (value is VariableQuery.Item)
+					script = sender.Controller.VM.QueryScript((VariableQuery.Item)value, sender.Root.Log);
+				else if (value is string) // string can be a single query key.
+					script = sender.Controller.VM.QueryScript((string)value, sender.Root.Log);
+				else
+					sender.Root.Log.ErrorF(StringsScripting.Formatted_Function_invalid_type, "GoTo", arg.Value.GetType().Name, typeof(Script).Name);
+
 				if (script != null)
 				{
 					if (ReferenceEquals(script, sender.Root))
 						sender.Root.Log.Error(StringsScripting.FunctionGoTo_cannot_goto_self);
-					else
+					else if (sender.Root.Valid != BlockBase.Validation.Running)
 						sender.Controller.Add(script);
 				}
-				else
-					sender.Root.Log.ErrorF(StringsScripting.Formatted_Function_invalid_type, "GoTo", arg.Value.GetType().Name, typeof(Script).Name);
 			}
 			return null;
 		}
@@ -163,5 +172,6 @@ namespace TeaseAI_CE.Scripting
 			return new Variable(TimeSpan.Zero);
 		}
 		#endregion
+
 	}
 }

@@ -13,6 +13,7 @@ namespace TeaseAI_CE.Scripting
 	public class Controller
 	{
 		public readonly Personality Personality;
+		public VM VM { get { return Personality.VM; } }
 
 		/// <summary>
 		/// Time inbetween updates.

@@ -19,7 +19,7 @@ Setup
 Script.Tagging
 
 	// look for a script tagged with "start" and has tag "notay" or "1885"
-	#GoTo( #QueryScript("start" and ("notay" or "1885")) )
+	#GoTo("start" and ("notay" or "1885"))
 	
 
 // Contact script thought
@@ -65,6 +65,7 @@ Script.Welcome[tags, start, welcome, notay][]
 	I am @.Age years old.
 	@.somevar
 	@(50% + 25%) @List.Emote.Happy @List.Emote.Happy @List.Emote.Happy @List.Emote.Happy
+	#GoTo(script.tagging)
 
 Script.Welcome2[start, notay][]
 	You found welcome 2!
