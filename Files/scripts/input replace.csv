@@ -1,18 +1,20 @@
-﻿pass, keyword   , inputs   (first line ignored.)  Each pass we replace all inputs found with the keyword.   Use "" when you need whitespace on an end.
+﻿//pass, keyword   , inputs
+//Each pass we replace all inputs found with the keyword.   Use "" when you need whitespace on an end.
 
-2   , " are "   , " r "
-2   , " you "   , " u ", " yu "
-1   , " your "  , " ur ", " u are ", " u r "
-1   , your      , you are, youre, you're
-1   , thats     , that's, that is, this is
-1   , cant      , can't, can not
-1   , dont      , don't, do not
-1   , so        , soo, sooo
+10  , " are "   , " r "
+10  , " you "   , " u ", " yu "
+2   , " your "  , " ur ", " u are ", " u r "
+2   , your      , you are, youre, you're
+2   , thats     , that is, this is
+2   , cant      , can not
+2   , dont      , do not
+2   , so        , soo, sooo
+2   , hi        , hello, hey, helo, " yo "
 
 
-1   , bodypart  , body, butt, ass, tits, breast, legs, etc..
+2   , bodypart  , body, butt, ass, tits, breast, legs, etc..
 
 
-1   , sexyhot   , sexy, beautiful, gorgeous, incredible, hot, great, amazing, fantastic, wonderful, stunning
-1   , bitch     , cunt, whore, slut
+2   , sexyhot   , sexy, beautiful, gorgeous, incredible, hot, great, amazing, fantastic, wonderful, stunning
+2   , bitch     , cunt, whore, slut
 

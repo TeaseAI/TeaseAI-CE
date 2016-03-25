@@ -491,7 +491,8 @@ namespace TeaseAI_CE.Scripting
 				personControlLock.EnterWriteLock();
 				try
 				{
-					inputReplace = new List<Dictionary<string, string>>();
+					if (inputReplace == null)
+						inputReplace = new List<Dictionary<string, string>>();
 					foreach (var file in files)
 					{
 						log.Info(string.Format(StringsScripting.Formatted_Log_Loading_file, file));
@@ -1462,7 +1463,7 @@ namespace TeaseAI_CE.Scripting
 			{
 				// get line ignore empty
 				var str = rawLines[line];
-				if (str == null || str.Length == 0 || line == 0)
+				if (str == null || str.Length == 0 || str.StartsWith("//"))
 					continue;
 				log.SetId(line + 1);
 				// split line, check length.
