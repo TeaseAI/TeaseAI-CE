@@ -230,6 +230,7 @@ namespace TeaseAI_CE.Scripting
 				var list = scripts.Values.ToList();
 				VariableQuery.QueryReduceByTag(list, query, log);
 				if (list == null || list.Count == 0)
+					// ToDo : Error
 					return null;
 				// ToDo6: Make not random.
 				int r = random.Next(0, list.Count);

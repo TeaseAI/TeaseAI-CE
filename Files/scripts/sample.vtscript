@@ -18,7 +18,7 @@ Setup
 
 Script.FirstWelcome[First]
 	#GoTo(script.introduction)
-	#GoTo("welcome")
+	#GoTo("start")
 	#(.first = false)
 
 Script.Introduction
@@ -29,7 +29,7 @@ Script.Introduction
 	#else
 		I am @.Age years old.
 
-Script.Welcome[Welcome]
+Script.Welcome[start]
 	#if(not .first)
 		Welcome back!
 	
