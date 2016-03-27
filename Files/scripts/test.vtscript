@@ -12,7 +12,7 @@ Setup
 		#(.Test = true)
 	#if(not isset(.lastknown))
 		#(.lastknown = date)
-	#(.startquery = "start" and "notay" and not "welcome")
+	//#(.startquery = "start" and "notay" and not "welcome")
 
 
 // Some tag thoughts
@@ -54,7 +54,7 @@ Script.Two
 	This is from a different script.
 	It auto returns to the caller.
 
-Script.Welcome[tags, start, welcome, notay][]
+Script.Welcome[test, start, welcome, notay][]
 	Hello, my name is @.Name .
 	#if(.test)
 		Welcome to a test script.
@@ -67,10 +67,10 @@ Script.Welcome[tags, start, welcome, notay][]
 	@(50% + 25%) @List.Emote.Happy @List.Emote.Happy @List.Emote.Happy @List.Emote.Happy
 	#GoTo(script.tagging)
 
-Script.Welcome2[start, notay][]
+Script.Welcome2[test, start, notay][]
 	You found welcome 2!
 	#goto(script.welcome)
-Script.Welcome3[start, welcome, notay][]
+Script.Welcome3[test, start, welcome, notay][]
 	You found welcome 3!
 	#goto(script.welcome)
 

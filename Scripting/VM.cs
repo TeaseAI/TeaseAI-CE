@@ -255,6 +255,20 @@ namespace TeaseAI_CE.Scripting
 				finally
 				{ scriptsLock.ExitReadLock(); }
 			}
+			else if (key.StartsWith("list."))
+			{
+
+				var tmpK = sender.Root.Group.Key + '.' + KeySplit(key)[1];
+				scriptsLock.EnterReadLock();
+				try
+				{
+					Variable<List> result;
+					if (scriptLists.TryGetValue(tmpK, out result))
+						return result;
+				}
+				finally
+				{ scriptsLock.ExitReadLock(); }
+			}
 			return GetVariable(key, sender.Root.Log);
 		}
 		/// <summary>

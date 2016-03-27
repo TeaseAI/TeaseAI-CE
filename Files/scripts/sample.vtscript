@@ -1,0 +1,67 @@
+﻿// 
+// 
+// 
+
+// Setup is ran for every personality.
+// It can be used to calculate the mood, or anything you want setup before any scripts are ran.
+Setup
+	// .StartQuery is used to find the first script to run.
+	#(.startQuery = "start" and not "test")
+	// .EmptyQuery is used to find a script once the stack is empty. (no scripts running)
+	#(.emptyQuery = "general" and not "test")
+	
+	// if .first is not set, we set it to true, and set our start script to point to "first".
+	#if(not IsSet(.first))
+		#(.first = true)
+		#(.startQuery = "First")
+	
+
+Script.FirstWelcome[First]
+	#GoTo(script.introduction)
+	#GoTo("welcome")
+	#(.first = false)
+
+Script.Introduction
+	Hello!
+	My name is @.Name , you can call me @.Title .
+	#if(.age < 30)
+		I am only @.Age years old!
+	#else
+		I am @.Age years old.
+
+Script.Welcome[Welcome]
+	#if(not .first)
+		Welcome back!
+	
+	This script is just to show what is currently possible.
+	There is still a lot to do.
+	
+	Welcome finished, I will now run general scripts, forever..
+
+Script.General[general]
+	Nothing here.
+
+Script.Smiley[general]
+	@list.emote.happy @list.emote.happy @list.emote.happy @list.emote.happy
+	@list.emote.happy @list.emote.happy @list.emote.happy @list.emote.happy
+	
+Script.Letters[general]
+	How about some letters?
+	@list.letters @list.letters @list.letters
+
+
+List.Letters
+	A
+	B
+	#x(10) C
+	D
+	F
+	G
+
+// If your script requires a personality with an exact ID, or you just want include someone with your script.
+// You can create a personality like so:
+Personality.Lisa
+	#(.name = "Lisa")
+	#(.title = "Miss " + .name)
+	#(.eye = "green")
+	#(.birthday = Date("1988-05-22"))

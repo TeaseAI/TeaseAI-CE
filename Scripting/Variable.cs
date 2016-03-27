@@ -192,6 +192,16 @@ namespace TeaseAI_CE.Scripting
 						if (!validating) // Don't change variable if we are validating.
 							left.Value = r;
 					}
+					else if (l is VariableQuery.Item && r is string)
+					{
+						if (!validating)
+							left.Value = (VariableQuery.Item)(string)r;
+					}
+					else if (l is string && r is VariableQuery.Item)
+					{
+						if (!validating)
+							left.Value = (VariableQuery.Item)r;
+					}
 					else
 					{
 						log.Error(string.Format(StringsScripting.Formatted_Evaluate_Assign_type_mismatch, l.GetType().Name, r.GetType().Name));
