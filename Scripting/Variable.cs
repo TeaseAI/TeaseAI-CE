@@ -79,6 +79,19 @@ namespace TeaseAI_CE.Scripting
 				output.Append(Value.ToString());
 		}
 
+		public virtual bool CanWriteValue()
+		{
+			if (!IsSet || Readonly)
+				return false;
+
+			return
+				Value is string ||
+				Value is float ||
+				Value is bool ||
+				Value is TimeSpan ||
+				Value is DateTime;
+		}
+
 		/// <summary>
 		/// Use to write a value as a string, when writing to files.
 		/// </summary>
@@ -86,8 +99,6 @@ namespace TeaseAI_CE.Scripting
 		public virtual void WriteValue(StringBuilder sb)
 		{
 			// ToDo : Handle other types like scripts.
-			if (!IsSet)
-				return;
 			if (Value is string)
 			{
 				sb.Append('"');
@@ -112,12 +123,8 @@ namespace TeaseAI_CE.Scripting
 				sb.Append(((TimeSpan)Value).ToString("G"));
 				sb.Append("\")");
 			}
-			else if (Value is VariableQuery.Item)
-			{
-				// ToDo : Save query variables.
-			}
 			else
-				sb.Append("Unsupported_Type");
+				sb.Append("Unsupported_Variable_Write_Type");
 		}
 
 		public static Variable Evaluate(Context sender, Variable left, Operators op, Variable right)

@@ -113,7 +113,7 @@ namespace TeaseAI_CE.Scripting
 
 				foreach (var kvp in variables)
 				{
-					if (!kvp.Value.IsSet || kvp.Value.Readonly || kvp.Key.StartsWith("tmp"))
+					if (!kvp.Value.CanWriteValue() || kvp.Key.StartsWith("tmp"))
 						continue;
 					// TAB#(.KEY=VALUE)
 					sb.Append("\t#(.");
