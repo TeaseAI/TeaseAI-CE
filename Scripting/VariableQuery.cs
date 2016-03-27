@@ -29,9 +29,13 @@ namespace TeaseAI_CE.Scripting
 		public static void QueryReduceByTag(List<Variable<Script>> list, Item item, Logger log)
 		{
 			int i = 0;
+			BlockBase script;
 			while (i < list.Count)
 			{
-				if (!list[i].IsSet || !pass(list[i].Value, item, log))
+				script = list[i].Value;
+				if (script == null || !script.HasTags)
+					list.RemoveAt(i);
+				else if (!(pass(script, item, log) ^ item.Notted))
 					list.RemoveAt(i);
 				else
 					++i;
@@ -54,7 +58,7 @@ namespace TeaseAI_CE.Scripting
 			if (items.Length == 0)
 				return true;
 			if (items.Length == 1)
-				return pass(test, items[0], log);
+				return pass(test, items[0], log) ^ items[0].Notted;
 
 			int i = 0;
 			while (i + 2 < items.Length)
@@ -73,10 +77,10 @@ namespace TeaseAI_CE.Scripting
 					return false;
 				}
 
-				bool lResult = pass(test, l, log);
+				bool lResult = pass(test, l, log) ^ l.Notted;
 				if (o.Operator == Operators.Or && lResult)
 					continue;
-				bool rResult = pass(test, r, log);
+				bool rResult = pass(test, r, log) ^ r.Notted;
 
 				if (o.Operator == Operators.Or)
 				{
@@ -157,6 +161,7 @@ namespace TeaseAI_CE.Scripting
 		public class Item
 		{
 			public Operators Operator;
+			public bool Notted = false;
 			public string Key = null;
 			public Item[] Items = null;
 			public bool IsOperator { get { return Key == null && Items == null; } }
@@ -184,6 +189,31 @@ namespace TeaseAI_CE.Scripting
 			public Item(Item lItem, Operators op, Item rItem)
 			{
 				Items = new Item[] { lItem, op, rItem };
+			}
+
+			public override string ToString()
+			{
+				if (Items != null)
+				{
+					string result = "( ";
+					if (Notted)
+						result = "not( ";
+					foreach (Item i in Items)
+						result += i.ToString() + " ";
+					return result + ")";
+				}
+				if (Key != null)
+				{
+					if (Notted)
+						return "not \"" + Key + '"';
+					return '"' + Key + '"';
+				}
+				return Operator.ToString();
+			}
+
+			public static Item Not(Item item)
+			{
+				return new Item() { Key = item.Key, Items = item.Items, Notted = true };
 			}
 
 			public static implicit operator Item(string key)

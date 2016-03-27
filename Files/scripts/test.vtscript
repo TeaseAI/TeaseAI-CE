@@ -10,9 +10,9 @@ Setup
 		#(.test = not(.test))
 	#else
 		#(.Test = true)
-	#if(not(.lastknown))
+	#if(not isset(.lastknown))
 		#(.lastknown = date)
-	#(.startquery = "start" and "notay")
+	#(.startquery = "start" and "notay" and not "welcome")
 
 
 // Some tag thoughts

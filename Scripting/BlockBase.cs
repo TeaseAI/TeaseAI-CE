@@ -59,6 +59,7 @@ namespace TeaseAI_CE.Scripting
 			}
 		}
 
+		public bool HasTags { get { return tags != null && tags.Count > 0; } }
 		public bool ContainsTag(string key)
 		{
 			if (tags == null)

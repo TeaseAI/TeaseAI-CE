@@ -1233,7 +1233,7 @@ namespace TeaseAI_CE.Scripting
 				log.Warning(StringsScripting.Parentheses_empty);
 				return new Variable[0];
 			}
-			else if (items[0].IsValue == false)
+			else if (items[0].IsValue == false && items[0].Operator != Operators.Not)
 			{
 				log.Error(StringsScripting.Parentheses_first_item_is_not_variable);
 				return new Variable[0];
@@ -1245,12 +1245,13 @@ namespace TeaseAI_CE.Scripting
 			// Operator precedence
 			// 1. Parentheses          ( )
 			// 2. Execute functions
-			// 3. Multiply & Divide    * /
-			// 4. Add & Subtract       + -
-			// 5. logic 1              > < ==
-			// 6. logic 2             and or
-			// 7. Assignment          =
-			//Note: assignment goes right to left.
+			// 3. Logic Not            not
+			// 4. Multiply & Divide    * /
+			// 5. Add & Subtract       + -
+			// 6. logic 1              > < ==
+			// 7. logic 2             and or
+			// 8. Assignment          =
+			//Note: 'not' and assignment goes right to left.
 
 			// 1. Done when we parse
 			// 2. Execute functions
@@ -1281,6 +1282,19 @@ namespace TeaseAI_CE.Scripting
 				}
 			}
 
+			// 3. Logic not
+			j = items.Count - 2;
+			while (j >= 0)
+			{
+				if (!items[j].IsValue && items[j].Operator == Operators.Not)
+				{
+					var r = items[j + 1].Value;
+					items[j] = Variable.Evaluate(sender, null, Operators.Not, r);
+					items.RemoveAt(j + 1);
+				}
+				--j;
+			}
+
 			// At this point it is required that there is exactly one operator inbetween each variable.
 			j = 0;
 			while (j + 2 < items.Count)
@@ -1298,10 +1312,15 @@ namespace TeaseAI_CE.Scripting
 					log.Error(StringsScripting.Parentheses_Expected_operator_got_variable);
 					return new Variable[0];
 				}
+				else if (o.Operator == Operators.Not)
+				{
+					log.Error(""); // ToDo : Error
+					return new Variable[0];
+				}
 				j += 2;
 			}
 
-			// 3. Multiply & Divide
+			// 4. Multiply & Divide
 			j = 0;
 			while (j + 2 < items.Count)
 			{
@@ -1316,7 +1335,7 @@ namespace TeaseAI_CE.Scripting
 				else
 					j += 2;
 			}
-			// 4. Add & Subtract
+			// 5. Add & Subtract
 			j = 0;
 			while (j + 2 < items.Count)
 			{
@@ -1331,7 +1350,7 @@ namespace TeaseAI_CE.Scripting
 				else
 					j += 2;
 			}
-			// 5. logic 1
+			// 6. logic 1
 			j = 0;
 			while (j + 2 < items.Count)
 			{
@@ -1346,7 +1365,7 @@ namespace TeaseAI_CE.Scripting
 				else
 					j += 2;
 			}
-			// 6. logic 2
+			// 7. logic 2
 			j = 0;
 			while (j + 2 < items.Count)
 			{
@@ -1361,7 +1380,7 @@ namespace TeaseAI_CE.Scripting
 				else
 					j += 2;
 			}
-			// 7. Assignment
+			// 8. Assignment
 			j = items.Count - 1;
 			while (j - 2 >= 0)
 			{
@@ -1414,6 +1433,8 @@ namespace TeaseAI_CE.Scripting
 			else if (str == "false")
 				items.Add(new Variable(false));
 			// logic operators
+			else if (str == "not")
+				items.Add(Operators.Not);
 			else if (str == "and")
 				items.Add(Operators.And);
 			else if (str == "or")

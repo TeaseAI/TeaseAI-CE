@@ -16,6 +16,7 @@ namespace TeaseAI_CE.Scripting
 		Multiply,
 		Divide,
 		// Logic
+		Not,
 		Equal,
 		More,
 		Less,
@@ -123,6 +124,32 @@ namespace TeaseAI_CE.Scripting
 		{
 			var log = sender.Root.Log;
 			bool validating = sender.Root.Valid == BlockBase.Validation.Running;
+
+			// logic not
+			if (op == Operators.Not)
+			{
+				if (right == null)
+				{
+					log.Error(StringsScripting.Evaluate_null_variable);
+					return null;
+				}
+				if (!right.IsSet)
+				{
+					log.Error(string.Format(StringsScripting.Formatted_Evaluate_Operator_unset_variable, op.ToString()));
+					return null;
+				}
+
+				object value = right.Value;
+				if (value is bool)
+					return new Variable(!(bool)value);
+				if (value is VariableQuery.Item)
+					return new VariableQuery(VariableQuery.Item.Not((VariableQuery.Item)value));
+				if (value is string)
+					return new VariableQuery(VariableQuery.Item.Not((string)value));
+				log.Error(string.Format(StringsScripting.Formatted_Evaluate_Operator_type_invalid, op.ToString(), "", value.GetType().Name));
+				return null;
+			}
+
 			if (left == null || right == null)
 			{
 				log.Error(StringsScripting.Evaluate_null_variable);

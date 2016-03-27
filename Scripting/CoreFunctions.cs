@@ -12,7 +12,7 @@ namespace TeaseAI_CE.Scripting
 			vm.AddFunction(elseif);
 			vm.AddFunction(@else);
 
-			vm.AddFunction(not);
+			vm.AddFunction(isSet);
 
 			vm.AddFunction(@goto);
 
@@ -62,19 +62,19 @@ namespace TeaseAI_CE.Scripting
 		}
 		#endregion
 
-		#region goto, not
-		private static Variable not(Context sender, Variable[] args)
+		#region goto, isSet
+		private static Variable isSet(Context sender, Variable[] args)
 		{
-			if (args.Length != 0)
+			if (args.Length == 0)
+			{
+				sender.Root.Log.WarningF(StringsScripting.Formatted_Function_arguments_empty, "IsSet");
 				return new Variable(false);
-			if (args.Length > 1)
-				sender.Root.Log.WarningF(StringsScripting.Formatted_Function_arguments_less_than_two, "Not");
-			if (!args[0].IsSet)
-				sender.Root.Log.ErrorF(StringsScripting.Formatted_Function_argument_unset, "Not", "");
-			else if (args[0].Value is bool)
-				return new Variable((bool)args[0].Value);
-			else
-				sender.Root.Log.ErrorF(StringsScripting.Formatted_Function_invalid_type, "Not", args[0].Value.GetType().Name, typeof(bool).Name);
+			}
+			foreach (var arg in args)
+			{
+				if (!arg.IsSet)
+					return new Variable(false);
+			}
 			return new Variable(true);
 		}
 
