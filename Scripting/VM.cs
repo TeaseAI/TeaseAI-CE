@@ -212,26 +212,32 @@ namespace TeaseAI_CE.Scripting
 		public Script QueryScript(Variable query, Logger log)
 		{
 			if (query == null || !query.IsSet)
-				// ToDo : Error
-				return null;
-			if (query.Value is VariableQuery.Item == false)
-				// ToDo : Error
-				return null;
-			return QueryScript(query.Value as VariableQuery.Item, log);
+				log.Error(StringsScripting.Query_empty);
+			else if (query.Value is VariableQuery.Item)
+				return QueryScript(query.Value as VariableQuery.Item, log);
+			else if (query.Value is string)
+				return QueryScript((string)query.Value, log);
+			else
+				log.ErrorF(StringsScripting.Formatted_Invalid_Type, "Query", query.Value.GetType().Name);
+			return null;
 		}
 		public Script QueryScript(VariableQuery.Item query, Logger log)
 		{
 			if (query == null)
-				// ToDo : Error
+			{
+				log.Error(StringsScripting.Query_empty);
 				return null;
+			}
 			scriptsLock.EnterReadLock();
 			try
 			{
 				var list = scripts.Values.ToList();
 				VariableQuery.QueryReduceByTag(list, query, log);
 				if (list == null || list.Count == 0)
-					// ToDo : Error
+				{
+					log.Error(StringsScripting.Query_empty);
 					return null;
+				}
 				// ToDo6: Make not random.
 				int r = random.Next(0, list.Count);
 				return list[r].Value;
@@ -1317,19 +1323,22 @@ namespace TeaseAI_CE.Scripting
 				var l = items[j];
 				var o = items[j + 1];
 				var r = items[j + 2];
-				if (l.IsValue == false || r.IsValue == false)
+				if (!l.IsValue || !r.IsValue)
 				{
-					log.Error(StringsScripting.Parentheses_Expected_variable_got_operator);
+					if (!l.IsValue)
+						log.ErrorF(StringsScripting.Formatted_Expected_variable_got_operator, l.Operator);
+					if (!r.IsValue)
+						log.ErrorF(StringsScripting.Formatted_Expected_variable_got_operator, r.Operator);
 					return new Variable[0];
 				}
 				else if (o.IsValue)
 				{
-					log.Error(StringsScripting.Parentheses_Expected_operator_got_variable);
+					log.Error(StringsScripting.Expected_operator_got_variable);
 					return new Variable[0];
 				}
 				else if (o.Operator == Operators.Not)
 				{
-					log.Error(""); // ToDo : Error
+					log.ErrorF(StringsScripting.Formatted_Unexpected_Operator, o.ToString());
 					return new Variable[0];
 				}
 				j += 2;

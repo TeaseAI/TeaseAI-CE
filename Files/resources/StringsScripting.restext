@@ -1,4 +1,16 @@
 ﻿
+### Generic
+# 0 = Operator
+Formatted Unexpected Operator = Operator "{0}" is not expected in this context!
+Formatted Expected variable got operator = Expecting variable/value, but got operator "{0}".
+# 0=Expected type 1=Givin type
+Formatted Invalid Type = Expected "{0}" but got "{1}"
+
+Expected operator got variable = Expecting an operator, but got a variable/value.
+
+Divide by zero = Tried to divide by zero!
+
+
 ### VM.cs
 Log VM Dirty = Can not start when VM is dirty! Run validator then try again.
 
@@ -44,14 +56,14 @@ Sub parentheses zero arguments = Empty sub parentheses.
 Sub parentheses too many arguments = Sub parentheses have more than one argument!
 Parentheses empty = Parentheses is empty!
 Parentheses first item is not variable = Parentheses must start with a variable/value, not an operator.
-Parentheses Expected variable got operator = Expecting variable/value, but got an operator.
-Parentheses Expected operator got variable = Expecting an operator, but got a variable/value.
 Parentheses Expected function arguments = Expecting function arguments.
 
 InputReplace Pass empty = The pass number is empty!
 InputReplace Pass not a number = Unable to parse pass as a number!
 # 0 = existing keyword. 1 = new keyword
 Formatted InputReplace Duplicate keyword = Keyword "{1}" is not needed sense it is equal to the existing keyword "{0}".
+
+Query empty = Query is empty or null!
 
 
 ### Variable.cs
@@ -67,7 +79,6 @@ Formatted Evaluate Invalid operator = Invalid operator "{0}".
 # 0=Operator 1=Left type 2=Right type
 Formatted Evaluate Operator type invalid = Unable to {0} "{1}" with "{2}"!
 
-Divide by zero = Tried to divide by zero!
 
 
 ### List.cs

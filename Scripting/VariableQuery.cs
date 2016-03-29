@@ -46,7 +46,7 @@ namespace TeaseAI_CE.Scripting
 		{
 			if (item.IsOperator)
 			{
-				log.Error("");
+				log.ErrorF(StringsScripting.Formatted_Unexpected_Operator, item.Operator.ToString());
 				return false;
 			}
 			if (item.Key != null)
@@ -68,12 +68,15 @@ namespace TeaseAI_CE.Scripting
 				Item r = items[i++];
 				if (l.IsOperator || r.IsOperator)
 				{
-					log.Error("");
+					if (l.IsOperator)
+						log.ErrorF(StringsScripting.Formatted_Unexpected_Operator, l.Operator);
+					if (r.IsOperator)
+						log.ErrorF(StringsScripting.Formatted_Unexpected_Operator, r.Operator);
 					return false;
 				}
 				if (!o.IsOperator)
 				{
-					log.Error("");
+					log.Error(StringsScripting.Expected_operator_got_variable);
 					return false;
 				}
 
@@ -94,7 +97,7 @@ namespace TeaseAI_CE.Scripting
 				}
 				else
 				{
-					log.Error("");
+					log.ErrorF(StringsScripting.Formatted_Unexpected_Operator, o.Operator);
 					return false;
 				}
 			}
