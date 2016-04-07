@@ -9,7 +9,7 @@ namespace TeaseAI_CE.Scripting
 	/// <summary>
 	/// A personality holds anything that defines the personality.
 	/// </summary>
-	public class Personality
+	public class Personality : IKeyed
 	{
 		public readonly VM VM;
 
@@ -37,8 +37,7 @@ namespace TeaseAI_CE.Scripting
 			set { name_var.Value = value; }
 		}
 
-		private ReaderWriterLockSlim varLock = new ReaderWriterLockSlim(LockRecursionPolicy.SupportsRecursion);
-		private Dictionary<string, Variable> variables = new Dictionary<string, Variable>();
+		private KeyedDictionary<Variable> variables = new KeyedDictionary<Variable>();
 
 		internal Personality(VM vm, string name, string id)
 		{
@@ -47,23 +46,20 @@ namespace TeaseAI_CE.Scripting
 			variables["name"] = name_var = new Variable(name);
 			variables["id"] = id_var = new Variable(id) { Readonly = true };
 			variables["enabled_user"] = enabledUser_var = new Variable(true);
-			variables["birthday"] = new Variable(DateTime.MinValue);
+			variables["birthday"] = new Variable(new VType.Date(DateTime.MinValue));
 
 			// readonly age, returns DateTime.Now - BirthDay
 			variables["age"] = new VariableFunc(() =>
 			{
-				varLock.EnterReadLock();
 				try
 				{
-					var span = DateTime.Now - (DateTime)variables["birthday"].Value;
+					var span = DateTime.Now - ((VType.Date)variables["birthday"].Value).Value;
 					return (float)(new DateTime(1, 1, 1) + span).Year - 1f;
 				}
 				catch (ArgumentOutOfRangeException)
 				{
 					return -1f;
 				}
-				finally
-				{ varLock.ExitReadLock(); }
 			}, null);
 		}
 
@@ -72,41 +68,24 @@ namespace TeaseAI_CE.Scripting
 			VM.RunSetupOn(this);
 		}
 
-		public Variable GetVariable(string key, Context sender)
+		#region IKeyed
+		public Variable Get(Key key, Logger log = null)
 		{
-			// variables starting wtih . is short hand for this personality.
-			if (key[0] == '.')
-				return getVariable_internal(key.Substring(1, key.Length - 1));
-			return VM.GetVariable(key, sender);
-		}
-		// ToDo : Remove, will not be needed once things are running properly.
-		public Variable GetVariable(string key, Logger log)
-		{
-			// variables starting wtih . is short hand for this personality.
-			if (key[0] == '.')
-				return getVariable_internal(key.Substring(1, key.Length - 1));
-
-			return VM.GetVariable(key, log);
-		}
-		internal Variable getVariable_internal(string key)
-		{
-			varLock.EnterReadLock();
-			try
+			if (key.AtEnd)
+				return VM.Get(new Key(log, "personality", (string)id_var.Value));
+			if (key.NextIf("self"))
 			{
-				Variable result;
-				if (!variables.TryGetValue(key, out result))
-					variables[key] = result = new Variable();
-				return result;
+				if (key.AtEnd)
+					return VM.Get(new Key(log, "personality", (string)id_var.Value));
+				return variables.Get(key, log);
 			}
-			finally
-			{ varLock.ExitReadLock(); }
+			return VM.Get(key, log);
 		}
+		#endregion
 
 		public string WriteVariablesToString()
 		{
 			var sb = new StringBuilder();
-			varLock.EnterReadLock();
-			try
 			{
 				sb.Append("Personality.");
 				sb.AppendLine(ID);
@@ -123,8 +102,6 @@ namespace TeaseAI_CE.Scripting
 					sb.AppendLine(")");
 				}
 			}
-			finally
-			{ varLock.ExitReadLock(); }
 			return sb.ToString();
 		}
 
@@ -132,5 +109,6 @@ namespace TeaseAI_CE.Scripting
 		{
 			return ID;
 		}
+
 	}
 }

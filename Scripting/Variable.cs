@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using MyResources;
+using TeaseAI_CE.Scripting.VType;
 
 namespace TeaseAI_CE.Scripting
 {
@@ -30,7 +31,7 @@ namespace TeaseAI_CE.Scripting
 	/// The base variable class, should be used for [bool, float, string]
 	/// by-reference thread-safe
 	/// </summary>
-	public class Variable
+	public class Variable : IKeyed
 	{
 		protected object _value = null;
 		public object Value { get { return getObj(); } set { setObj(value); } }
@@ -40,16 +41,19 @@ namespace TeaseAI_CE.Scripting
 		/// <summary> If true scripts can only read. </summary>
 		public bool Readonly = false;
 
-		public Variable() { }
+		public Variable()
+		{ _value = null; }
 		public Variable(string value)
 		{ _value = value; }
 		public Variable(bool value)
 		{ _value = value; }
 		public Variable(float value)
 		{ _value = value; }
-		public Variable(DateTime value)
+		public Variable(IVType value)
 		{ _value = value; }
-		public Variable(TimeSpan value)
+		public Variable(VM.Function value)
+		{ _value = value; }
+		public Variable(Variable[] value)
 		{ _value = value; }
 
 		protected virtual object getObj()
@@ -127,125 +131,130 @@ namespace TeaseAI_CE.Scripting
 				sb.Append("Unsupported_Variable_Write_Type");
 		}
 
+		#region IKeyed
+		public virtual Variable Get(Key key, Logger log = null)
+		{
+			if (key.AtEnd)
+				return this;
+			if (!IsSet)
+			{
+				// ToDo : Error
+				return null;
+			}
+			IKeyed value = Value as IKeyed;
+			if (value == null)
+			{
+				// ToDo : Error
+				return null;
+			}
+			return value.Get(key, log);
+		}
+		#endregion
+
 		public static Variable Evaluate(Context sender, Variable left, Operators op, Variable right)
 		{
 			var log = sender.Root.Log;
 			bool validating = sender.Root.Valid == BlockBase.Validation.Running;
+			object l = null, r;
 
-			// logic not
-			if (op == Operators.Not)
-			{
-				if (right == null)
-				{
-					log.Error(StringsScripting.Evaluate_null_variable);
-					return null;
-				}
-				if (!right.IsSet)
-				{
-					log.Error(string.Format(StringsScripting.Formatted_Evaluate_Operator_unset_variable, op.ToString()));
-					return null;
-				}
-
-				object value = right.Value;
-				if (value is bool)
-					return new Variable(!(bool)value);
-				if (value is VariableQuery.Item)
-					return new VariableQuery(VariableQuery.Item.Not((VariableQuery.Item)value));
-				if (value is string)
-					return new VariableQuery(VariableQuery.Item.Not((string)value));
-				log.Error(string.Format(StringsScripting.Formatted_Evaluate_Operator_type_invalid, op.ToString(), "", value.GetType().Name));
-				return null;
-			}
-
-			if (left == null || right == null)
+			// make sure variable is not null.
+			if (right == null)
 			{
 				log.Error(StringsScripting.Evaluate_null_variable);
 				return null;
 			}
-
-			if (left is VariableQuery || right is VariableQuery)
+			r = right.Value;
+			if (op != Operators.Not) // "Not" doesn't use left variable.
 			{
-				return VariableQuery.Evaluate(sender, left, op, right);
-			}
-
-			object l = left.Value;
-			object r = right.Value;
-
-			if (op == Operators.Assign)
-			{
-				if (!right.IsSet)
+				if (left == null)
 				{
-					log.Error(StringsScripting.Evaluate_Assign_to_unset);
+					log.Error(StringsScripting.Evaluate_null_variable);
 					return null;
 				}
-
-				if (left.Readonly)
-				{
-					log.Error(StringsScripting.Evaluate_Assign_Readonly);
-					return left;
-				}
-
-				if (left.IsSet)
-				{
-					if (l.GetType() == r.GetType())
-					{
-						if (!validating) // Don't change variable if we are validating.
-							left.Value = r;
-					}
-					else if (l is VariableQuery.Item && r is string)
-					{
-						if (!validating)
-							left.Value = (VariableQuery.Item)(string)r;
-					}
-					else if (l is string && r is VariableQuery.Item)
-					{
-						if (!validating)
-							left.Value = (VariableQuery.Item)r;
-					}
-					else
-					{
-						log.Error(string.Format(StringsScripting.Formatted_Evaluate_Assign_type_mismatch, l.GetType().Name, r.GetType().Name));
-						return null;
-					}
-				}
-				else
-				{
-					if (validating)
-						left.Value = getDefault(right.Value.GetType());
-					else
-						left.Value = right.Value;
-				}
-				return left;
+				l = left.Value;
 			}
 
-			if (!left.IsSet || !right.IsSet)
+			// make sure variable is set.
+			if (!right.IsSet)
 			{
-				log.Error(string.Format(StringsScripting.Formatted_Evaluate_Operator_unset_variable, op.ToString()));
+				log.Error(string.Format(StringsScripting.Formatted_Evaluate_Operator_unset_variable, op.ToString())); // ToDo : Different error?
 				return null;
+			}
+			if (op != Operators.Not && op != Operators.Assign) // "Not" and "Assign" can use a unset left variable.
+			{
+				if (!left.IsSet)
+				{
+					log.Error(string.Format(StringsScripting.Formatted_Evaluate_Operator_unset_variable, op.ToString())); // ToDo : Different error?
+					return null;
+				}
+			}
+
+			// Do not allow assign to readonly variables.
+			if (op == Operators.Assign && left.Readonly)
+			{
+				log.Error(StringsScripting.Evaluate_Assign_Readonly);
+				return null;
+			}
+
+
+			// try to evaluate the viriable value directly. 
+			if (l is IVType)
+			{
+				var results = ((IVType)l).Evaluate(sender, left, op, right);
+				if (results != null)
+					return results;
+			}
+			if (r is IVType)
+			{
+				var results = ((IVType)r).Evaluate(sender, left, op, right);
+				if (results != null)
+					return results;
 			}
 
 			switch (op)
 			{
+				// logic not
+				case Operators.Not:
+					object value = right.Value;
+					if (value is bool)
+						return new Variable(!(bool)value);
+					if (value is string)
+						return new Variable(Query.Not((string)value));
+
+					log.Error(string.Format(StringsScripting.Formatted_Evaluate_Operator_type_invalid, op.ToString(), "", value.GetType().Name));
+					return null;
+
+				// assign
+				case Operators.Assign:
+					if (left.IsSet)
+					{
+						if (l.GetType() == r.GetType())
+						{
+							if (!validating) // Don't change variable if we are validating.
+								left.Value = r;
+						}
+						else
+						{
+							log.Error(string.Format(StringsScripting.Formatted_Evaluate_Assign_type_mismatch, l.GetType().Name, r.GetType().Name));
+							return null;
+						}
+					}
+					else
+					{
+						if (validating)
+							left.Value = getDefault(right.Value.GetType());
+						else
+							left.Value = right.Value;
+					}
+					return left;
+
+
 				// Math
 				case Operators.Add:
 					if (l is float && r is float)
 						return new Variable((float)l + (float)r);
 					if (l is string && r is string)
 						return new Variable(string.Concat(l, r));
-					if ((l is DateTime && r is TimeSpan))
-					{
-						try
-						{ return new Variable((DateTime)l + (TimeSpan)r); }
-						catch (ArgumentOutOfRangeException ex)
-						{ log.Error(ex.Message); }
-					}
-					if (l is TimeSpan && r is TimeSpan)
-					{
-						try
-						{ return new Variable((TimeSpan)l + (TimeSpan)r); }
-						catch (OverflowException ex)
-						{ log.Error(ex.Message); }
-					}
 					log.Error(string.Format(StringsScripting.Formatted_Evaluate_Operator_type_invalid, op.ToString(), l.GetType().Name, r.GetType().Name));
 					return null;
 
@@ -254,22 +263,6 @@ namespace TeaseAI_CE.Scripting
 						return new Variable((float)l - (float)r);
 					if (l is string && r is string)
 						return new Variable(((string)l).Replace((string)r, ""));
-					if ((l is DateTime && r is DateTime))
-						return new Variable((DateTime)l - (DateTime)r);
-					if ((l is DateTime && r is TimeSpan))
-					{
-						try
-						{ return new Variable((DateTime)l - (TimeSpan)r); }
-						catch (ArgumentOutOfRangeException ex)
-						{ log.Error(ex.Message); }
-					}
-					if (l is TimeSpan && r is TimeSpan)
-					{
-						try
-						{ return new Variable((TimeSpan)l - (TimeSpan)r); }
-						catch (OverflowException ex)
-						{ log.Error(ex.Message); }
-					}
 					log.Error(string.Format(StringsScripting.Formatted_Evaluate_Operator_type_invalid, op.ToString(), l.GetType().Name, r.GetType().Name));
 					return null;
 
@@ -306,33 +299,25 @@ namespace TeaseAI_CE.Scripting
 				case Operators.More:
 					if (l is float && r is float)
 						return new Variable((float)l > (float)r);
-					if (l is DateTime && r is DateTime)
-						return new Variable((DateTime)l > (DateTime)r);
-					if (l is TimeSpan && r is TimeSpan)
-						return new Variable((TimeSpan)l > (TimeSpan)r);
 					log.Error(string.Format(StringsScripting.Formatted_Evaluate_Operator_type_invalid, op.ToString(), l.GetType().Name, r.GetType().Name));
 					return null;
 				case Operators.Less:
 					if (l is float && r is float)
 						return new Variable((float)l < (float)r);
-					if (l is DateTime && r is DateTime)
-						return new Variable((DateTime)l < (DateTime)r);
-					if (l is TimeSpan && r is TimeSpan)
-						return new Variable((TimeSpan)l < (TimeSpan)r);
 					log.Error(string.Format(StringsScripting.Formatted_Evaluate_Operator_type_invalid, op.ToString(), l.GetType().Name, r.GetType().Name));
 					return null;
 				case Operators.And:
 					if (l is bool && r is bool)
 						return new Variable((bool)l && (bool)r);
 					if (l is string && r is string)
-						return VariableQuery.Evaluate(sender, left, op, right);
+						return new Variable(new Query((string)l, op, (string)r));
 					log.Error(string.Format(StringsScripting.Formatted_Evaluate_Operator_type_invalid, op.ToString(), l.GetType().Name, r.GetType().Name));
 					return null;
 				case Operators.Or:
 					if (l is bool && r is bool)
 						return new Variable((bool)l || (bool)r);
 					if (l is string && r is string)
-						return VariableQuery.Evaluate(sender, left, op, right);
+						return new Variable(new Query((string)l, op, (string)r));
 					log.Error(string.Format(StringsScripting.Formatted_Evaluate_Operator_type_invalid, op.ToString(), l.GetType().Name, r.GetType().Name));
 					return null;
 			}
@@ -357,7 +342,7 @@ namespace TeaseAI_CE.Scripting
 	/// Generic variable, should be used for class typed values.
 	/// thread-safe, class T may not be thread-safe.
 	/// </summary>
-	public class Variable<T> : Variable where T : class
+	public class Variable<T> : Variable where T : class, IKeyed
 	{
 		private new T _value = null;
 		public new T Value
@@ -373,6 +358,20 @@ namespace TeaseAI_CE.Scripting
 			_value = value;
 		}
 
+		#region IKeyed
+		public override Variable Get(Key key, Logger log = null)
+		{
+			if (key.AtEnd)
+				return this;
+			if (!IsSet)
+			{
+				// ToDo : Error unset
+				return this;
+			}
+			return Value.Get(key, log);
+		}
+		#endregion
+
 		protected override object getObj()
 		{
 			return _value;
@@ -380,6 +379,12 @@ namespace TeaseAI_CE.Scripting
 		protected override void setObj(object value)
 		{
 			Interlocked.Exchange(ref _value, value as T);
+		}
+
+		// Does this help or cause problems?
+		public static implicit operator T(Variable<T> variable)
+		{
+			return variable.Value;
 		}
 	}
 

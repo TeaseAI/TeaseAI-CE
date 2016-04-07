@@ -8,7 +8,7 @@ namespace TeaseAI_CE.Scripting
 	/// <summary>
 	/// Foundation for root level blocks, eg a script, or a list.
 	/// </summary>
-	public class BlockBase : Line
+	public class BlockBase : Line, IKeyed
 	{
 		public enum Validation { NeverRan = 0, Running, Passed, Failed }
 		public Validation Valid { get; private set; }
@@ -66,5 +66,15 @@ namespace TeaseAI_CE.Scripting
 				return false;
 			return tags.Contains(key);
 		}
+
+		#region IKeyed
+		public Variable Get(Key key, Logger log = null)
+		{
+			if (key.AtEnd)
+				return new Variable<BlockBase>(this);
+			// ToDo : Error
+			return null;
+		}
+		#endregion
 	}
 }

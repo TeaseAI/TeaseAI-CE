@@ -1,5 +1,6 @@
 ﻿using System;
 using MyResources;
+using TeaseAI_CE.Scripting.VType;
 
 namespace TeaseAI_CE.Scripting
 {
@@ -97,8 +98,8 @@ namespace TeaseAI_CE.Scripting
 				object value = arg.Value;
 				if (value is BlockBase)
 					script = (BlockBase)value;
-				else if (value is VariableQuery.Item)
-					script = sender.Controller.VM.QueryScript((VariableQuery.Item)value, sender.Root.Log);
+				else if (value is VType.Query)
+					script = sender.Controller.VM.QueryScript((VType.Query)value, sender.Root.Log);
 				else if (value is string) // string can be a single query key.
 					script = sender.Controller.VM.QueryScript((string)value, sender.Root.Log);
 				else
@@ -120,7 +121,7 @@ namespace TeaseAI_CE.Scripting
 		private static Variable date(Context sender, Variable[] args)
 		{
 			if (args.Length == 0)
-				return new Variable(DateTime.Now);
+				return new Variable(new Date(DateTime.Now));
 			if (args.Length == 1)
 			{
 				if (!args[0].IsSet)
@@ -131,7 +132,7 @@ namespace TeaseAI_CE.Scripting
 					try
 					{
 						if (DateTime.TryParse((string)args[0].Value, out result))
-							return new Variable(result);
+							return new Variable(new Date(result));
 						else
 							sender.Root.Log.ErrorF(StringsScripting.Formatted_Unable_to_parse, "Date", (string)args[0].Value, typeof(DateTime).Name);
 					}
@@ -140,17 +141,17 @@ namespace TeaseAI_CE.Scripting
 				}
 				else
 					sender.Root.Log.ErrorF(StringsScripting.Formatted_Function_invalid_type, "Date", args[0].Value.GetType().Name, typeof(string).Name);
-				return new Variable(DateTime.Now);
+				return new Variable(new Date(DateTime.Now));
 			}
 			else
 				sender.Root.Log.WarningF(StringsScripting.Formatted_Function_arguments_less_than_two, "Date");
-			return new Variable(DateTime.Now);
+			return new Variable(new Date(DateTime.Now));
 		}
 
 		private static Variable time(Context sender, Variable[] args)
 		{
 			if (args.Length == 0)
-				return new Variable(TimeSpan.Zero);
+				return new Variable(new TimeFrame(TimeSpan.Zero));
 			if (args.Length == 1)
 			{
 				if (!args[0].IsSet)
@@ -159,17 +160,17 @@ namespace TeaseAI_CE.Scripting
 				{
 					TimeSpan result;
 					if (TimeSpan.TryParse((string)args[0].Value, out result))
-						return new Variable(result);
+						return new Variable(new TimeFrame(result));
 					else
 						sender.Root.Log.ErrorF(StringsScripting.Formatted_Unable_to_parse, "Time", (string)args[0].Value, typeof(TimeSpan).Name);
 				}
 				else
 					sender.Root.Log.ErrorF(StringsScripting.Formatted_Function_invalid_type, "Time", args[0].Value.GetType().Name, typeof(string).Name);
-				return new Variable(TimeSpan.Zero);
+				return new Variable(new TimeFrame(TimeSpan.Zero));
 			}
 			else
 				sender.Root.Log.WarningF(StringsScripting.Formatted_Function_arguments_less_than_two, "Time");
-			return new Variable(TimeSpan.Zero);
+			return new Variable(new TimeFrame(TimeSpan.Zero));
 		}
 		#endregion
 

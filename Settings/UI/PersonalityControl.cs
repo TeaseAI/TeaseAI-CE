@@ -39,13 +39,12 @@ namespace TeaseAI_CE.Settings.UI
 		// text box
 		private void attach(string key, TextBox txt)
 		{
-			key = VM.KeyClean(key);
 			txt.TextChanged -= txtChanged;
 			txt.Text = "";
 			if (p == null)
 				return;
 
-			var v = p.GetVariable(key, log);
+			var v = p.Get(new Key(key, log), log);
 			txt.Tag = v;
 			if (v.IsSet)
 				txt.Text = (string)v.Value;
@@ -64,7 +63,6 @@ namespace TeaseAI_CE.Settings.UI
 		// combo box
 		private void attach(string key, ComboBox combo)
 		{
-			key = VM.KeyClean(key);
 			combo.TextChanged -= comboChanged;
 			if (combo.Items.Count > 0)
 				combo.Text = combo.Items[0].ToString();
@@ -75,7 +73,7 @@ namespace TeaseAI_CE.Settings.UI
 				return;
 
 
-			var v = p.GetVariable(key, log);
+			var v = p.Get(new Key(key, log), log);
 			combo.Tag = v;
 			if (v.IsSet)
 				combo.Text = (string)v.Value;

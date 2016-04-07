@@ -116,7 +116,7 @@ namespace TeaseAI_CE.UI
 			var controller = vm.CreateController(persona);
 			controller.Interval = 500;
 			var fakelog = new Logger("fakelog");
-			controller.Add(vm.QueryScript(persona.GetVariable(".startquery", fakelog), fakelog));
+			controller.Add(vm.QueryScript(persona.Get(new Key(".startquery", fakelog), fakelog), fakelog));
 
 
 			status(90, Strings.Status_Load_UI);

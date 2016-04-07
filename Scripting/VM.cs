@@ -13,7 +13,7 @@ namespace TeaseAI_CE.Scripting
 	/// <summary>
 	/// Main 'world' object, needs to know about all scripts, personalities, controllers, functions, etc..
 	/// </summary>
-	public class VM
+	public class VM : IKeyed
 	{
 		public delegate Variable Function(Context sender, Variable[] args);
 
@@ -26,18 +26,21 @@ namespace TeaseAI_CE.Scripting
 		private ConcurrentDictionary<string, Function> functions = new ConcurrentDictionary<string, Function>();
 
 		private ReaderWriterLockSlim personControlLock = new ReaderWriterLockSlim(LockRecursionPolicy.SupportsRecursion);
-		private Dictionary<string, Personality> personalities = new Dictionary<string, Personality>();
+		//private Dictionary<string, Personality> personalities = new Dictionary<string, Personality>();
 		private List<Controller> controllers = new List<Controller>();
 		private List<Dictionary<string, string>> inputReplace;
 
 		private ReaderWriterLockSlim scriptsLock = new ReaderWriterLockSlim(LockRecursionPolicy.SupportsRecursion);
 		private List<GroupInfo> scriptGroups = new List<GroupInfo>();
 		private List<Script> scriptSetups = new List<Script>();
-		private Dictionary<string, Variable<Script>> scripts = new Dictionary<string, Variable<Script>>();
-		private Dictionary<string, List<Script>> scriptTags = new Dictionary<string, List<Script>>();
-		private Dictionary<string, Variable<List>> scriptLists = new Dictionary<string, Variable<List>>();
-		private Dictionary<string, List<List>> scriptListTags = new Dictionary<string, List<List>>();
+		//private Dictionary<string, Variable<Script>> scripts = new Dictionary<string, Variable<Script>>();
+		//private Dictionary<string, Variable<List>> scriptLists = new Dictionary<string, Variable<List>>();
 		private Dictionary<string, List<BlockBase>> scriptResponses = new Dictionary<string, List<BlockBase>>();
+
+		private KeyedDictionary<Variable<Personality>> personalities = new KeyedDictionary<Variable<Personality>>(false);
+
+		private KeyedDictionary<Variable<Script>> scripts = new KeyedDictionary<Variable<Script>>(false);
+		private KeyedDictionary<Variable<List>> scriptLists = new KeyedDictionary<Variable<List>>(false);
 
 
 		private volatile int _dirty = 0;
@@ -128,54 +131,46 @@ namespace TeaseAI_CE.Scripting
 		public Personality CreatePersonality(string name)
 		{
 			var id = KeyClean(name);
-			personControlLock.EnterWriteLock();
 			Dirty = true;
-			try
+			// If personality with id already exists, add number.
+			if (personalities.ContainsKey(id))
 			{
-				// If personality with id already exists, add number.
-				if (personalities.ContainsKey(id))
-				{
-					int num = 1;
-					while (personalities.ContainsKey(id + (++num)))
-					{ }
-					id = id + num;
-				}
-
-				var p = new Personality(this, name, id);
-				personalities[id] = p;
-				return p;
+				int num = 1;
+				while (personalities.ContainsKey(id + (++num)))
+				{ }
+				id = id + num;
 			}
-			finally
-			{ personControlLock.ExitWriteLock(); }
+
+			var p = new Personality(this, name, id);
+			personalities[id] = new Variable<Personality>(p);
+			return p;
 		}
 
 		public bool TryGetPersonality(string name, out Personality p)
 		{
-			personControlLock.EnterReadLock();
-			try
+			Variable<Personality> vP = null;
+			if (personalities.TryGetValue(KeyClean(name), out vP) && vP.IsSet)
 			{
-				return personalities.TryGetValue(KeyClean(name), out p);
+				p = vP.Value;
+				return true;
 			}
-			finally
-			{ personControlLock.ExitReadLock(); }
+			p = null;
+			return false;
 		}
 
 		public bool ChangePersonalityID(Personality p, string newID)
 		{
 			newID = KeyClean(newID);
-			personControlLock.EnterWriteLock();
-			try
-			{
-				if (personalities.ContainsKey(newID))
-					return false;
-				Dirty = true;
-				personalities.Remove(p.ID);
-				personalities[newID] = p;
-				p.ID = newID;
-				return true;
-			}
-			finally
-			{ personControlLock.ExitWriteLock(); }
+			if (personalities.ContainsKey(newID))
+				return false;
+			Dirty = true;
+			Variable<Personality> var;
+			if (personalities.TryRemove(p.ID, out var))
+				personalities[newID] = var;
+			else
+				personalities[newID] = new Variable<Personality>(p);
+			p.ID = newID;
+			return true;
 		}
 
 		/// <summary>
@@ -198,13 +193,11 @@ namespace TeaseAI_CE.Scripting
 
 		public Personality[] GetPersonalities()
 		{
-			personControlLock.EnterReadLock();
-			try
-			{
-				return personalities.Values.ToArray();
-			}
-			finally
-			{ personControlLock.ExitReadLock(); }
+			var p = personalities.Values.ToArray();
+			var result = new Personality[p.Length];
+			for (int i = 0; i < result.Length; ++i)
+				result[i] = p[i].Value;
+			return result;
 		}
 
 		#endregion
@@ -213,15 +206,15 @@ namespace TeaseAI_CE.Scripting
 		{
 			if (query == null || !query.IsSet)
 				log.Error(StringsScripting.Query_empty);
-			else if (query.Value is VariableQuery.Item)
-				return QueryScript(query.Value as VariableQuery.Item, log);
+			else if (query.Value is VType.Query)
+				return QueryScript((VType.Query)query.Value, log);
 			else if (query.Value is string)
 				return QueryScript((string)query.Value, log);
 			else
 				log.ErrorF(StringsScripting.Formatted_Invalid_Type, "Query", query.Value.GetType().Name);
 			return null;
 		}
-		public Script QueryScript(VariableQuery.Item query, Logger log)
+		public Script QueryScript(VType.Query query, Logger log)
 		{
 			if (query == null)
 			{
@@ -232,7 +225,7 @@ namespace TeaseAI_CE.Scripting
 			try
 			{
 				var list = scripts.Values.ToList();
-				VariableQuery.QueryReduceByTag(list, query, log);
+				VType.Query.QueryReduceByTag(list, query, log);
 				if (list == null || list.Count == 0)
 				{
 					log.Error(StringsScripting.Query_empty);
@@ -246,130 +239,29 @@ namespace TeaseAI_CE.Scripting
 			{ scriptsLock.ExitReadLock(); }
 		}
 
-		internal Variable GetVariable(string key, Context sender)
+		public Variable Get(Key key, Logger log = null)
 		{
-			// allow calling local script without full key.
-			if (key.StartsWith("script."))
+			if (key.AtEnd)
 			{
-				var tmpK = sender.Root.Group.Key + '.' + KeySplit(key)[1];
-				scriptsLock.EnterReadLock();
-				try
-				{
-					Variable<Script> result;
-					if (scripts.TryGetValue(tmpK, out result))
-						return result;
-				}
-				finally
-				{ scriptsLock.ExitReadLock(); }
+				// ToDo : Error
+				return null;
 			}
-			else if (key.StartsWith("list."))
+			switch (key.Peek)
 			{
-
-				var tmpK = sender.Root.Group.Key + '.' + KeySplit(key)[1];
-				scriptsLock.EnterReadLock();
-				try
-				{
-					Variable<List> result;
-					if (scriptLists.TryGetValue(tmpK, out result))
-						return result;
-				}
-				finally
-				{ scriptsLock.ExitReadLock(); }
-			}
-			return GetVariable(key, sender.Root.Log);
-		}
-		/// <summary>
-		/// Get a variable, or null if not found.
-		/// </summary>
-		/// <param name="key">Clean key</param>
-		/// <param name="log"></param>
-		/// <returns></returns>
-		internal Variable GetVariable(string key, Logger log)
-		{
-			var keySplit = KeySplit(key);
-
-			if (keySplit.Length == 1)
-			{
-				switch (keySplit[0])
-				{
-					case "list":
-					case "script":
-					case "personality":
-						log.Error(string.Format(StringsScripting.Formatted_Sub_key_missing, keySplit[0]));
-						return null;
-				}
-			}
-
-			switch (keySplit[0])
-			{
-				case "script":
-					scriptsLock.EnterReadLock();
-					try
-					{
-						Variable<Script> result;
-						if (scripts.TryGetValue(keySplit[1], out result))
-						{
-							if (result.IsSet && result.Value.Valid == BlockBase.Validation.Failed)
-							{
-								log.Error(string.Format(StringsScripting.Formatted_Get_failed_script, keySplit[1]));
-								return null;
-							}
-						}
-						else
-							log.Error(string.Format(StringsScripting.Formatted_Script_not_found, keySplit[1]));
-						return result;
-					}
-					finally
-					{ scriptsLock.ExitReadLock(); }
-				case "list":
-					scriptsLock.EnterReadLock();
-					try
-					{
-						Variable<List> result;
-						if (scriptLists.TryGetValue(keySplit[1], out result))
-						{
-							if (result.IsSet && result.Value.Valid == BlockBase.Validation.Failed)
-							{
-								log.Error(string.Format(StringsScripting.Formatted_Get_failed_list, keySplit[1]));
-								return null;
-							}
-						}
-						else
-							log.Error(string.Format(StringsScripting.Formatted_List_not_found, keySplit[1]));
-						return result;
-					}
-					finally
-					{ scriptsLock.ExitReadLock(); }
-
-				// return personality or a variable from the personailty.
 				case "personality":
-					var pKey = KeySplit(keySplit[1]); // split key into [0]personality key, [1]variable key
-					personControlLock.EnterReadLock();
-					try
+					return personalities.Get(++key);
+				case "script":
+					return scripts.Get(++key);
+				case "list":
+					return scriptLists.Get(++key);
+				default:
 					{
-						Personality p;
-						if (personalities.TryGetValue(pKey[0], out p))
-						{
-							if (pKey.Length == 2) // return variable if we have key.
-								return p.getVariable_internal(pKey[1]);
-							// else just return the personality.
-							return new Variable<Personality>(p);
-						}
-						log.Error(string.Format(StringsScripting.Formatted_Personality_not_found, pKey[0]));
+						Function func;
+						if (functions.TryGetValue(key.Peek, out func))
+							return new Variable(func);
+						// ToDo : Error
 						return null;
 					}
-					finally
-					{ personControlLock.ExitReadLock(); }
-
-
-
-				default: // Function?
-					Function func;
-					if (functions.TryGetValue(key, out func))
-						return new Variable<Function>(func);
-					else
-						log.Error(string.Format(StringsScripting.Formatted_Function_not_found, keySplit[0]));
-					return null;
 			}
 		}
 
@@ -429,19 +321,6 @@ namespace TeaseAI_CE.Scripting
 			{
 				scripts[key] = new Variable<Script>(script);
 
-				// tags
-				if (tags != null)
-				{
-					foreach (string tag in tags)
-					{
-						if (tag == null || tag.Length == 0)
-							continue;
-						List<Script> list;
-						if (!scriptTags.TryGetValue(tag, out list))
-							list = scriptTags[tag] = new List<Script>();
-						list.Add(script);
-					}
-				}
 				// responses
 				if (responses != null)
 				{
@@ -466,19 +345,6 @@ namespace TeaseAI_CE.Scripting
 			{
 				scriptLists[key] = new Variable<List>(scriptList);
 
-				// tags
-				if (tags != null)
-				{
-					foreach (string tag in tags)
-					{
-						if (tag == null || tag.Length == 0)
-							continue;
-						List<List> list;
-						if (!scriptListTags.TryGetValue(tag, out list))
-							list = scriptListTags[tag] = new List<List>();
-						list.Add(scriptList);
-					}
-				}
 				// responses
 				if (responses != null)
 				{
@@ -683,11 +549,11 @@ namespace TeaseAI_CE.Scripting
 											key = keySplit[1];
 											// does personality already exist?
 											Personality p = null;
-											personControlLock.EnterReadLock();
-											personalities.TryGetValue(key, out p);
-											personControlLock.ExitReadLock();
+											Variable<Personality> vP = null;
+											if (personalities.TryGetValue(key, out vP))
+												p = vP.Value;
 											// if not create new.
-											if (p == null)
+											else
 												p = CreatePersonality(key);
 											// run through the script to fill the personalities variables.
 											var script = new Script(blockKey, lines, null, group, log);
@@ -1034,7 +900,7 @@ namespace TeaseAI_CE.Scripting
 						execSplitCommand(sender, line, ref i, out key, out args);
 						if (key != null)
 						{
-							Variable variable = sender.GetVariable(key);
+							Variable variable = sender.Get(new Key(key, sender), log);
 							if (variable == null || variable.IsSet == false)
 								continue;
 							var func = variable.Value as Function;
@@ -1166,7 +1032,7 @@ namespace TeaseAI_CE.Scripting
 							if (count < items.Count && items[items.Count - 1].IsValue)
 							{
 								var v = items[items.Count - 1].Value;
-								funcParenth = v.IsSet && v is Variable<Function>;
+								funcParenth = v.IsSet && v.Value is Function;
 							}
 
 							++i;
@@ -1174,7 +1040,7 @@ namespace TeaseAI_CE.Scripting
 							var args = execParentheses(sender, str, ref i);
 
 							if (funcParenth) // simply add the whole array as-is.
-								items.Add(new Variable<Variable[]>(args));
+								items.Add(new Variable(args));
 							else if (args.Length == 0)
 								log.Warning(StringsScripting.Sub_parentheses_zero_arguments, -1, _char);
 							else
@@ -1281,25 +1147,25 @@ namespace TeaseAI_CE.Scripting
 			{
 				if (items[j].IsValue)
 				{
-					var func = items[j].Value as Variable<Function>;
+					var func = items[j].Value.Value as Function;
 					if (func == null)
 						continue;
 					Variable[] args = null;
 					// check if args is next item
 					if (j + 1 < items.Count && items[j + 1].IsValue)
 					{
-						var argvar = items[j + 1].Value as Variable<Variable[]>;
+						var argvar = items[j + 1].Value.Value as Variable[];
 						if (argvar == null)
 						{
 							log.Error(StringsScripting.Parentheses_Expected_function_arguments);
 							return new Variable[0];
 						}
-						args = argvar.Value;
+						args = argvar;
 						items.RemoveAt(j + 1);
 					}
 					if (args == null)
 						args = new Variable[0];
-					items[j] = func.Value(sender, args);
+					items[j] = func(sender, args);
 				}
 			}
 
@@ -1464,7 +1330,7 @@ namespace TeaseAI_CE.Scripting
 			else if (str == "or")
 				items.Add(Operators.Or);
 			else // variable
-				items.Add(sender.GetVariable(str));
+				items.Add(sender.Get(new Key(str, sender)));
 			return;
 		}
 

@@ -5,7 +5,7 @@ using System.Text;
 
 namespace TeaseAI_CE.Scripting
 {
-	public class Context
+	public class Context : IKeyed
 	{
 		public readonly Controller Controller;
 		public readonly BlockBase Root;
@@ -35,17 +35,17 @@ namespace TeaseAI_CE.Scripting
 			Variables = variables;
 		}
 
-		public Variable GetVariable(string key)
+		public Variable Get(Key key, Logger log = null)
 		{
-			if (key.StartsWith("local"))
+			if (key.NextIf("local"))
 			{
 				Variable result;
-				if (!Variables.TryGetValue(key, out result))
-					Variables[key] = result = new Variable();
+				if (!Variables.TryGetValue(key.Peek, out result))
+					Variables[key.Peek] = result = new Variable();
 				return result;
 			}
 			else
-				return Controller.Personality.GetVariable(key, this);
+				return Controller.Personality.Get(key, Root.Log);
 		}
 	}
 }
