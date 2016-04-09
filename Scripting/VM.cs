@@ -243,7 +243,7 @@ namespace TeaseAI_CE.Scripting
 		{
 			if (key.AtEnd)
 			{
-				// ToDo : Error
+				Logger.LogF(log, Logger.Level.Error, StringsScripting.Formatted_IKeyed_Cannot_return_self, key, GetType());
 				return null;
 			}
 			switch (key.Peek)
@@ -259,7 +259,7 @@ namespace TeaseAI_CE.Scripting
 						Function func;
 						if (functions.TryGetValue(key.Peek, out func))
 							return new Variable(func);
-						// ToDo : Error
+						Logger.LogF(log, Logger.Level.Error, StringsScripting.Formatted_Function_not_found, key);
 						return null;
 					}
 			}

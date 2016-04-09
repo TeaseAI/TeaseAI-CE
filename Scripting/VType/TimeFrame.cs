@@ -1,4 +1,5 @@
 ﻿using System;
+using MyResources;
 
 namespace TeaseAI_CE.Scripting.VType
 {
@@ -60,7 +61,8 @@ namespace TeaseAI_CE.Scripting.VType
 		{
 			if (key.AtEnd)
 			{
-				// ToDo : Error
+				Logger.LogF(log, Logger.Level.Error, StringsScripting.Formatted_IKeyed_Cannot_return_self, key, GetType());
+				return null;
 			}
 
 			switch (key.Next())
@@ -69,7 +71,7 @@ namespace TeaseAI_CE.Scripting.VType
 					return new Variable((float)Value.TotalHours);
 					// ToDo : more like ^^
 			}
-			// ToDo : Error unknown sub key
+			Logger.LogF(log, Logger.Level.Error, StringsScripting.Formatted_Unknown_sub_key, key);
 			return null;
 		}
 

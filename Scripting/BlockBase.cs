@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using MyResources;
 
 namespace TeaseAI_CE.Scripting
 {
@@ -72,7 +73,7 @@ namespace TeaseAI_CE.Scripting
 		{
 			if (key.AtEnd)
 				return new Variable<BlockBase>(this);
-			// ToDo : Error
+			Logger.LogF(log, Logger.Level.Error, StringsScripting.Formatted_Variable_not_found, key);
 			return null;
 		}
 		#endregion

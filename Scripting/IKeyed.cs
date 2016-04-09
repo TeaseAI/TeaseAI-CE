@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.Concurrent;
 using System.Linq;
 using System.Text;
+using MyResources;
 
 namespace TeaseAI_CE.Scripting
 {
@@ -27,7 +28,7 @@ namespace TeaseAI_CE.Scripting
 					this[key.Peek] = result = Activator.CreateInstance<T>();
 				else
 				{
-					// ToDo : Error 
+					Logger.LogF(log, Logger.Level.Error, StringsScripting.Formatted_Variable_not_found, key);
 					return default(T);
 				}
 			}

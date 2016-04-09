@@ -130,8 +130,10 @@ namespace TeaseAI_CE.Scripting
 		public void Add(BlockBase root)
 		{
 			if (root == null)
-				// ToDo : Error
+			{
+				Logger.Log(null, Logger.Level.Error, StringsScripting.Script_null_add_stack);
 				return;
+			}
 			lock (queue)
 			{
 				queue.Add(new Context(this, root, root, 0, new Dictionary<string, Variable>()));

@@ -78,7 +78,8 @@ Formatted Evaluate Operator unset variable = Cannot apply operator "{0}" with un
 Formatted Evaluate Invalid operator = Invalid operator "{0}".
 # 0=Operator 1=Left type 2=Right type
 Formatted Evaluate Operator type invalid = Unable to {0} "{1}" with "{2}"!
-
+# 0=Key
+Formatted IKeyedGet Variable Unset = Cannot get child variable "{0}" from an unset variable!
 
 
 ### List.cs
@@ -106,11 +107,20 @@ FunctionGoTo cannot goto self = Tried to GoTo self!
 Formatted Unable to parse = "{0}" unable to parse "{1}" as "{2}"
 
 ### Controller.cs
+Script null add stack = Cannot add an empty an empty script!
 # 0=size
 Formatted Stack too big = Stack > {0}, infinite loop, or improper script calling usage.
 Formatted Queue too big = Queue > {0}, infinite loop, or improper script calling usage.
 
 
-### VariableQuery.cs
+### VType\Query.cs
 Query cannot start with operator = Query can not start with an operator!
 
+
+
+### IKeyed
+# 0=Key 1=type
+Formatted IKeyed Cannot return self = Cannot return variable "{0}" for type "{1}"
+# 0=Key
+Formatted Variable not found = No variable found for key "{0}"!
+Formatted Unknown sub key = Variable found but sub key is unknown "{0}"

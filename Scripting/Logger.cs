@@ -8,7 +8,7 @@ namespace TeaseAI_CE.Scripting
 {
 	public class Logger
 	{
-		private enum Level { Error, Warning, Info }
+		public enum Level { Error, Warning, Info }
 
 		private string prefix;
 
@@ -33,63 +33,33 @@ namespace TeaseAI_CE.Scripting
 		public int ErrorCount { get { return errors.Count; } }
 		public void Error(string message)
 		{
-			log(message, Level.Error);
+			Log(this, Level.Error, message);
 		}
 		public void ErrorF(string format, params object[] args)
 		{
-			try
-			{
-				log(string.Format(format, args), Level.Error);
-			}
-			catch
-			{
-				log("Logging format error.", Level.Warning);
-				log(format, Level.Error);
-			}
+			LogF(this, Level.Error, format, args);
 		}
 		public void Error(string message, int line, int @char = 0)
 		{
 			SetId(line, @char);
-			log(message, Level.Error);
+			Log(this, Level.Error, message);
 		}
 		public void Warning(string message)
 		{
-			log(message, Level.Warning);
+			Log(this, Level.Warning, message);
 		}
 		public void WarningF(string format, params object[] args)
 		{
-			try
-			{
-				log(string.Format(format, args), Level.Warning);
-			}
-			catch
-			{
-				log("Logging format error.", Level.Warning);
-				log(format, Level.Warning);
-			}
+			LogF(this, Level.Warning, format, args);
 		}
 		public void Warning(string message, int line, int @char = 0)
 		{
 			SetId(line, @char);
-			log(message, Level.Warning);
+			Log(this, Level.Warning, message);
 		}
 		public void Info(string message)
 		{
 			log_global(prefix, message, Level.Info);
-		}
-
-		private void log(string message, Level level)
-		{
-			string str = string.Format("[{0,2}, {1,2}]: {2}", id_line, id_char, message);
-			if (level == Level.Error)
-				errors.Add(level.ToString() + message);
-			else if (level == Level.Warning)
-				warnings.Add(level.ToString() + message);
-			log_global(prefix, str, level);
-		}
-		private static void log_global(string prefix, string str, Level level)
-		{
-			Trace.WriteLine(string.Format("{0,-7}[{1}]{2}", level, prefix, str));
 		}
 
 		public void Clear()
@@ -98,6 +68,35 @@ namespace TeaseAI_CE.Scripting
 			errors.Clear();
 			warnings.Clear();
 		}
+
+		public static void LogF(Logger log, Level level, string format, params object[] args)
+		{
+			string message;
+			try
+			{ message = string.Format(format, args); }
+			catch
+			{ message = "Logging format error: " + format; }
+			Log(log, level, message);
+		}
+		public static void Log(Logger log, Level level, string message)
+		{
+			if (log != null)
+			{
+				string str = string.Format("[{0,2}, {1,2}]: {2}", log.id_line, log.id_char, message);
+				if (level == Level.Error)
+					log.errors.Add(level.ToString() + message);
+				else if (level == Level.Warning)
+					log.warnings.Add(level.ToString() + message);
+				log_global(log.prefix, str, level);
+			}
+			else
+				log_global("-global-", message, level);
+		}
+		private static void log_global(string prefix, string str, Level level)
+		{
+			Trace.WriteLine(string.Format("{0,-7}[{1}]{2}", level, prefix, str));
+		}
+
 	}
 	/// <summary>
 	/// Logs start message on creation, then end message with the elapsed time on dispose.

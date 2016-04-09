@@ -138,13 +138,13 @@ namespace TeaseAI_CE.Scripting
 				return this;
 			if (!IsSet)
 			{
-				// ToDo : Error
+				Logger.LogF(log, Logger.Level.Error, StringsScripting.Formatted_IKeyedGet_Variable_Unset, key);
 				return null;
 			}
 			IKeyed value = Value as IKeyed;
 			if (value == null)
 			{
-				// ToDo : Error
+				Logger.LogF(log, Logger.Level.Error, StringsScripting.Formatted_Variable_not_found, key);
 				return null;
 			}
 			return value.Get(key, log);
@@ -365,7 +365,7 @@ namespace TeaseAI_CE.Scripting
 				return this;
 			if (!IsSet)
 			{
-				// ToDo : Error unset
+				Logger.LogF(log, Logger.Level.Error, StringsScripting.Formatted_IKeyedGet_Variable_Unset, key);
 				return this;
 			}
 			return Value.Get(key, log);

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using MyResources;
 
 namespace TeaseAI_CE.Scripting
 {
@@ -16,7 +17,7 @@ namespace TeaseAI_CE.Scripting
 		{
 			if (key.AtEnd)
 			{
-				// ToDo : Error
+				Logger.LogF(log, Logger.Level.Error, StringsScripting.Formatted_IKeyed_Cannot_return_self, key, GetType());
 				return null;
 			}
 			return blocks.Get(key, log);
