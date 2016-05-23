@@ -39,10 +39,7 @@ namespace TeaseAI_CE.Scripting
 			{
 				if (keys[0] == "")
 					keys[0] = "self";
-			}
-			else if (keys.Length > 1)
-			{
-				if (keys[0] == "script" || keys[0] == "list")
+				else if (keys[0] == "script" || keys[0] == "list")
 				{
 					if (keys[1] == "")
 						keys[1] = context.Root.Group.Key;

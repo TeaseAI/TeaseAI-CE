@@ -157,6 +157,7 @@ namespace TeaseAI_CE.Scripting
 			bool validating = sender.Root.Valid == BlockBase.Validation.Running;
 			object l = null, r;
 
+
 			// make sure variable is not null.
 			if (right == null)
 			{
@@ -172,6 +173,13 @@ namespace TeaseAI_CE.Scripting
 					return null;
 				}
 				l = left.Value;
+			}
+
+			// allow equals to work on unset variables.
+			if (op == Operators.Equal)
+			{
+				if (l == null || r == null)
+					return new Variable(l == null && r == null);
 			}
 
 			// make sure variable is set.
