@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -11,7 +12,19 @@ namespace TeaseAI_CE.Scripting
 	/// </summary>
 	public class BlockGroup<T> : IKeyed where T : BlockBase, IKeyed
 	{
-		private KeyedDictionary<Variable<T>> blocks = new KeyedDictionary<Variable<T>>(false);
+		private ConcurrentDictionary<Tuple<string, string>, Variable<T>> blocks = new ConcurrentDictionary<Tuple<string, string>, Variable<T>>();
+
+		public bool IsEmpty { get { return blocks.Count == 0; } }
+
+
+		public bool TryAdd(string rootKey, string key, T block)
+		{
+			return blocks.TryAdd(new Tuple<string, string>(rootKey, key), new Variable<T>(block));
+		}
+		//public bool TryGet(string key, Variable<T> value)
+		//{
+		//	return blocks.TryGetValue(key, out value);
+		//}
 
 		public Variable Get(Key key, Logger log = null)
 		{
@@ -20,7 +33,19 @@ namespace TeaseAI_CE.Scripting
 				Logger.LogF(log, Logger.Level.Error, StringsScripting.Formatted_IKeyed_Cannot_return_self, key, GetType());
 				return null;
 			}
-			return blocks.Get(key, log);
+
+			Variable<T> value;
+			if (blocks.TryGetValue(new Tuple<string, string>(key.Next(), key.Next()), out value))
+				return value;
+
+			Logger.LogF(log, Logger.Level.Error, StringsScripting.Formatted_Variable_not_found, key);
+			return new Variable<T>(default(T));
 		}
+
+		public ICollection<Variable<T>> GetAll()
+		{
+			return blocks.Values;
+		}
+
 	}
 }

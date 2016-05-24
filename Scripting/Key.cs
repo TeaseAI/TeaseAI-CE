@@ -43,6 +43,8 @@ namespace TeaseAI_CE.Scripting
 				{
 					if (keys[1] == "")
 						keys[1] = context.Root.Group.Key;
+					if (keys.Length == 2)
+						keys = new string[] { keys[0], context.Root.Group.Key, keys[1] };
 				}
 			}
 		}

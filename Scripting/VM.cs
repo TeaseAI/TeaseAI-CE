@@ -39,9 +39,10 @@ namespace TeaseAI_CE.Scripting
 
 		private KeyedDictionary<Variable<Personality>> personalities = new KeyedDictionary<Variable<Personality>>(false);
 
-		private KeyedDictionary<Variable<Script>> scripts = new KeyedDictionary<Variable<Script>>(false);
 		private KeyedDictionary<Variable<List>> scriptLists = new KeyedDictionary<Variable<List>>(false);
 
+		// ToDo : Rename:
+		private BlockGroup<Script> allscripts = new BlockGroup<Script>();
 
 		private volatile int _dirty = 0;
 		public bool Dirty { get { return _dirty != 0; } private set { Interlocked.Exchange(ref _dirty, value ? 1 : 0); } }
@@ -230,22 +231,17 @@ namespace TeaseAI_CE.Scripting
 				log.Error(StringsScripting.Query_empty);
 				return null;
 			}
-			scriptsLock.EnterReadLock();
-			try
+
+			var list = allscripts.GetAll().ToList();
+			VType.Query.QueryReduceByTag(list, query, log);
+			if (list == null || list.Count == 0)
 			{
-				var list = scripts.Values.ToList();
-				VType.Query.QueryReduceByTag(list, query, log);
-				if (list == null || list.Count == 0)
-				{
-					log.Error(StringsScripting.Query_empty);
-					return null;
-				}
-				// ToDo6: Make not random.
-				int r = random.Next(0, list.Count);
-				return list[r].Value;
+				log.Error(StringsScripting.Query_empty);
+				return null;
 			}
-			finally
-			{ scriptsLock.ExitReadLock(); }
+			// ToDo6: Make not random.
+			int r = random.Next(0, list.Count);
+			return list[r].Value;
 		}
 
 		public Variable Get(Key key, Logger log = null)
@@ -258,11 +254,11 @@ namespace TeaseAI_CE.Scripting
 			switch (key.Peek)
 			{
 				case "personality":
-					return personalities.Get(++key);
+					return personalities.Get(++key, log);
 				case "script":
-					return scripts.Get(++key);
+					return allscripts.Get(++key, log);
 				case "list":
-					return scriptLists.Get(++key);
+					return allscripts.Get(++key, log);
 				default:
 					{
 						Function func;
@@ -323,29 +319,23 @@ namespace TeaseAI_CE.Scripting
 			return true;
 		}
 
-		private void addScript(Script script, string key, string[] tags, string[] responses)
+		private void addScript(Script script, string rootKey, string key, string[] tags, string[] responses)
 		{
-			scriptsLock.EnterWriteLock();
-			try
-			{
-				scripts[key] = new Variable<Script>(script);
+			allscripts.TryAdd(rootKey, key, script);
 
-				// responses
-				if (responses != null)
+			// responses
+			if (responses != null)
+			{
+				foreach (string keyword in responses)
 				{
-					foreach (string keyword in responses)
-					{
-						if (keyword == null || keyword.Length == 0)
-							continue;
-						List<BlockBase> list;
-						if (!scriptResponses.TryGetValue(keyword, out list))
-							list = scriptResponses[keyword] = new List<BlockBase>();
-						list.Add(script);
-					}
+					if (keyword == null || keyword.Length == 0)
+						continue;
+					List<BlockBase> list;
+					if (!scriptResponses.TryGetValue(keyword, out list))
+						list = scriptResponses[keyword] = new List<BlockBase>();
+					list.Add(script);
 				}
 			}
-			finally
-			{ scriptsLock.ExitWriteLock(); }
 		}
 		private void addScriptList(List scriptList, string key, string[] tags, string[] responses)
 		{
@@ -543,7 +533,7 @@ namespace TeaseAI_CE.Scripting
 										{
 											var script = new Script(blockKey, lines, blockTags, group, log);
 											blocks.Add(script);
-											addScript(script, key, blockTags, blockResponses);
+											addScript(script, fileKey, keySplit[1], blockTags, blockResponses);
 										}
 										break;
 									case "list":
@@ -830,37 +820,32 @@ namespace TeaseAI_CE.Scripting
 				{ personControlLock.ExitReadLock(); }
 
 
-				scriptsLock.EnterReadLock();
-				try
+
+				if (allscripts.IsEmpty)
+					log.Error(StringsScripting.No_scripts);
+				if (scriptLists.Count == 0)
+					log.Warning(StringsScripting.No_lists);
+
+
+				// validate startup scripts.
+				foreach (var s in scriptSetups)
+					validateScript(c, s);
+
+				// validate all list scripts.
+				foreach (var list in scriptLists.Values)
 				{
-					if (scripts.Count == 0)
-						log.Error(StringsScripting.No_scripts);
-					if (scriptLists.Count == 0)
-						log.Warning(StringsScripting.No_lists);
-
-
-					// validate startup scripts.
-					foreach (var s in scriptSetups)
-						validateScript(c, s);
-
-					// validate all list scripts.
-					foreach (var list in scriptLists.Values)
-					{
-						if (!list.IsSet)
-							continue;
-						vars.Clear();
-						list.Value.Execute(new Context(c, list.Value, list.Value, 0, vars), output);
-					}
-
-					// validate all other scripts.
-					foreach (var s in scripts.Values)
-						if (s.IsSet)
-							validateScript(c, s.Value);
-
+					if (!list.IsSet)
+						continue;
+					vars.Clear();
+					list.Value.Execute(new Context(c, list.Value, list.Value, 0, vars), output);
 				}
-				finally
-				{ scriptsLock.ExitReadLock(); }
+
+				// validate all other scripts.
+				foreach (var s in allscripts.GetAll())
+					if (s.IsSet)
+						validateScript(c, s.Value);
 			}
+			// ToDo 2: Scripts can change inbetwen here and validation, so we could be dirty but dirty being false.
 			Dirty = false;
 		}
 		private void validateScript(Controller c, Script s)
