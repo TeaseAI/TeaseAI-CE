@@ -33,23 +33,24 @@ namespace TeaseAI_CE.Scripting
 		private ReaderWriterLockSlim scriptsLock = new ReaderWriterLockSlim(LockRecursionPolicy.SupportsRecursion);
 		private List<GroupInfo> scriptGroups = new List<GroupInfo>();
 		private List<Script> scriptSetups = new List<Script>();
-		//private Dictionary<string, Variable<Script>> scripts = new Dictionary<string, Variable<Script>>();
-		//private Dictionary<string, Variable<List>> scriptLists = new Dictionary<string, Variable<List>>();
 		private Dictionary<string, List<BlockBase>> scriptResponses = new Dictionary<string, List<BlockBase>>();
 
 		private KeyedDictionary<Variable<Personality>> personalities = new KeyedDictionary<Variable<Personality>>(false);
 
-		private KeyedDictionary<Variable<List>> scriptLists = new KeyedDictionary<Variable<List>>(false);
-
 		// ToDo : Rename:
-		private BlockGroup<Script> allscripts = new BlockGroup<Script>();
+		private BlockGroup<Script> allscripts;
 
 		private volatile int _dirty = 0;
-		public bool Dirty { get { return _dirty != 0; } private set { Interlocked.Exchange(ref _dirty, value ? 1 : 0); } }
+		public bool Dirty { get { return _dirty != 0; } internal set { Interlocked.Exchange(ref _dirty, value ? 1 : 0); } }
 
 		public const char IndentChar = '\t';
 		public static readonly char[] Punctuation = new char[] { '\'', '!', '?', '.', ',' };
 		private static readonly char[] keySeparator = { '.' };
+
+		public VM()
+		{
+			allscripts = new BlockGroup<Script>(this);
+		}
 
 		#region Tick thread
 		/// <summary> Starts the controller update thread </summary>
@@ -256,9 +257,9 @@ namespace TeaseAI_CE.Scripting
 				case "personality":
 					return personalities.Get(++key, log);
 				case "script":
-					return allscripts.Get(++key, log);
+					return allscripts.Get(key, log);
 				case "list":
-					return allscripts.Get(++key, log);
+					return allscripts.Get(key, log);
 				default:
 					{
 						Function func;
@@ -319,9 +320,9 @@ namespace TeaseAI_CE.Scripting
 			return true;
 		}
 
-		private void addScript(Script script, string rootKey, string key, string[] tags, string[] responses)
+		private void addScript(string type, string rootKey, string key, Script script, string[] tags, string[] responses)
 		{
-			allscripts.TryAdd(rootKey, key, script);
+			allscripts.TryAdd(type, rootKey, key, script);
 
 			// responses
 			if (responses != null)
@@ -336,30 +337,6 @@ namespace TeaseAI_CE.Scripting
 					list.Add(script);
 				}
 			}
-		}
-		private void addScriptList(List scriptList, string key, string[] tags, string[] responses)
-		{
-			scriptsLock.EnterWriteLock();
-			try
-			{
-				scriptLists[key] = new Variable<List>(scriptList);
-
-				// responses
-				if (responses != null)
-				{
-					foreach (string keyword in responses)
-					{
-						if (keyword == null || keyword.Length == 0)
-							continue;
-						List<BlockBase> list;
-						if (!scriptResponses.TryGetValue(keyword, out list))
-							list = scriptResponses[keyword] = new List<BlockBase>();
-						list.Add(scriptList);
-					}
-				}
-			}
-			finally
-			{ scriptsLock.ExitWriteLock(); }
 		}
 
 		#region Loading files
@@ -504,7 +481,7 @@ namespace TeaseAI_CE.Scripting
 								{
 									scriptsLock.EnterWriteLock();
 									try
-									{ scriptSetups.Add(new Script(blockKey, lines, blockTags, group, log)); }
+									{ scriptSetups.Add(new Script(this, false, blockKey, lines, blockTags, group, log)); }
 									finally
 									{ scriptsLock.ExitWriteLock(); }
 									// warn if has tags or responses
@@ -530,17 +507,11 @@ namespace TeaseAI_CE.Scripting
 								switch (keySplit[0])
 								{
 									case "script":
-										{
-											var script = new Script(blockKey, lines, blockTags, group, log);
-											blocks.Add(script);
-											addScript(script, fileKey, keySplit[1], blockTags, blockResponses);
-										}
-										break;
 									case "list":
 										{
-											var list = new List(this, blockKey, lines, blockTags, group, log);
-											blocks.Add(list);
-											addScriptList(list, key, blockTags, blockResponses);
+											var script = new Script(this, keySplit[0] == "list", blockKey, lines, blockTags, group, log);
+											blocks.Add(script);
+											addScript(keySplit[0], fileKey, keySplit[1], script, blockTags, blockResponses);
 										}
 										break;
 									case "personality":
@@ -555,10 +526,11 @@ namespace TeaseAI_CE.Scripting
 											else
 												p = CreatePersonality(key);
 											// run through the script to fill the personalities variables.
-											var script = new Script(blockKey, lines, null, group, log);
+											var script = new Script(this, false, blockKey, lines, null, group, log);
 											var c = new Controller(p, "DUMMY");
-											validateScript(c, script);
-											runThroughScript(p, c, script, new StringBuilder());
+											var sb = new StringBuilder();
+											validateScript(c, script, null, sb);
+											runThroughScript(p, c, script, sb);
 										}
 										break;
 									default:
@@ -823,32 +795,21 @@ namespace TeaseAI_CE.Scripting
 
 				if (allscripts.IsEmpty)
 					log.Error(StringsScripting.No_scripts);
-				if (scriptLists.Count == 0)
-					log.Warning(StringsScripting.No_lists);
 
 
 				// validate startup scripts.
 				foreach (var s in scriptSetups)
-					validateScript(c, s);
-
-				// validate all list scripts.
-				foreach (var list in scriptLists.Values)
-				{
-					if (!list.IsSet)
-						continue;
-					vars.Clear();
-					list.Value.Execute(new Context(c, list.Value, list.Value, 0, vars), output);
-				}
+					validateScript(c, s, vars, output);
 
 				// validate all other scripts.
 				foreach (var s in allscripts.GetAll())
 					if (s.IsSet)
-						validateScript(c, s.Value);
+						validateScript(c, s, vars, output);
 			}
 			// ToDo 2: Scripts can change inbetwen here and validation, so we could be dirty but dirty being false.
 			Dirty = false;
 		}
-		private void validateScript(Controller c, Script s)
+		private void validateScript(Controller c, Script s, Dictionary<string, Variable> vars, StringBuilder output)
 		{
 			// if script has never been validated, but has errors, then do not validate, they are parse errors.
 			if (s.Valid == BlockBase.Validation.NeverRan && s.Log.ErrorCount > 0)
@@ -858,11 +819,18 @@ namespace TeaseAI_CE.Scripting
 			}
 
 			s.SetValid(true);
-			c.Add(s);
-			var sb = new StringBuilder();
-			while (c.next(sb))
+			if (s.List)
 			{
+				vars.Clear();
+				s.ExecuteAsList(new Context(c, s, s, 0, vars), output);
+			}
+			else
+			{
+				c.Add(s);
+				while (c.next(output))
+				{
 
+				}
 			}
 			s.SetValid(false);
 		}

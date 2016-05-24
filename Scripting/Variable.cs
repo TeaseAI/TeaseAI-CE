@@ -77,8 +77,8 @@ namespace TeaseAI_CE.Scripting
 			if (!IsSet || sender.Root.Valid == BlockBase.Validation.Running)
 				return;
 
-			if (Value is List)
-				((List)Value).Execute(sender, output);
+			if (Value is Script && ((Script)Value).List)
+				((Script)Value).ExecuteAsList(sender, output);
 			else
 				output.Append(Value.ToString());
 		}
