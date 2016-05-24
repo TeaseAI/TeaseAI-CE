@@ -101,6 +101,23 @@ namespace TeaseAI_CE.Scripting
 					kvp.Value.WriteValue(sb);
 					sb.AppendLine(")");
 				}
+				
+				// ToDo 5: Add abality for seprate setups to be ran.
+				// controller needs own setup otherwise when we run setup for controllers we will run all setups on all personalities again.
+				// Maybe use tags of setup to derturmin how it is ran. So if a setup has tag of personality, it runs for all personalities.
+				sb.AppendLine("Setup");
+				var controllers = VM.GetControllers();
+				foreach (var c in controllers)
+				{
+					if (!ReferenceEquals(c.Personality, this))
+						continue;
+					sb.Append("\t#if(.id==\"");
+					sb.Append(ID);
+					sb.Append("\" and .tmpController==\"");
+					sb.Append(c.Id);
+					sb.AppendLine("\")");
+					c.WriteValues("\t\t", sb);
+				}
 			}
 			return sb.ToString();
 		}

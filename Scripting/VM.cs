@@ -178,15 +178,24 @@ namespace TeaseAI_CE.Scripting
 		/// </summary>
 		/// <param name="p"></param>
 		/// <returns></returns>
-		public Controller CreateController(Personality p)
+		public Controller CreateController(Personality p, string id)
 		{
 			personControlLock.EnterWriteLock();
 			try
 			{
-				var c = new Controller(p);
+				var c = new Controller(p, id);
 				controllers.Add(c);
 				return c;
 			}
+			finally
+			{ personControlLock.ExitWriteLock(); }
+		}
+
+		public Controller[] GetControllers()
+		{
+			personControlLock.EnterWriteLock();
+			try
+			{ return controllers.ToArray(); }
 			finally
 			{ personControlLock.ExitWriteLock(); }
 		}
@@ -290,7 +299,7 @@ namespace TeaseAI_CE.Scripting
 		/// <param name="p"></param>
 		internal void RunSetupOn(Personality p)
 		{
-			var c = new Controller(p);
+			var c = new Controller(p, "DUMMY");
 			var sb = new StringBuilder();
 			scriptsLock.EnterReadLock();
 			try
@@ -557,7 +566,7 @@ namespace TeaseAI_CE.Scripting
 												p = CreatePersonality(key);
 											// run through the script to fill the personalities variables.
 											var script = new Script(blockKey, lines, null, group, log);
-											var c = new Controller(p);
+											var c = new Controller(p, "DUMMY");
 											validateScript(c, script);
 											runThroughScript(p, c, script, new StringBuilder());
 										}
@@ -804,7 +813,7 @@ namespace TeaseAI_CE.Scripting
 			{
 				// dummy variables used to run scripts without effecting user data.
 				var p = new Personality(this, "tmpValidator", "tmpValidator");
-				var c = new Controller(p);
+				var c = new Controller(p, "DUMMY");
 				var output = new StringBuilder();
 				var vars = new Dictionary<string, Variable>();
 

@@ -113,7 +113,7 @@ namespace TeaseAI_CE.UI
 			// ToDo : At some point we will want to run all setups.
 			persona.RunSetup();
 
-			var controller = vm.CreateController(persona);
+			var controller = vm.CreateController(persona, "Main");
 			controller.Interval = 500;
 			var fakelog = new Logger("fakelog");
 			controller.Add(vm.QueryScript(persona.Get(new Key(".startquery", fakelog), fakelog), fakelog));

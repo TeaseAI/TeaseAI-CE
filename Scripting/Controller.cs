@@ -10,8 +10,10 @@ namespace TeaseAI_CE.Scripting
 	/// <summary>
 	/// Controllers are the part that figures out what the personlity is going to say next.
 	/// </summary>
-	public class Controller
+	public class Controller : IKeyed
 	{
+		public string Id { get; private set; }
+
 		public readonly Personality Personality;
 		public VM VM { get { return Personality.VM; } }
 
@@ -27,14 +29,17 @@ namespace TeaseAI_CE.Scripting
 		private Stack<Context> stack = new Stack<Context>();
 		private List<Context> queue = new List<Context>();
 
+		private Variable startQuery = new Variable("start");
+		private Variable emptyQuery = new Variable("test");
 
 		// ToDo : A shorter list of enabled(or disabled) scripts, based off of the personalities list.
 
 		private StringBuilder output = new StringBuilder();
 
-		internal Controller(Personality personality)
+		internal Controller(Personality personality, string id)
 		{
 			Personality = personality;
+			Id = VM.KeyClean(id);
 		}
 
 		public void Tick()
@@ -123,7 +128,6 @@ namespace TeaseAI_CE.Scripting
 				return true;
 			}
 		}
-
 		/// <summary>
 		/// Enqueue a root block to be added to the stack.
 		/// </summary>
@@ -152,5 +156,38 @@ namespace TeaseAI_CE.Scripting
 			if (OnOutput != null)
 				OnOutput(p, Personality.VM.InputToShorthand(text));
 		}
+
+		public void WriteValues(string prefix, StringBuilder sb)
+		{
+			writeValue(prefix, sb, "startQuery", startQuery);
+			writeValue(prefix, sb, "emptyQuery", emptyQuery);
+		}
+		private void writeValue(string prefix, StringBuilder sb, string key, Variable v)
+		{
+			if (v == null || !v.CanWriteValue())
+				return;
+			sb.Append(prefix);
+			sb.Append("#(.");
+			sb.Append(key);
+			sb.Append("=");
+			v.WriteValue(sb);
+			sb.AppendLine(")");
+		}
+
+		#region IKeyed
+		public Variable Get(Key key, Logger log = null)
+		{
+			if (key.AtEnd)
+			{
+				// ToDo : Error
+				return null;
+			}
+			if (key.NextIf("startquery"))
+				return startQuery.Get(key, log);
+			if (key.NextIf("emptyquery"))
+				return emptyQuery.Get(key, log);
+			return Personality.Get(key, log);
+		}
+		#endregion
 	}
 }
