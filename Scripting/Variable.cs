@@ -93,7 +93,8 @@ namespace TeaseAI_CE.Scripting
 				Value is float ||
 				Value is bool ||
 				Value is TimeSpan ||
-				Value is DateTime;
+				Value is DateTime ||
+				Value is Query;
 		}
 
 		/// <summary>
@@ -126,6 +127,11 @@ namespace TeaseAI_CE.Scripting
 				sb.Append("Time(\"");
 				sb.Append(((TimeSpan)Value).ToString("G"));
 				sb.Append("\")");
+			}
+			else if (Value is Query)
+			{
+				// ToDo 4: Query support for saving the variable key not just the values.
+				sb.Append(Value.ToString());
 			}
 			else
 				sb.Append("Unsupported_Variable_Write_Type");

@@ -1,5 +1,5 @@
 ﻿
-Setup
+Setup.Personality
 	#(.IsYoung = .age < 24)
 	#(.Crazy = true)
 

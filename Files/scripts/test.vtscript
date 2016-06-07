@@ -4,7 +4,7 @@
 
 // Setup is ran for every personality.
 // It can be used to calculate the mood, or anything you want setup before any scripts are ran.
-Setup
+Setup.Personality
 	#(.SomeVar = "Bye!")
 	#if(.Test)
 		#(.test = not(.test))
@@ -12,7 +12,9 @@ Setup
 		#(.Test = true)
 	#if(not isset(.lastknown))
 		#(.lastknown = date)
-	//#(.startquery = "start" and "notay" and not "welcome")
+
+Setup.Controller
+	//#(startquery = "start" and "notay" and not "welcome")
 
 
 // Some tag thoughts

@@ -29,8 +29,10 @@ namespace TeaseAI_CE.Scripting
 		private Stack<Context> stack = new Stack<Context>();
 		private List<Context> queue = new List<Context>();
 
-		private Variable startQuery = new Variable("start");
-		private Variable emptyQuery = new Variable("test");
+		public bool AutoFill = false;
+
+		private Variable startQuery = new Variable();
+		private Variable emptyQuery = new Variable();
 
 		// ToDo : A shorter list of enabled(or disabled) scripts, based off of the personalities list.
 
@@ -62,6 +64,11 @@ namespace TeaseAI_CE.Scripting
 		/// <returns>false if there was nothing to do.</returns>
 		internal bool next(StringBuilder output)
 		{
+			if (AutoFill && stack.Count == 0 && queue.Count == 0 && emptyQuery.IsSet)
+			{
+				AddFromEmptyQuery(new Logger("Controller." + Id));
+			}
+
 			// populate stack with items in the queue.
 			if (queue.Count > 0)
 			{
@@ -148,6 +155,20 @@ namespace TeaseAI_CE.Scripting
 					queue.Clear();
 				}
 			}
+		}
+		public bool AddFromStartQuery(Logger log)
+		{
+			if (startQuery == null || !startQuery.IsSet)
+				return false;
+			Add(VM.QueryScript(startQuery, log));
+			return true;
+		}
+		public bool AddFromEmptyQuery(Logger log)
+		{
+			if (emptyQuery == null || !emptyQuery.IsSet)
+				return false;
+			Add(VM.QueryScript(emptyQuery, log));
+			return true;
 		}
 
 		public void Input(Personality p, string text)

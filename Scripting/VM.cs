@@ -26,13 +26,13 @@ namespace TeaseAI_CE.Scripting
 		private ConcurrentDictionary<string, Function> functions = new ConcurrentDictionary<string, Function>();
 
 		private ReaderWriterLockSlim personControlLock = new ReaderWriterLockSlim(LockRecursionPolicy.SupportsRecursion);
-		//private Dictionary<string, Personality> personalities = new Dictionary<string, Personality>();
-		private List<Controller> controllers = new List<Controller>();
+		private Dictionary<string, List<Controller>> controllers = new Dictionary<string, List<Controller>>();
 		private List<Dictionary<string, string>> inputReplace;
 
 		private ReaderWriterLockSlim scriptsLock = new ReaderWriterLockSlim(LockRecursionPolicy.SupportsRecursion);
 		private List<GroupInfo> scriptGroups = new List<GroupInfo>();
-		private List<Script> scriptSetups = new List<Script>();
+		private List<Script> setupPersonality = new List<Script>();
+		private List<Script> setupController = new List<Script>();
 		private Dictionary<string, List<BlockBase>> scriptResponses = new Dictionary<string, List<BlockBase>>();
 
 		private KeyedDictionary<Variable<Personality>> personalities = new KeyedDictionary<Variable<Personality>>(false);
@@ -73,8 +73,10 @@ namespace TeaseAI_CE.Scripting
 			threadRun = false;
 			if (thread != null)
 			{
-				foreach (var c in controllers) // stop all timmers
-					c.timmer.Stop();
+				foreach (var lst in controllers.Values)
+					foreach (var c in lst) // stop all timmers
+						c.timmer.Stop();
+
 				for (int i = 0; i < 10; ++i) // wait one second for thread to stop on it's own.
 					if (thread.IsAlive)
 						Thread.Sleep(100);
@@ -98,16 +100,19 @@ namespace TeaseAI_CE.Scripting
 					personControlLock.EnterReadLock();
 					try
 					{
-						foreach (var c in controllers)
+						foreach (var lst in controllers.Values)
 						{
-							if (!c.timmer.IsRunning)
-								c.timmer.Start();
-							if (c.timmer.ElapsedMilliseconds > c.Interval)
+							foreach (var c in lst)
 							{
-								c.timmer.Stop();
-								c.timmer.Reset();
-								c.timmer.Start();
-								c.Tick();
+								if (!c.timmer.IsRunning)
+									c.timmer.Start();
+								if (c.timmer.ElapsedMilliseconds > c.Interval)
+								{
+									c.timmer.Stop();
+									c.timmer.Reset();
+									c.timmer.Start();
+									c.Tick();
+								}
 							}
 						}
 					}
@@ -180,26 +185,82 @@ namespace TeaseAI_CE.Scripting
 		/// </summary>
 		/// <param name="p"></param>
 		/// <returns></returns>
-		public Controller CreateController(Personality p, string id)
+		public Controller AddController(Personality p, string id, Logger log = null)
 		{
+			if (log == null)
+				log = new Logger("AddController[" + id + "]");
 			personControlLock.EnterWriteLock();
 			try
 			{
 				var c = new Controller(p, id);
-				controllers.Add(c);
+				List<Controller> lst;
+				if (!controllers.TryGetValue(c.Id, out lst))
+					lst = controllers[c.Id] = new List<Controller>();
+				lst.Add(c);
+
+				// run setups
+				if (Dirty)
+					Logger.Log(log, Logger.Level.Error, StringsScripting.Log_VM_Dirty);
+				else
+				{
+					personControlLock.EnterReadLock();
+					scriptsLock.EnterReadLock();
+					try
+					{ runAllSetupOn(c, new StringBuilder()); }
+					finally
+					{
+						scriptsLock.ExitReadLock();
+						personControlLock.ExitReadLock();
+					}
+				}
+				c.AddFromStartQuery(log);
 				return c;
 			}
 			finally
 			{ personControlLock.ExitWriteLock(); }
 		}
-
-		public Controller[] GetControllers()
+		public void RemoveController(Controller c)
 		{
+			if (c == null)
+				return;
+			c.timmer.Stop();
 			personControlLock.EnterWriteLock();
 			try
-			{ return controllers.ToArray(); }
+			{
+				List<Controller> lst;
+				if (controllers.TryGetValue(c.Id, out lst))
+					lst.Remove(c);
+			}
 			finally
 			{ personControlLock.ExitWriteLock(); }
+		}
+
+		public Controller[] GetControllers(string id)
+		{
+			id = KeyClean(id);
+			personControlLock.EnterReadLock();
+			try
+			{
+				List<Controller> lst;
+				if (controllers.TryGetValue(id, out lst))
+					return lst.ToArray();
+				return new Controller[0];
+			}
+			finally
+			{ personControlLock.ExitReadLock(); }
+		}
+		public List<Controller> GetAllControllers()
+		{
+			var result = new List<Controller>();
+			personControlLock.EnterReadLock();
+			try
+			{
+				foreach (var lst in controllers.Values)
+					result.AddRange(lst);
+				return result;
+			}
+			finally
+			{ personControlLock.ExitReadLock(); }
 		}
 
 		public Personality[] GetPersonalities()
@@ -292,31 +353,66 @@ namespace TeaseAI_CE.Scripting
 			AddFunction(func.Method.Name, func);
 		}
 
-		/// <summary> Runs all setup scripts on the personality. </summary>
-		/// <param name="p"></param>
-		internal void RunSetupOn(Personality p)
+		public void RunPersonalitySetup()
 		{
-			var c = new Controller(p, "DUMMY");
+			if (Dirty)
+			{
+				Logger.Log(null, Logger.Level.Error, StringsScripting.Log_VM_Dirty);
+				return;
+			}
+
 			var sb = new StringBuilder();
+
 			scriptsLock.EnterReadLock();
 			try
 			{
-				foreach (var s in scriptSetups)
-					runThroughScript(p, c, s, sb);
+				foreach (var p in personalities)
+					runAllSetupOn(p.Value, sb);
+			}
+			finally
+			{
+				scriptsLock.ExitReadLock();
+			}
+		}
+
+		/// <summary> Runs all setup scripts on the personality. </summary>
+		private void runAllSetupOn(Personality p, StringBuilder sb)
+		{
+			var c = new Controller(p, "DUMMY");
+			scriptsLock.EnterReadLock();
+			try
+			{
+				foreach (var s in setupPersonality)
+					runThroughScript(c, s, sb);
+			}
+			finally
+			{ scriptsLock.ExitReadLock(); }
+		}
+		/// <summary> Runs all setup scripts on the controller. </summary>
+		private void runAllSetupOn(Controller c, StringBuilder sb)
+		{
+			scriptsLock.EnterReadLock();
+			try
+			{
+				foreach (var s in setupController)
+					runThroughScript(c, s, sb);
 			}
 			finally
 			{ scriptsLock.ExitReadLock(); }
 		}
 		/// <summary> Add script to controller, call next until false. </summary>
 		/// <returns> false if valid is not passed </returns>
-		private bool runThroughScript(Personality p, Controller c, BlockBase s, StringBuilder sb)
+		private bool runThroughScript(Controller c, BlockBase s, StringBuilder sb)
 		{
 			if (s.Valid != BlockBase.Validation.Passed)
 				return false;
 			c.Add(s);
+			bool AutoFill = c.AutoFill;
+			c.AutoFill = false;
 			while (c.next(sb))
 			{
 			}
+			c.AutoFill = AutoFill;
 			return true;
 		}
 
@@ -475,28 +571,7 @@ namespace TeaseAI_CE.Scripting
 						{
 							// Figureout type of script, then add it.
 							var keySplit = KeySplit(blockKey);
-							if (keySplit.Length == 1)
-							{
-								if (keySplit[0] == "setup")
-								{
-									scriptsLock.EnterWriteLock();
-									try
-									{ scriptSetups.Add(new Script(this, false, blockKey, lines, blockTags, group, log)); }
-									finally
-									{ scriptsLock.ExitWriteLock(); }
-									// warn if has tags or responses
-									if (blockTags != null && blockTags.Length > 0)
-										fileLog.Warning(StringsScripting.Setup_has_tags, blockLine);
-									if (blockResponses != null && blockResponses.Length >= 0)
-										fileLog.Warning(StringsScripting.Setup_has_responses, blockLine);
-								}
-								else
-								{
-									fileLog.Error(string.Format(StringsScripting.Formatted_Error_Invalid_root_type, keySplit[0]), blockLine);
-									break;
-								}
-							}
-							else if (keySplit.Length == 2)
+							if (keySplit.Length == 2)
 							{
 								if (keySplit[1] == null || keySplit[1].Length == 0)
 								{
@@ -506,6 +581,27 @@ namespace TeaseAI_CE.Scripting
 								var key = fileKey + '.' + keySplit[1];
 								switch (keySplit[0])
 								{
+									case "setup":
+
+										scriptsLock.EnterWriteLock();
+										try
+										{
+											if (keySplit[1] == "controller")
+												setupController.Add(new Script(this, false, blockKey, lines, blockTags, group, log));
+											else if (keySplit[1] == "personality")
+												setupPersonality.Add(new Script(this, false, blockKey, lines, blockTags, group, log));
+											//else
+											//ToDo : Error unknown setup type.
+										}
+										finally
+										{ scriptsLock.ExitWriteLock(); }
+										// ToDo : Remove error from strings.
+										//if (blockTags != null && blockTags.Length > 0)
+										//	fileLog.Warning(StringsScripting.Setup_has_tags, blockLine);
+										// warn if has responses
+										if (blockResponses != null && blockResponses.Length >= 0)
+											fileLog.Warning(StringsScripting.Setup_has_responses, blockLine);
+										break;
 									case "script":
 									case "list":
 										{
@@ -530,13 +626,18 @@ namespace TeaseAI_CE.Scripting
 											var c = new Controller(p, "DUMMY");
 											var sb = new StringBuilder();
 											validateScript(c, script, null, sb);
-											runThroughScript(p, c, script, sb);
+											runThroughScript(c, script, sb);
 										}
 										break;
 									default:
 										fileLog.Error(string.Format(StringsScripting.Formatted_Error_Invalid_root_type, keySplit[0]), blockLine);
 										return;
 								}
+							}
+							else
+							{
+								fileLog.Error(string.Format(StringsScripting.Formatted_Error_Invalid_root_type, keySplit[0]), blockLine);
+								break;
 							}
 						}
 					}
@@ -798,8 +899,16 @@ namespace TeaseAI_CE.Scripting
 
 
 				// validate startup scripts.
-				foreach (var s in scriptSetups)
-					validateScript(c, s, vars, output);
+				scriptsLock.EnterReadLock();
+				try
+				{
+					foreach (var s in setupPersonality)
+						validateScript(c, s, vars, output);
+					foreach (var s in setupController)
+						validateScript(c, s, vars, output);
+				}
+				finally
+				{ scriptsLock.ExitReadLock(); }
 
 				// validate all other scripts.
 				foreach (var s in allscripts.GetAll())

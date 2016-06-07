@@ -110,13 +110,13 @@ namespace TeaseAI_CE.UI
 			status(70, Strings.Status_Validate);
 			vm.Validate();
 
-			// ToDo : At some point we will want to run all setups.
-			persona.RunSetup();
+			// ToDo : Move message to strings
+			status(80, "Running setups..");
+			vm.RunPersonalitySetup();
 
-			var controller = vm.CreateController(persona, "Main");
+			var controller = vm.AddController(persona, "Main");
 			controller.Interval = 500;
-			var fakelog = new Logger("fakelog");
-			controller.Add(vm.QueryScript(persona.Get(new Key(".startquery", fakelog), fakelog), fakelog));
+			controller.AutoFill = true;
 
 
 			status(90, Strings.Status_Load_UI);

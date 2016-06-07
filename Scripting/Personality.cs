@@ -63,10 +63,6 @@ namespace TeaseAI_CE.Scripting
 			}, null);
 		}
 
-		public void RunSetup()
-		{
-			VM.RunSetupOn(this);
-		}
 
 		#region IKeyed
 		public Variable Get(Key key, Logger log = null)
@@ -101,12 +97,12 @@ namespace TeaseAI_CE.Scripting
 					kvp.Value.WriteValue(sb);
 					sb.AppendLine(")");
 				}
-				
+
 				// ToDo 5: Add abality for seprate setups to be ran.
 				// controller needs own setup otherwise when we run setup for controllers we will run all setups on all personalities again.
 				// Maybe use tags of setup to derturmin how it is ran. So if a setup has tag of personality, it runs for all personalities.
-				sb.AppendLine("Setup");
-				var controllers = VM.GetControllers();
+				sb.AppendLine("Setup.Controller");
+				var controllers = VM.GetAllControllers();
 				foreach (var c in controllers)
 				{
 					if (!ReferenceEquals(c.Personality, this))

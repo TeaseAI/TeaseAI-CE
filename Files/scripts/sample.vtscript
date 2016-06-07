@@ -2,19 +2,21 @@
 // 
 // 
 
+Setup.Controller
+	// .StartQuery is used to find the first script to run.
+	#(startQuery = "start" and not "test")
+	// .EmptyQuery is used to find a script once the stack is empty. (no scripts running)
+	#(emptyQuery = "general" and not "test")
+	#if(.first == true)
+		#(startQuery = "First")
+
 // Setup is ran for every personality.
 // It can be used to calculate the mood, or anything you want setup before any scripts are ran.
-Setup
-	// .StartQuery is used to find the first script to run.
-	#(.startQuery = "start" and not "test")
-	// .EmptyQuery is used to find a script once the stack is empty. (no scripts running)
-	#(.emptyQuery = "general" and not "test")
-	
+Setup.Personality
 	// if .first is not set, we set it to true, and set our start script to point to "first".
 	#if(not IsSet(.first))
 		#(.first = true)
-		#(.startQuery = "First")
-	
+
 
 Script.FirstWelcome[First]
 	#GoTo(script.introduction)
