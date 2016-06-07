@@ -173,9 +173,16 @@ namespace TeaseAI_CE.Scripting
 
 		public void Input(Personality p, string text)
 		{
-			// ToDo : Finsh input.
-			if (OnOutput != null)
-				OnOutput(p, Personality.VM.InputToShorthand(text));
+			var shorthand = VM.InputToShorthand(text);
+
+			// ToDo 8: If Debugging
+			//OnOutput?.Invoke(p, shorthand);
+			// else
+			OnOutput?.Invoke(p, text);
+
+			var script = VM.GetScriptResponse(shorthand);
+			if (script != null)
+				Add(script);
 		}
 
 		public void WriteValues(string prefix, StringBuilder sb)

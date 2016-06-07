@@ -301,7 +301,7 @@ namespace TeaseAI_CE.Scripting
 				log.Error(StringsScripting.Query_empty);
 				return null;
 			}
-			// ToDo6: Make not random.
+			// ToDo 6: Make not random.
 			int r = random.Next(0, list.Count);
 			return list[r].Value;
 		}
@@ -421,6 +421,7 @@ namespace TeaseAI_CE.Scripting
 			allscripts.TryAdd(type, rootKey, key, script);
 
 			// responses
+			scriptsLock.EnterWriteLock();
 			if (responses != null)
 			{
 				foreach (string keyword in responses)
@@ -433,6 +434,23 @@ namespace TeaseAI_CE.Scripting
 					list.Add(script);
 				}
 			}
+			scriptsLock.ExitWriteLock();
+		}
+
+		public BlockBase GetScriptResponse(string keyword)
+		{
+			scriptsLock.EnterReadLock();
+			try
+			{
+				List<BlockBase> lst;
+				if (!scriptResponses.TryGetValue(keyword, out lst))
+					return null;
+				// ToDo 6 Make not random.
+				int r = random.Next(0, lst.Count);
+				return lst[r];
+			}
+			finally
+			{ scriptsLock.ExitReadLock(); }
 		}
 
 		#region Loading files
