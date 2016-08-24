@@ -41,6 +41,8 @@
   <ItemGroup>
     <Compile Include="Context.cs" />
     <Compile Include="CoreFunctions.cs" />
+    <Compile Include="Events\IEvent.cs" />
+    <Compile Include="Events\Timed.cs" />
     <Compile Include="GroupInfo.cs" />
     <Compile Include="BlockGroup.cs" />
     <Compile Include="IKeyed.cs" />

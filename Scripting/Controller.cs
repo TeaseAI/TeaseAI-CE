@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Linq;
 using System.Text;
 using System.Diagnostics;
 using MyResources;
+using TeaseAI_CE.Scripting.Events;
 
 namespace TeaseAI_CE.Scripting
 {
@@ -36,6 +38,8 @@ namespace TeaseAI_CE.Scripting
 
 		// ToDo : A shorter list of enabled(or disabled) scripts, based off of the personalities list.
 
+		private Queue<IEvent> events = new Queue<IEvent>();
+
 		private StringBuilder output = new StringBuilder();
 
 		internal Controller(Personality personality, string id)
@@ -49,12 +53,22 @@ namespace TeaseAI_CE.Scripting
 			if (Personality.Enabled == false)
 				return;
 
+			// Wait for all events to finish.
+			while (events.Count > 0)
+			{
+				if (!events.Peek().Finished())
+					return;
+				events.Dequeue();
+			}
+
 			while (next(output) && output.Length == 0)
 			{ }
 
-			if (OnOutput != null && output.Length > 0)
-				OnOutput.Invoke(Personality, output.ToString());
-			output.Clear();
+			events.Enqueue(new Timed(new TimeSpan(0, 0, 0, 0, output.Length * 80), false, () =>
+			{
+				OnOutput?.Invoke(Personality, output.ToString());
+				output.Clear();
+			}));
 		}
 
 		/// <summary>

@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
-VisualStudioVersion = 14.0.25123.0
+VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TeaseAI_CE", "TeaseAI_CE\TeaseAI_CE.csproj", "{02134F4D-723D-4515-949F-AEB64C014133}"
 EndProject
@@ -18,8 +18,8 @@ Global
 		HasPerformanceSessions = true
 	EndGlobalSection
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
-		Files\Files.projitems*{fc56c73f-fda9-4f03-9316-d9b9673dbb48}*SharedItemsImports = 13
 		Files\Files.projitems*{02134f4d-723d-4515-949f-aeb64c014133}*SharedItemsImports = 4
+		Files\Files.projitems*{fc56c73f-fda9-4f03-9316-d9b9673dbb48}*SharedItemsImports = 13
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
