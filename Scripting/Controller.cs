@@ -185,6 +185,12 @@ namespace TeaseAI_CE.Scripting
 			return true;
 		}
 
+		public void Add(IEvent e)
+		{
+			// ToDo : Not thread safe
+			events.Enqueue(e);
+		}
+
 		public void Input(Personality p, string text)
 		{
 			var shorthand = VM.InputToShorthand(text);

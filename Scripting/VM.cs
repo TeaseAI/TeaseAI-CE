@@ -1133,10 +1133,11 @@ namespace TeaseAI_CE.Scripting
 							else if (args.Length == 0)
 								log.Warning(StringsScripting.Sub_parentheses_zero_arguments, -1, _char);
 							else
+							{
 								items.Add(args[0]); // sense it's not for a function, we only care about the first arg.
-
-							if (args.Length > 1)
-								log.Warning(StringsScripting.Sub_parentheses_too_many_arguments, -1, _char);
+								if (args.Length > 1)
+									log.Warning(StringsScripting.Sub_parentheses_too_many_arguments, -1, _char);
+							}
 						}
 						continue;
 
@@ -1148,7 +1149,7 @@ namespace TeaseAI_CE.Scripting
 						finished = true; // finished, sense execParentheses will go until end.
 						continue;
 
-					// white-space seprates stuffs
+					// white-space separates stuffs
 					case ' ':
 					case '\t':
 						execParenthCheckAdd(sender, items, sb);
@@ -1157,7 +1158,7 @@ namespace TeaseAI_CE.Scripting
 					// equal and assign
 					case '=':
 						execParenthCheckAdd(sender, items, sb);
-						// (a=b) is not eqqual to (a==b). The first assigns b to a and returns a, second returns bool if a equals b.
+						// (a=b) is not equal to (a==b). The first assigns b to a and returns a, second returns bool if a equals b.
 						// so we must use different operators.
 						if (i + 1 < str.Length && str[i + 1] == '=') // ==
 						{ ++i; items.Add(Operators.Equal); }

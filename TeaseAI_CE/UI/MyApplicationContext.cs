@@ -94,6 +94,7 @@ namespace TeaseAI_CE.UI
 			vm = new VM();
 			status(15, Strings.Status_Add_Functions);
 			CoreFunctions.AddTo(vm);
+			Functions.AddTo(vm);
 			status(20, Strings.Status_Load_Scripts);
 			vm.LoadFromDirectory("scripts"); // Load all scritps from scripts folder.
 			status(40, Strings.Status_Load_Personalities);

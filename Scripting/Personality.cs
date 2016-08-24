@@ -42,7 +42,7 @@ namespace TeaseAI_CE.Scripting
 		internal Personality(VM vm, string name, string id)
 		{
 			VM = vm;
-			// Variables MUST always be set:
+			// These variables MUST always be set:
 			variables["name"] = name_var = new Variable(name);
 			variables["id"] = id_var = new Variable(id) { Readonly = true };
 			variables["enabled_user"] = enabledUser_var = new Variable(true);
@@ -61,6 +61,8 @@ namespace TeaseAI_CE.Scripting
 					return -1f;
 				}
 			}, null);
+
+			// ToDo 5: Add mood variables.
 		}
 
 
