@@ -1,0 +1,48 @@
+﻿// 
+// 
+// 
+
+Setup.Controller
+	
+
+// Setup is ran for every personality.
+// It can be used to calculate the mood, or anything you want setup before any scripts are ran.
+Setup.Personality
+
+
+Script.Start[general]
+	Lets try multiple personalities!
+
+	#JoinMode("Swap")
+
+	// for now there is no way to get a random contact, so lets add Piper or Lesa.
+	#if(not .id = "piper")
+		#Join(Personality.Piper)
+	#else
+		#Join(Personaility.Lesa)
+	#GoTo(Script.Simple)
+
+// note: this script requires there to be at least two contacts.
+Script.Simple
+	#Active(0)
+	// Still on main contact, but we can get the other contact's variables.
+	And now @(Contact.1.Name) will be joining us.
+
+	// set the new contact as active, sense we are in "Swap" mode, the main contact will be disabled.
+	#Active(1)
+	
+	// now all scripts will be ran from the new contact.
+	#GoTo(Script.sample.Introduction)
+	
+	Bye
+
+	// when a active contact leaves, who ever is contact 0 gets set as active.
+	#Leave(1)
+	Well she is gone.
+
+// make sure we have second contact.
+Personality.Piper
+	#(.name = "Piper")
+	#(.title = "Mistress")
+	#(.eye = "green")
+	#(.birthday = Date("1988-05-22"))
