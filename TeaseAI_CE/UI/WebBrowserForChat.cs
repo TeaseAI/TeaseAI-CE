@@ -52,14 +52,16 @@ namespace TeaseAI_CE.UI
 			message = System.Security.SecurityElement.Escape(message);
 
 			textBox.AppendText("\n");
-			if (lastPersona != p)
-			{
-				lastPersona = p;
-				var name = System.Security.SecurityElement.Escape(p.Name);
-				textBox.AppendText(name);
-				textBox.AppendText(" Says:\n");
-			}
-			textBox.AppendText("    ");
+			//if (lastPersona != p)
+			//{
+			//	lastPersona = p;
+			var name = System.Security.SecurityElement.Escape(p.Name);
+			//	textBox.AppendText(name);
+			//	textBox.AppendText(" Says:\n");
+			//}
+			//textBox.AppendText("    ");
+			textBox.AppendText(name);
+			textBox.AppendText(" Says: ");
 			textBox.AppendText(message);
 
 			textBox.Select(textBox.TextLength - 1, 0);
