@@ -15,7 +15,7 @@ namespace TeaseAI_CE.Scripting
 		public int Line;
 		/// <summary> If true, repeat current line and block. </summary>
 		public bool Repeat = false;
-		/// <summary> Vairables local to this scope. </summary>
+		/// <summary> Variables local to this scope. </summary>
 		public Dictionary<string, Variable> Variables;
 		/// <summary> Results of last if statement, could easily just be a local variable. </summary>
 		public bool LastIf = false;

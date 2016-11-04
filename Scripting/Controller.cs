@@ -10,23 +10,22 @@ using TeaseAI_CE.Scripting.Events;
 namespace TeaseAI_CE.Scripting
 {
 	/// <summary>
-	/// Controllers are the part that figures out what the personlity is going to say next.
+	/// Controllers are the part that figures out what the personality is going to say next.
 	/// </summary>
 	public class Controller : IKeyed
 	{
 		public string Id { get; private set; }
 
-		public readonly Personality Personality;
-		public VM VM { get { return Personality.VM; } }
+		private Personality personality;
+		public readonly VM VM;
 
 		/// <summary>
-		/// Time inbetween updates.
+		/// Time in between ticks.
 		/// </summary>
 		public int Interval;
-		internal Stopwatch timmer = new Stopwatch(); // ToDo : Stopwatch is not optimal.
+		private Stopwatch timmer = new Stopwatch(); // ToDo : Stopwatch is not optimal.
 
-		public delegate void OutputDelegate(Personality p, string text);
-		public OutputDelegate OnOutput;
+		public Action<Personality, string> OnOutput;
 
 		private Stack<Context> stack = new Stack<Context>();
 		private List<Context> queue = new List<Context>();
@@ -42,15 +41,49 @@ namespace TeaseAI_CE.Scripting
 
 		private StringBuilder output = new StringBuilder();
 
-		internal Controller(Personality personality, string id)
+		internal Controller(VM vm, string id)
 		{
-			Personality = personality;
+			VM = vm;
 			Id = VM.KeyClean(id);
+		}
+
+		public bool Contains(Personality p)
+		{
+			return ReferenceEquals(p, personality);
+		}
+
+		public void AddPersonality(Personality p)
+		{
+			if (!ReferenceEquals(p.VM, VM))
+			{
+				// ToDo : Error
+				Logger.Log(null, Logger.Level.Error, "Tried to add a personality with a different VM then the controller!");
+			}
+			// ToDo :
+			personality = p;
+		}
+
+		internal void stop()
+		{
+			timmer.Stop();
+		}
+
+		internal void tick_internal()
+		{
+			if (!timmer.IsRunning)
+				timmer.Start();
+			if (timmer.ElapsedMilliseconds > Interval)
+			{
+				timmer.Stop();
+				timmer.Reset();
+				timmer.Start();
+				Tick();
+			}
 		}
 
 		public void Tick()
 		{
-			if (Personality.Enabled == false)
+			if (personality == null || personality.Enabled == false)
 				return;
 
 			// Wait for all events to finish.
@@ -66,7 +99,7 @@ namespace TeaseAI_CE.Scripting
 
 			events.Enqueue(new Timed(new TimeSpan(0, 0, 0, 0, output.Length * 80), false, () =>
 			{
-				OnOutput?.Invoke(Personality, output.ToString());
+				OnOutput?.Invoke(personality, output.ToString());
 				output.Clear();
 			}));
 		}
@@ -109,7 +142,7 @@ namespace TeaseAI_CE.Scripting
 				scope.Root.Log.SetId(scope.Block.Lines[scope.Line].LineNumber);
 				// exec current line
 				Line line = scope.Block.Lines[scope.Line];
-				Personality.VM.ExecLine(scope, line.Data, output);
+				VM.ExecLine(scope, line.Data, output);
 
 				if (scope.ExitLine)
 					scope.Repeat = false;
@@ -234,7 +267,9 @@ namespace TeaseAI_CE.Scripting
 				return startQuery.Get(key, log);
 			if (key.NextIf("emptyquery"))
 				return emptyQuery.Get(key, log);
-			return Personality.Get(key, log);
+			if (personality == null)
+				return null;
+			return personality.Get(key, log);
 		}
 		#endregion
 	}

@@ -107,7 +107,7 @@ namespace TeaseAI_CE.Scripting
 				var controllers = VM.GetAllControllers();
 				foreach (var c in controllers)
 				{
-					if (!ReferenceEquals(c.Personality, this))
+					if (!c.Contains(this))
 						continue;
 					sb.Append("\t#if(.id==\"");
 					sb.Append(ID);

@@ -26,7 +26,7 @@ namespace TeaseAI_CE.Scripting
 		private ConcurrentDictionary<string, Function> functions = new ConcurrentDictionary<string, Function>();
 
 		private ReaderWriterLockSlim personControlLock = new ReaderWriterLockSlim(LockRecursionPolicy.SupportsRecursion);
-		private Dictionary<string, List<Controller>> controllers = new Dictionary<string, List<Controller>>();
+		private List<Controller> controllers = new List<Controller>();
 		private List<Dictionary<string, string>> inputReplace;
 
 		private ReaderWriterLockSlim scriptsLock = new ReaderWriterLockSlim(LockRecursionPolicy.SupportsRecursion);
@@ -52,6 +52,7 @@ namespace TeaseAI_CE.Scripting
 			allscripts = new BlockGroup<Script>(this);
 		}
 
+
 		#region Tick thread
 		/// <summary> Starts the controller update thread </summary>
 		public void Start()
@@ -73,10 +74,7 @@ namespace TeaseAI_CE.Scripting
 			threadRun = false;
 			if (thread != null)
 			{
-				foreach (var lst in controllers.Values)
-					foreach (var c in lst) // stop all timmers
-						c.timmer.Stop();
-
+				// stop thread
 				for (int i = 0; i < 10; ++i) // wait one second for thread to stop on it's own.
 					if (thread.IsAlive)
 						Thread.Sleep(100);
@@ -86,6 +84,16 @@ namespace TeaseAI_CE.Scripting
 					thread.Join();
 				}
 				thread = null;
+
+				// stop all controllers
+				personControlLock.EnterReadLock();
+				try
+				{
+					foreach (var c in controllers)
+						c.stop();
+				}
+				finally
+				{ personControlLock.ExitReadLock(); }
 			}
 		}
 
@@ -100,21 +108,8 @@ namespace TeaseAI_CE.Scripting
 					personControlLock.EnterReadLock();
 					try
 					{
-						foreach (var lst in controllers.Values)
-						{
-							foreach (var c in lst)
-							{
-								if (!c.timmer.IsRunning)
-									c.timmer.Start();
-								if (c.timmer.ElapsedMilliseconds > c.Interval)
-								{
-									c.timmer.Stop();
-									c.timmer.Reset();
-									c.timmer.Start();
-									c.Tick();
-								}
-							}
-						}
+						foreach (var c in controllers)
+							c.tick_internal();
 					}
 					finally
 					{ personControlLock.ExitReadLock(); }
@@ -185,18 +180,15 @@ namespace TeaseAI_CE.Scripting
 		/// </summary>
 		/// <param name="p"></param>
 		/// <returns></returns>
-		public Controller AddController(Personality p, string id, Logger log = null)
+		public Controller CreateController(string id, Logger log = null)
 		{
 			if (log == null)
-				log = new Logger("AddController[" + id + "]");
+				log = new Logger("CreateController[" + id + "]");
 			personControlLock.EnterWriteLock();
 			try
 			{
-				var c = new Controller(p, id);
-				List<Controller> lst;
-				if (!controllers.TryGetValue(c.Id, out lst))
-					lst = controllers[c.Id] = new List<Controller>();
-				lst.Add(c);
+				var c = new Controller(this, id);
+				controllers.Add(c);
 
 				// run setups
 				if (Dirty)
@@ -223,41 +215,22 @@ namespace TeaseAI_CE.Scripting
 		{
 			if (c == null)
 				return;
-			c.timmer.Stop();
+			c.stop();
 			personControlLock.EnterWriteLock();
 			try
 			{
-				List<Controller> lst;
-				if (controllers.TryGetValue(c.Id, out lst))
-					lst.Remove(c);
+				controllers.Remove(c);
 			}
 			finally
 			{ personControlLock.ExitWriteLock(); }
 		}
 
-		public Controller[] GetControllers(string id)
+		public Controller[] GetAllControllers()
 		{
-			id = KeyClean(id);
 			personControlLock.EnterReadLock();
 			try
 			{
-				List<Controller> lst;
-				if (controllers.TryGetValue(id, out lst))
-					return lst.ToArray();
-				return new Controller[0];
-			}
-			finally
-			{ personControlLock.ExitReadLock(); }
-		}
-		public List<Controller> GetAllControllers()
-		{
-			var result = new List<Controller>();
-			personControlLock.EnterReadLock();
-			try
-			{
-				foreach (var lst in controllers.Values)
-					result.AddRange(lst);
-				return result;
+				return controllers.ToArray();
 			}
 			finally
 			{ personControlLock.ExitReadLock(); }
@@ -378,7 +351,8 @@ namespace TeaseAI_CE.Scripting
 		/// <summary> Runs all setup scripts on the personality. </summary>
 		private void runAllSetupOn(Personality p, StringBuilder sb)
 		{
-			var c = new Controller(p, "DUMMY");
+			var c = new Controller(this, "DUMMY");
+			c.AddPersonality(p);
 			scriptsLock.EnterReadLock();
 			try
 			{
@@ -641,7 +615,8 @@ namespace TeaseAI_CE.Scripting
 												p = CreatePersonality(key);
 											// run through the script to fill the personalities variables.
 											var script = new Script(this, false, blockKey, lines, null, group, log);
-											var c = new Controller(p, "DUMMY");
+											var c = new Controller(this, "DUMMY");
+											c.AddPersonality(p);
 											var sb = new StringBuilder();
 											validateScript(c, script, null, sb);
 											runThroughScript(c, script, sb);
@@ -894,7 +869,8 @@ namespace TeaseAI_CE.Scripting
 			{
 				// dummy variables used to run scripts without effecting user data.
 				var p = new Personality(this, "tmpValidator", "tmpValidator");
-				var c = new Controller(p, "DUMMY");
+				var c = new Controller(this, "DUMMY");
+				c.AddPersonality(p);
 				var output = new StringBuilder();
 				var vars = new Dictionary<string, Variable>();
 

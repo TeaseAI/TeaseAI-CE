@@ -50,8 +50,8 @@ namespace TeaseAI_CE.UI
 			PauseVM();
 
 			settings.Windows.Split = !settings.Windows.Split;
-			// ToDo 9: Implment control hot-swaping, so a restart is not required.
-			MessageBox.Show("Please restart the applcation for changes to take effect.");
+			// ToDo 9: Implement control hot-swapping, so a restart is not required.
+			MessageBox.Show("Please restart the application for changes to take effect.");
 
 			ResumeVM();
 		}
@@ -96,13 +96,14 @@ namespace TeaseAI_CE.UI
 			CoreFunctions.AddTo(vm);
 			Functions.AddTo(vm);
 			status(20, Strings.Status_Load_Scripts);
-			vm.LoadFromDirectory("scripts"); // Load all scritps from scripts folder.
+			vm.LoadFromDirectory("scripts"); // Load all scripts from scripts folder.
 			status(40, Strings.Status_Load_Personalities);
 			vm.LoadFromDirectory(settings.Personalities.Path);
 
 			Personality player;
 			if (!vm.TryGetPersonality("player", out player))
 				player = vm.CreatePersonality("Player");
+
 			// Create a personality for testing.
 			Personality persona;
 			if (!vm.TryGetPersonality("Lisa", out persona))
@@ -115,10 +116,10 @@ namespace TeaseAI_CE.UI
 			status(80, "Running setups..");
 			vm.RunPersonalitySetup();
 
-			var controller = vm.AddController(persona, "Main");
+			var controller = vm.CreateController("Main");
 			controller.Interval = 500;
 			controller.AutoFill = true;
-
+			controller.AddPersonality(persona);
 
 			status(90, Strings.Status_Load_UI);
 			bool split = settings.Windows.Split;
