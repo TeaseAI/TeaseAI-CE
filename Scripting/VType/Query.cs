@@ -86,7 +86,7 @@ namespace TeaseAI_CE.Scripting.VType
 			while (i < list.Count)
 			{
 				script = list[i].Value;
-				if (script == null || !script.HasTags)
+				if (script == null || script.Valid != BlockBase.Validation.Passed || !script.HasTags)
 					list.RemoveAt(i);
 				else if (!(pass(script, item, log) ^ item.Notted))
 					list.RemoveAt(i);
