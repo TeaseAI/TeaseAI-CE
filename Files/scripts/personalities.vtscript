@@ -1,0 +1,16 @@
+﻿// Create some default personalities that we will use by ID in other scripts.
+// Note: Personalities can go in any script, it's just more organised if they are not scattered around.
+
+
+Personality.Lisa
+	#(.name = "Lisa")
+	#(.title = "Miss " + .name)
+	#(.eye = "green")
+	#(.birthday = Date("1988-05-22"))
+
+
+Personality.Piper
+	#(.name = "Piper")
+	#(.title = "Mistress")
+	#(.eye = "blue")
+	#(.birthday = Date("1990-01-23"))

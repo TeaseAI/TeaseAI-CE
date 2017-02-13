@@ -59,11 +59,3 @@ List.Letters
 	D
 	F
 	G
-
-// If your script requires a personality with an exact ID, or you just want include someone with your script.
-// You can create a personality like so:
-Personality.Lisa
-	#(.name = "Lisa")
-	#(.title = "Miss " + .name)
-	#(.eye = "green")
-	#(.birthday = Date("1988-05-22"))

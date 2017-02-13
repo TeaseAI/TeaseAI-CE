@@ -5,11 +5,11 @@
 Script.Start[general]
 	Lets try multiple personalities!
 
-	// for now there is no way to get a random contact, so lets add Piper or Lesa.
+	// for now there is no way to get a random contact, so lets add Piper or Lisa.
 	#if(not .id == "piper")
 		#AddContact(Personality.Piper)
 	#else
-		#AddContact(Personality.Lesa)
+		#AddContact(Personality.Lisa)
 	#GoTo(Script.Simple)
 
 // note: this script requires there to be at least two contacts.
@@ -36,10 +36,3 @@ Script.Simple
 	// when a active contact leaves, who ever is contact 0 gets set as active.
 	#RemoveContact(1)
 	Well now that @(local.1.name) is gone, lets do something else.
-
-// make sure we have second contact.
-Personality.Piper
-	#(.name = "Piper")
-	#(.title = "Mistress")
-	#(.eye = "blue")
-	#(.birthday = Date("1990-01-23"))
