@@ -39,6 +39,7 @@
     <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Contacts.cs" />
     <Compile Include="Context.cs" />
     <Compile Include="CoreFunctions.cs" />
     <Compile Include="Events\IEvent.cs" />

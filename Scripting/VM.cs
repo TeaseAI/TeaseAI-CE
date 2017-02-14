@@ -352,7 +352,7 @@ namespace TeaseAI_CE.Scripting
 		private void runAllSetupOn(Personality p, StringBuilder sb)
 		{
 			var c = new Controller(this, "DUMMY");
-			c.AddPersonality(p);
+			c.Personalities.Add(p);
 			scriptsLock.EnterReadLock();
 			try
 			{
@@ -383,7 +383,8 @@ namespace TeaseAI_CE.Scripting
 			c.Add(s);
 			bool AutoFill = c.AutoFill;
 			c.AutoFill = false;
-			while (c.next(sb))
+			Personality p;
+			while (c.next(out p, sb))
 			{
 			}
 			c.AutoFill = AutoFill;
@@ -616,7 +617,7 @@ namespace TeaseAI_CE.Scripting
 											// run through the script to fill the personalities variables.
 											var script = new Script(this, false, blockKey, lines, null, group, log);
 											var c = new Controller(this, "DUMMY");
-											c.AddPersonality(p);
+											c.Personalities.Add(p);
 											var sb = new StringBuilder();
 											validateScript(c, script, null, sb);
 											runThroughScript(c, script, sb);
@@ -870,7 +871,7 @@ namespace TeaseAI_CE.Scripting
 				// dummy variables used to run scripts without effecting user data.
 				var p = new Personality(this, "tmpValidator", "tmpValidator");
 				var c = new Controller(this, "DUMMY");
-				c.AddPersonality(p);
+				c.Personalities.Add(p);
 				var output = new StringBuilder();
 				var vars = new Dictionary<string, Variable>();
 
@@ -929,8 +930,10 @@ namespace TeaseAI_CE.Scripting
 			}
 			else
 			{
+				// ToDo : Valadator needs to know if there is multiple contacts!
 				c.Add(s);
-				while (c.next(output))
+				Personality p;
+				while (c.next(out p, output))
 				{
 
 				}

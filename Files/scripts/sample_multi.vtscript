@@ -6,9 +6,9 @@ Script.Start[general]
 	Lets try multiple personalities!
 
 	// for now there is no way to get a random contact, so lets add Piper or Lisa.
-	#if(not .id == "piper")
+	//#if(not .id == "piper")
 		#AddContact(Personality.Piper)
-	#else
+	//#else
 		#AddContact(Personality.Lisa)
 	#GoTo(Script.Simple)
 
@@ -17,22 +17,21 @@ Script.Simple
 	
 	// Note how AddContact accepts a personality, where the rest will only accept a number.
 	// That is so this script is generic, it can be ran for any contacts, as long as there is at least two.
-	#ActivateContact(0)
 	
 	// Main contact is running, but we can get the other contact's variables.
 	And now @(Contact.1.Name) will be joining us.
 
-	// set the new contact as active. Only one contact can be active at once, so the main(0) contact will be disabled.
+	// set the new contact as active. Only one contact can be active at once, so the main(0) contact will be disabled and swap with 1.
 	#ActivateContact(1)
 	
-	// we are going to remove contact 1, lets hold the personality as a variable, so we can use it latter.
-	#(local.1 = Contact.1)
+	// we are going to remove the active contact(0), lets hold the personality as a variable, so we can use it latter.
+	#(local.c = Contact.0)
 
 	// now all scripts will be ran from the new contact.
 	#GoTo(Script.sample.Introduction)
 	
 	Bye
 
-	// when a active contact leaves, who ever is contact 0 gets set as active.
-	#RemoveContact(1)
-	Well now that @(local.1.name) is gone, lets do something else.
+	// when a active contact gets removed, the next contact gets set as active.
+	#RemoveContact(0)
+	Well now that @(local.c.name) is gone, lets do something else.

@@ -16,7 +16,7 @@ namespace TeaseAI_CE.Scripting
 	{
 		public string Id { get; private set; }
 
-		private Personality personality;
+		public Contacts Personalities;
 		public readonly VM VM;
 
 		/// <summary>
@@ -45,23 +45,14 @@ namespace TeaseAI_CE.Scripting
 		{
 			VM = vm;
 			Id = VM.KeyClean(id);
+			Personalities = new Contacts(VM);
 		}
 
 		public bool Contains(Personality p)
 		{
-			return ReferenceEquals(p, personality);
+			return Personalities.Contains(p);
 		}
 
-		public void AddPersonality(Personality p)
-		{
-			if (!ReferenceEquals(p.VM, VM))
-			{
-				// ToDo : Error
-				Logger.Log(null, Logger.Level.Error, "Tried to add a personality with a different VM then the controller!");
-			}
-			// ToDo :
-			personality = p;
-		}
 
 		internal void stop()
 		{
@@ -83,9 +74,6 @@ namespace TeaseAI_CE.Scripting
 
 		public void Tick()
 		{
-			if (personality == null || personality.Enabled == false)
-				return;
-
 			// Wait for all events to finish.
 			while (events.Count > 0)
 			{
@@ -94,9 +82,12 @@ namespace TeaseAI_CE.Scripting
 				events.Dequeue();
 			}
 
-			while (next(output) && output.Length == 0)
+			Personality personality;
+			while (next(out personality, output) && output.Length == 0)
 			{ }
 
+			if (output.Length == 0)
+				return;
 			events.Enqueue(new Timed(new TimeSpan(0, 0, 0, 0, output.Length * 80), false, () =>
 			{
 				OnOutput?.Invoke(personality, output.ToString());
@@ -109,8 +100,12 @@ namespace TeaseAI_CE.Scripting
 		/// </summary>
 		/// <param name="output"></param>
 		/// <returns>false if there was nothing to do.</returns>
-		internal bool next(StringBuilder output)
+		internal bool next(out Personality personality, StringBuilder output)
 		{
+			personality = Personalities.GetActive();
+			if (personality == null)
+				return false;
+
 			if (AutoFill && stack.Count == 0 && queue.Count == 0 && emptyQuery.IsSet)
 			{
 				AddFromEmptyQuery(new Logger("Controller." + Id));
@@ -135,7 +130,7 @@ namespace TeaseAI_CE.Scripting
 			if (scope.Line >= scope.Block.Lines.Length)
 			{
 				stack.Pop();
-				return next(output);
+				return next(out personality, output);
 			}
 			else
 			{
@@ -267,9 +262,21 @@ namespace TeaseAI_CE.Scripting
 				return startQuery.Get(key, log);
 			if (key.NextIf("emptyquery"))
 				return emptyQuery.Get(key, log);
-			if (personality == null)
+
+
+			var p = Personalities.GetActive();
+			if (key.NextIf("contact"))
+			{
+				int i;
+				if (!int.TryParse(key.Next(), out i))
+					// ToDo : Error
+					return null;
+				p = Personalities.Get(i);
+			}
+
+			if (p == null)
 				return null;
-			return personality.Get(key, log);
+			return p.Get(key, log);
 		}
 		#endregion
 	}

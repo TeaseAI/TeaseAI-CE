@@ -119,7 +119,7 @@ namespace TeaseAI_CE.UI
 			var controller = vm.CreateController("Main");
 			controller.Interval = 500;
 			controller.AutoFill = true;
-			controller.AddPersonality(persona);
+			controller.Personalities.Add(persona);
 
 			status(90, Strings.Status_Load_UI);
 			bool split = settings.Windows.Split;
