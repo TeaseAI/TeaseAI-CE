@@ -14,12 +14,13 @@ Script.Start[general]
 
 // note: this script requires there to be at least two contacts.
 Script.Simple
+	#RequireContacts(2)
 	
 	// Note how AddContact accepts a personality, where the rest will only accept a number.
 	// That is so this script is generic, it can be ran for any contacts, as long as there is at least two.
 	
 	// Main contact is running, but we can get the other contact's variables.
-	And now @(Contact.1.Name) will be joining us.
+	And now @(Contact.1.Self.Name) will be joining us.
 
 	// set the new contact as active. Only one contact can be active at once, so the main(0) contact will be disabled and swap with 1.
 	#ActivateContact(1)

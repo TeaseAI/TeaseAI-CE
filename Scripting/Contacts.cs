@@ -40,7 +40,7 @@ namespace TeaseAI_CE.Scripting
 			try
 			{
 				locker.EnterReadLock();
-				if (i <= 0 || i >= list.Count)
+				if (i < 0 || i >= list.Count)
 					// ToDo : Error
 					return null;
 
@@ -162,6 +162,54 @@ namespace TeaseAI_CE.Scripting
 			}
 			finally
 			{ locker.ExitWriteLock(); }
+		}
+
+		public void AddRandom()
+		{
+			try
+			{
+				locker.EnterWriteLock();
+
+				var ps = VM.GetPersonalities();
+				var rnd = new Random();
+				int maxTries = 100;
+				for (int i = 0; i < maxTries; ++i)
+				{
+					var r = rnd.Next(0, ps.Length);
+					if (!list.Contains(ps[r]))
+					{
+						list.Add(ps[r]);
+						return;
+					}
+				}
+				// ToDo: Error, unable to add a random personality!
+
+			}
+			finally { locker.ExitWriteLock(); }
+		}
+
+		public void AddRandomMultiple(Context sender, int count)
+		{
+			try
+			{
+				locker.EnterWriteLock();
+
+				if (list.Count >= count)
+					return;
+
+				var ps = VM.GetPersonalities();
+				var rnd = new Random();
+				int maxTries = 100 * count;
+				for (int i = 0; i < maxTries && list.Count < count; ++i)
+				{
+					var r = rnd.Next(0, ps.Length);
+					if (!list.Contains(ps[r]))
+						list.Add(ps[r]);
+				}
+				// ToDo: Error, unable to add a random personality!
+
+			}
+			finally { locker.ExitWriteLock(); }
 		}
 	}
 }

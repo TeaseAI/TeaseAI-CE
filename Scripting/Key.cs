@@ -92,7 +92,7 @@ namespace TeaseAI_CE.Scripting
 
 		public static Key operator ++(Key key)
 		{
-			if (key.index <= keySeparator.Length)
+			if (key.index <= key.keys.Length)
 				++key.index;
 			return key;
 		}

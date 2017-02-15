@@ -20,6 +20,7 @@ namespace TeaseAI_CE
 			vm.AddFunction(wait);
 
 
+			vm.AddFunction(requireContacts);
 			vm.AddFunction(addContact);
 			vm.AddFunction(activateContact);
 			vm.AddFunction(removeContact);
@@ -78,6 +79,21 @@ namespace TeaseAI_CE
 			return result;
 		}
 
+
+		private static Variable requireContacts(Context sender, Variable[] args)
+		{
+			if (args.Length == 0)
+				sender.Root.Log.WarningF(StringsScripting.Formatted_Function_arguments_empty, "RequireContacts");
+			else
+			{
+				object val = args[0].Value;
+				if (val is float)
+					sender.Controller.Personalities.AddRandomMultiple(sender, (int)(float)val);
+				// ToDo : Error
+
+			}
+			return null;
+		}
 
 		/// <summary>
 		/// Does not actvate but will add to controller.
