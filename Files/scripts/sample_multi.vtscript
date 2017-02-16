@@ -5,11 +5,11 @@
 Script.Start[general]
 	Lets try multiple personalities!
 
-	// for now there is no way to get a random contact, so lets add Piper or Lisa.
-	//#if(not .id == "piper")
-		#AddContact(Personality.Piper)
-	//#else
-		#AddContact(Personality.Lisa)
+	// Add a random contact, sense we need two.
+	#AddRandomContact()
+	// Note: We could add a specific contact like so:
+	//#AddContact(Personality.Piper)
+	
 	#GoTo(Script.Simple)
 
 // note: this script requires there to be at least two contacts.

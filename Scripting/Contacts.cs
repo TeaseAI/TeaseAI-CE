@@ -146,6 +146,24 @@ namespace TeaseAI_CE.Scripting
 			finally
 			{ locker.ExitWriteLock(); }
 		}
+
+		public void ActvateRandom()
+		{
+			try
+			{
+				locker.EnterWriteLock();
+				if (list.Count < 2)
+					return;
+
+				var rnd = new Random();
+				int i = rnd.Next(1, list.Count);
+
+				_swap(0, i);
+			}
+			finally
+			{ locker.ExitWriteLock(); }
+		}
+
 		private void _swap(int a, int b)
 		{
 			var tmp = list[a];
@@ -170,7 +188,7 @@ namespace TeaseAI_CE.Scripting
 			{
 				locker.EnterWriteLock();
 
-				var ps = VM.GetPersonalities();
+				var ps = VM.GetPersonalities(false);
 				var rnd = new Random();
 				int maxTries = 100;
 				for (int i = 0; i < maxTries; ++i)
@@ -197,7 +215,7 @@ namespace TeaseAI_CE.Scripting
 				if (list.Count >= count)
 					return;
 
-				var ps = VM.GetPersonalities();
+				var ps = VM.GetPersonalities(false);
 				var rnd = new Random();
 				int maxTries = 100 * count;
 				for (int i = 0; i < maxTries && list.Count < count; ++i)

@@ -22,7 +22,9 @@ namespace TeaseAI_CE
 
 			vm.AddFunction(requireContacts);
 			vm.AddFunction(addContact);
+			vm.AddFunction(addRandomContact);
 			vm.AddFunction(activateContact);
+			vm.AddFunction(activateRandomContact);
 			vm.AddFunction(removeContact);
 		}
 
@@ -79,7 +81,7 @@ namespace TeaseAI_CE
 			return result;
 		}
 
-
+		#region Contact functions
 		private static Variable requireContacts(Context sender, Variable[] args)
 		{
 			if (args.Length == 0)
@@ -111,6 +113,16 @@ namespace TeaseAI_CE
 			}
 			return null;
 		}
+
+		private static Variable addRandomContact(Context sender, Variable[] args)
+		{
+			if (args.Length != 0)
+				sender.Root.Log.WarningF(StringsScripting.Formatted_Function_arguments_not_empty, "addRandomContact");
+
+			sender.Controller.Personalities.AddRandom();
+			return null;
+		}
+
 		/// <summary>
 		///  Adds contact if not in controller, then actvates it.
 		/// </summary>
@@ -128,10 +140,18 @@ namespace TeaseAI_CE
 			}
 			return null;
 		}
+		private static Variable activateRandomContact(Context sender, Variable[] args)
+		{
+			if (args.Length != 0)
+				sender.Root.Log.WarningF(StringsScripting.Formatted_Function_arguments_not_empty, "activateRandomContact");
+
+			sender.Controller.Personalities.ActvateRandom();
+			return null;
+		}
 		private static Variable removeContact(Context sender, Variable[] args)
 		{
 			if (args.Length == 0)
-				sender.Root.Log.WarningF(StringsScripting.Formatted_Function_arguments_empty, "removeContact");
+				sender.Controller.Personalities.RemoveAt(0);
 			else
 			{
 				object v = args[0].Value;
@@ -143,4 +163,6 @@ namespace TeaseAI_CE
 			return null;
 		}
 	}
+	#endregion
+
 }

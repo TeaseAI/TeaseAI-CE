@@ -236,12 +236,22 @@ namespace TeaseAI_CE.Scripting
 			{ personControlLock.ExitReadLock(); }
 		}
 
-		public Personality[] GetPersonalities()
+		public Personality[] GetPersonalities(bool includePlayer = true)
 		{
 			var p = personalities.Values.ToArray();
 			var result = new Personality[p.Length];
+			int playerIndex = -1;
 			for (int i = 0; i < result.Length; ++i)
-				result[i] = p[i].Value;
+			{
+				if (includePlayer)
+					result[i] = p[i].Value;
+				else if (playerIndex > -1)
+					result[i - 1] = p[i];
+				else if (p[i].IsSet && p[i].Value.ID == "player")
+					playerIndex = i;
+				else
+					result[i] = p[i].Value;
+			}
 			return result;
 		}
 
