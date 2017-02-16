@@ -12,27 +12,27 @@ Script.Start[general]
 	
 	#GoTo(Script.Simple)
 
-// note: this script requires there to be at least two contacts.
 Script.Simple
+	// Before using multiple contacts in a script you must call RequireContacts with the number of contacts you are going to use.
 	#RequireContacts(2)
 	
 	// Note how AddContact accepts a personality, where the rest will only accept a number.
 	// That is so this script is generic, it can be ran for any contacts, as long as there is at least two.
 	
-	// Main contact is running, but we can get the other contact's variables.
-	And now @(Contact.1.Self.Name) will be joining us.
-
-	// set the new contact as active. Only one contact can be active at once, so the main(0) contact will be disabled and swap with 1.
+	// The active contact is always 0, we can get the other contact's variables like so:
+	And now @(Contact.1.Self.Name) will be joining us. // Note: Currently 'Self' is required.
+	
+	// Set contact 1 as active. Only one contact can be active at once, so the new active contact will swap positions with the old.
 	#ActivateContact(1)
 	
-	// we are going to remove the active contact(0), lets hold the personality as a variable, so we can use it latter.
-	#(local.c = Contact.0)
-
 	// now all scripts will be ran from the new contact.
 	#GoTo(Script.sample.Introduction)
 	
+	// we are going to remove the active contact(0), lets hold the personality as a variable, so we can use it latter.
+	#(local.c = Contact.0)
+	
 	Bye
-
-	// when a active contact gets removed, the next contact gets set as active.
+	
+	// when an active contact gets removed, the next contact gets set as active.
 	#RemoveContact(0)
 	Well now that @(local.c.name) is gone, lets do something else.

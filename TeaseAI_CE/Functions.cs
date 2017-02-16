@@ -90,7 +90,7 @@ namespace TeaseAI_CE
 			{
 				object val = args[0].Value;
 				if (val is float)
-					sender.Controller.Personalities.AddRandomMultiple(sender, (int)(float)val);
+					sender.Controller.Personalities.Require(sender, (int)(float)val);
 				// ToDo : Error
 
 			}

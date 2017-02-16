@@ -35,6 +35,13 @@ namespace TeaseAI_CE.Scripting
 			{ locker.ExitReadLock(); }
 		}
 
+		public void Require(Context sender, int count)
+		{
+			// ToDo : Add test to make sure require was called.
+
+			addRandomToCount(sender, count);
+		}
+
 		public Personality Get(int i)
 		{
 			try
@@ -182,6 +189,7 @@ namespace TeaseAI_CE.Scripting
 			{ locker.ExitWriteLock(); }
 		}
 
+		// ToDo 6: Add functions should return the personality as a variable.
 		public void AddRandom()
 		{
 			try
@@ -206,7 +214,7 @@ namespace TeaseAI_CE.Scripting
 			finally { locker.ExitWriteLock(); }
 		}
 
-		public void AddRandomMultiple(Context sender, int count)
+		private void addRandomToCount(Context sender, int count)
 		{
 			try
 			{
