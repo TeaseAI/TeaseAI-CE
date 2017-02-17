@@ -271,7 +271,7 @@ namespace TeaseAI_CE.Scripting
 				if (!int.TryParse(key.Next(), out i))
 					// ToDo : Error
 					return null;
-				p = Personalities.Get(i);
+				p = Personalities.Get(i, log);
 			}
 
 			if (p == null)

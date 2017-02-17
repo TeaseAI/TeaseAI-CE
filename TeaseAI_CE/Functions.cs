@@ -119,7 +119,7 @@ namespace TeaseAI_CE
 			if (args.Length != 0)
 				sender.Root.Log.WarningF(StringsScripting.Formatted_Function_arguments_not_empty, "addRandomContact");
 
-			sender.Controller.Personalities.AddRandom();
+			sender.Controller.Personalities.AddRandom(sender);
 			return null;
 		}
 
@@ -134,9 +134,9 @@ namespace TeaseAI_CE
 			{
 				object v = args[0].Value;
 				if (v is Personality)
-					sender.Controller.Personalities.Actvate((Personality)v);
+					sender.Controller.Personalities.Actvate(sender, (Personality)v);
 				else if (v is float)
-					sender.Controller.Personalities.Actvate((int)(float)v);
+					sender.Controller.Personalities.Actvate(sender, (int)(float)v);
 			}
 			return null;
 		}
@@ -151,14 +151,14 @@ namespace TeaseAI_CE
 		private static Variable removeContact(Context sender, Variable[] args)
 		{
 			if (args.Length == 0)
-				sender.Controller.Personalities.RemoveAt(0);
+				sender.Controller.Personalities.RemoveAt(sender, 0);
 			else
 			{
 				object v = args[0].Value;
 				if (v is Personality)
-					sender.Controller.Personalities.Remove((Personality)v);
+					sender.Controller.Personalities.Remove(sender, (Personality)v);
 				else if (v is float)
-					sender.Controller.Personalities.RemoveAt((int)(float)v);
+					sender.Controller.Personalities.RemoveAt(sender, (int)(float)v);
 			}
 			return null;
 		}

@@ -25,6 +25,8 @@ namespace TeaseAI_CE.Scripting
 		public bool Return = false;
 		/// <summary> If true stop executing the line. </summary>
 		public bool ExitLine = false;
+		/// <summary> Specifies how meny personalities are currently required. </summary>
+		public int RequiredPersonalities = 1;
 
 		public Context(Controller controller, BlockBase root, Line block, int line, Dictionary<string, Variable> variables)
 		{

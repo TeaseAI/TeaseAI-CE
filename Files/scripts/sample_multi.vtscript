@@ -6,7 +6,7 @@ Script.Start[general]
 	Lets try multiple personalities!
 
 	// Add a random contact, sense we need two.
-	#AddRandomContact()
+	#AddRandomContact
 	// Note: We could add a specific contact like so:
 	//#AddContact(Personality.Piper)
 	

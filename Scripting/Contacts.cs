@@ -37,12 +37,12 @@ namespace TeaseAI_CE.Scripting
 
 		public void Require(Context sender, int count)
 		{
-			// ToDo : Add test to make sure require was called.
+			sender.RequiredPersonalities = count;
 
 			addRandomToCount(sender, count);
 		}
 
-		public Personality Get(int i)
+		public Personality Get(int i, Logger log)
 		{
 			try
 			{
@@ -78,7 +78,6 @@ namespace TeaseAI_CE.Scripting
 
 			if (!ReferenceEquals(p.VM, VM))
 			{
-				// ToDo : Error
 				Logger.Log(null, Logger.Level.Error, "Tried to add a personality with a different VM then the controller!");
 				return;
 			}
@@ -92,33 +91,41 @@ namespace TeaseAI_CE.Scripting
 			finally
 			{ locker.ExitWriteLock(); }
 		}
-		public void RemoveAt(int i)
+		public void RemoveAt(Context sender, int i)
 		{
 			try
 			{
 				locker.EnterWriteLock();
+				if (i > sender.RequiredPersonalities - 1)
+					sender.Root.Log.Warning("RequiredContacts not properly setup!");
+				if (i < 0 || i >= list.Count)
+					// ToDo : Error
+					return;
 				list.RemoveAt(i);
 			}
 			finally
 			{ locker.ExitWriteLock(); }
 		}
-		public void Remove(Personality p)
+		public void Remove(Context sender, Personality p)
 		{
 			try
 			{
 				locker.EnterWriteLock();
-				list.Remove(p);
+				if (!list.Remove(p))
+					sender.Root.Log.Warning("Tried to remove a personality that was not contained.");
 			}
 			finally
 			{ locker.ExitWriteLock(); }
 		}
 
-		public void Actvate(int i)
+		public void Actvate(Context sender, int i)
 		{
 			try
 			{
 				locker.EnterWriteLock();
-				if (i <= 0 || i >= list.Count)
+				if (i > sender.RequiredPersonalities - 1)
+					sender.Root.Log.Warning("RequiredContacts not properly setup!");
+				if (i < 0 || i >= list.Count)
 					// ToDo : Error
 					return;
 
@@ -128,25 +135,22 @@ namespace TeaseAI_CE.Scripting
 			{ locker.ExitWriteLock(); }
 		}
 
-		public void Actvate(Personality p)
+		public void Actvate(Context sender, Personality p)
 		{
 			if (p.Enabled == false)
 				// ToDo : Error
 				return;
+			if (!ReferenceEquals(p.VM, VM))
+			{
+				Logger.Log(null, Logger.Level.Error, "Tried to add a personality with a different VM then the controller!");
+				return;
+			}
 
 			try
 			{
 				locker.EnterWriteLock();
 				if (!list.Contains(p))
-				{
-					if (!ReferenceEquals(p.VM, VM))
-					{
-						// ToDo : Error
-						Logger.Log(null, Logger.Level.Error, "Tried to add a personality with a different VM then the controller!");
-						return;
-					}
 					list.Insert(0, p);
-				}
 				else
 					_swap(0, list.IndexOf(p));
 			}
@@ -173,6 +177,8 @@ namespace TeaseAI_CE.Scripting
 
 		private void _swap(int a, int b)
 		{
+			if (a == b)
+				return;
 			var tmp = list[a];
 			list[a] = list[b];
 			list[b] = tmp;
@@ -190,7 +196,7 @@ namespace TeaseAI_CE.Scripting
 		}
 
 		// ToDo 6: Add functions should return the personality as a variable.
-		public void AddRandom()
+		public void AddRandom(Context sender)
 		{
 			try
 			{
@@ -208,7 +214,7 @@ namespace TeaseAI_CE.Scripting
 						return;
 					}
 				}
-				// ToDo: Error, unable to add a random personality!
+				sender.Root.Log.Error("Unable to add a random personality!");
 
 			}
 			finally { locker.ExitWriteLock(); }
@@ -232,7 +238,8 @@ namespace TeaseAI_CE.Scripting
 					if (!list.Contains(ps[r]))
 						list.Add(ps[r]);
 				}
-				// ToDo: Error, unable to add a random personality!
+				if (list.Count != count)
+					sender.Root.Log.Error("Unable to add a random personality!");
 
 			}
 			finally { locker.ExitWriteLock(); }

@@ -239,7 +239,10 @@ namespace TeaseAI_CE.Scripting
 		public Personality[] GetPersonalities(bool includePlayer = true)
 		{
 			var p = personalities.Values.ToArray();
-			var result = new Personality[p.Length];
+			var count = p.Length;
+			if (!includePlayer)
+				--count;
+			var result = new Personality[count];
 			int playerIndex = -1;
 			for (int i = 0; i < result.Length; ++i)
 			{
